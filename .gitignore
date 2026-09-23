@@ -1,3 +1,10 @@
 
 # references
 docs/references
+.dotnet/
+.dotnet-home/
+.nuget/
+.dotnet-install.ps1
+.env
+**/bin/
+**/obj/

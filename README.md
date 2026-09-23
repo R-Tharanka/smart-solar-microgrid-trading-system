@@ -16,3 +16,13 @@ Phase 1 requirements analysis and project foundation documents:
 - [Requirements traceability matrix](docs/requirements/requirements-traceability-matrix.md)
 - [UI and evidence checklist](docs/phase-1/ui-and-evidence-checklist.md)
 - [Decision log](docs/phase-1/decision-log.md)
+
+## Phase 2 architecture, database and API contracts
+
+- [Phase 2 master specification](docs/phase-2/architecture-database-api-contracts.md)
+- [Database specification](docs/phase-2/database-specification.md)
+- [API contract governance](docs/phase-2/api-contract-governance.md)
+- [Phase 2 diagrams](docs/architecture/phase-2-diagrams.md)
+- [Verification and team handoff](docs/phase-2/verification-and-handoff.md)
+
+The ASP.NET Core foundation is under `backend/` and uses MongoDB Atlas. Copy `.env.example` to an untracked `.env`, add the Atlas SRV connection string and run `docker compose up --build`. Verify Atlas connectivity at `http://localhost:5080/health/ready`.

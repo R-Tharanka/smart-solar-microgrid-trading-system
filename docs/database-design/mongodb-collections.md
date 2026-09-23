@@ -1,6 +1,6 @@
 # MongoDB Collection Design
 
-This file defines the Phase 1 MongoDB data model for the Smart Solar Microgrid Trading System.
+This file preserves the Phase 1 MongoDB data-model sketch for the Smart Solar Microgrid Trading System. The authoritative Phase 2 model, storage types, concurrency rules and indexes are defined in `docs/phase-2/database-specification.md`.
 
 ## 1. `users`
 
