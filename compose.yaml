@@ -3,13 +3,19 @@ services:
     build:
       context: ./backend
     restart: unless-stopped
+    env_file:
+      - path: ./backend/.env
+        required: false
+      - path: .env
+        required: false
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      MongoDb__ConnectionString: ${MONGODB_CONNECTION_STRING:-}
+      MongoDb__ConnectionString: ${MONGODB_CONNECTION_STRING}
       MongoDb__DatabaseName: ${MONGODB_DATABASE_NAME:-smart_solar_microgrid}
       Jwt__Issuer: SmartSolarMicrogrid.Api
       Jwt__Audience: SmartSolarMicrogrid.Clients
       Jwt__SigningKey: ${JWT_SIGNING_KEY:-development-only-key-replace-before-deployment-123456}
     ports:
       - "5080:8080"
+
