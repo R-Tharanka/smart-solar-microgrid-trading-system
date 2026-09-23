@@ -59,7 +59,7 @@ Purpose: Solar microgrid node/station profile.
 Indexes:
 
 - Unique: `stationCode`
-- Geospatial or compound location index if supported by implementation.
+- Geospatial index on location coordinates for nearby station queries.
 - Non-unique: `status`
 
 Status values:
@@ -154,4 +154,3 @@ Recommended reservation status values:
 - A station cannot be deactivated while active reservations exist.
 - QR verification and finalization must update the reservation state atomically where practical.
 - Clients must not directly mutate MongoDB records.
-

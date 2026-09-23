@@ -17,6 +17,9 @@ Phase 1 is complete when the team has agreed on:
 - MongoDB collections and key status values.
 - API endpoint catalogue and ownership.
 - Team responsibility matrix.
+- Assignment-to-feature traceability.
+- UI and evidence checklist.
+- Finalized decision log for ambiguous rules.
 - Initial use case, DFD and Phase 2 implementation plan.
 
 ## 2. Project Decisions
@@ -91,9 +94,9 @@ Phase 1 is complete when the team has agreed on:
 | Login | Yes | Yes | Yes |
 | Register as Prosumer | No | No | Yes |
 | Manage web users | Yes | No | No |
-| Manage prosumer accounts | Yes | Limited read if required | Own account only |
-| Deactivate/reactivate accounts | Yes | No | Request/deactivate own account if supported |
-| Manage stations and schedules | Yes | View/update operational data if agreed | No |
+| Manage prosumer accounts | Yes | Read operational identity summary only | Own account only |
+| Deactivate/reactivate accounts | Yes | No | Request own deactivation through profile flow |
+| Manage stations and schedules | Yes | View operational station data | No |
 | View nearby stations | No | Yes | Yes |
 | Create reservation | No | No | Yes |
 | Update/cancel own reservation | No | No | Yes |
@@ -204,7 +207,12 @@ Key shared decisions:
 
 ## 12. API Endpoint Catalogue Summary
 
-Detailed identity endpoint contracts are maintained in `docs/api-contracts/identity-api.md`.
+Detailed endpoint contracts are maintained in:
+
+- `docs/api-contracts/identity-api.md`
+- `docs/api-contracts/station-slot-api.md`
+- `docs/api-contracts/reservation-dashboard-api.md`
+- `docs/api-contracts/operator-transaction-api.md`
 
 | Module | Example Endpoints | Owner |
 | --- | --- | --- |
@@ -216,6 +224,19 @@ Detailed identity endpoint contracts are maintained in `docs/api-contracts/ident
 | Reservations | `POST /api/reservations`, `GET /api/reservations/me`, `PUT /api/reservations/{id}` | Member 3 |
 | Dashboards | `GET /api/dashboard/bookings`, `GET /api/dashboard/summary` | Member 3 |
 | Transactions | `POST /api/reservations/{id}/qr`, `POST /api/transactions/verify`, `POST /api/transactions/finalize` | Member 4 |
+
+## 12.1 Requirement Traceability
+
+Full requirement mapping is maintained in `docs/requirements/requirements-traceability-matrix.md`.
+
+That matrix maps each requirement to:
+
+- Feature owner.
+- API contract.
+- Database collection.
+- Web surface.
+- Android surface.
+- Evidence to capture.
 
 ## 13. API Response Convention
 
@@ -287,6 +308,12 @@ Shared work:
 | API endpoint catalogue | Completed with identity details in `docs/api-contracts/identity-api.md` |
 | Team ownership document | Completed |
 | Member 1 scope definition | Completed in `docs/phase-1/member-1-identity-scope.md` |
+| Full requirement traceability matrix | Completed in `docs/requirements/requirements-traceability-matrix.md` |
+| Station and slot API contract | Completed in `docs/api-contracts/station-slot-api.md` |
+| Reservation and dashboard API contract | Completed in `docs/api-contracts/reservation-dashboard-api.md` |
+| Operator transaction API contract | Completed in `docs/api-contracts/operator-transaction-api.md` |
+| UI and evidence checklist | Completed in `docs/phase-1/ui-and-evidence-checklist.md` |
+| Decision log | Completed in `docs/phase-1/decision-log.md` |
 
 ## 16. Phase 2 Implementation Plan
 
@@ -299,4 +326,3 @@ Shared work:
 7. Implement transaction verification and QR finalization.
 8. Begin React and Android client screens once each API contract is stable.
 9. Verify each feature with API requests, MongoDB records and UI screenshots.
-
