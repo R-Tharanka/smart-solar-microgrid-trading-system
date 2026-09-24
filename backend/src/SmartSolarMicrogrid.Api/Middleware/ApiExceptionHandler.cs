@@ -18,6 +18,8 @@ public sealed class ApiExceptionHandler(
         {
             IdentityException identity =>
                 (identity.StatusCode, "Identity request failed", identity.ErrorCode, identity.Message),
+            StationSlotException stationSlot =>
+                (stationSlot.StatusCode, "Station or slot request failed", stationSlot.ErrorCode, stationSlot.Message),
             MongoWriteException { WriteError.Category: ServerErrorCategory.DuplicateKey } =>
                 (StatusCodes.Status409Conflict, "Duplicate user", "USER_IDENTIFIER_EXISTS", "The email or NIC is already registered."),
             _ =>

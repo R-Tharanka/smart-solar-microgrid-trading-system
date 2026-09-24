@@ -121,6 +121,7 @@ public sealed class MongoCollectionInitializer(
         var slots = context.Database.GetCollection<BsonDocument>(CollectionNames.EnergyBookingSlots);
         await EnsureIndexesAsync(slots, new[]
         {
+            Index("ux_slots_code", new BsonDocument("slotCode", 1), unique: true, sparse: true),
             Index("ux_slots_station_period", new BsonDocument
             {
                 { "stationId", 1 }, { "startTimeUtc", 1 }, { "endTimeUtc", 1 }
