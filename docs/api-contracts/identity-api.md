@@ -25,6 +25,8 @@ This contract supersedes the earlier Phase 1 identity route sketch. User-facing 
   "email": "prosumer@example.com",
   "firstName": "Sample",
   "lastName": "Prosumer",
+  "phoneNumber": "0771234567",
+  "address": "Colombo",
   "role": "Prosumer",
   "status": "Active"
 }
@@ -45,7 +47,9 @@ Authorization: Public
   "email": "prosumer@example.com",
   "password": "StrongPassword123!",
   "firstName": "Sample",
-  "lastName": "Prosumer"
+  "lastName": "Prosumer",
+  "phoneNumber": "0771234567",
+  "address": "Colombo"
 }
 ```
 
@@ -80,11 +84,27 @@ Authorization: `Authenticated`
 ```json
 {
   "firstName": "Updated",
-  "lastName": "Name"
+  "lastName": "Name",
+  "phoneNumber": "+94771234567",
+  "address": "Colombo 03"
 }
 ```
 
-NIC, email, role and status cannot be changed by this endpoint.
+NIC, email, role and status cannot be changed by this endpoint. `phoneNumber` and `address` are required for Prosumer updates and are ignored for staff when omitted.
+
+### Change Password
+
+`POST /api/users/change-password`
+Authorization: `Authenticated`
+
+```json
+{
+  "currentPassword": "StrongPassword123!",
+  "newPassword": "NewStrongPassword456!"
+}
+```
+
+Returns `204 No Content`. The current password must be correct, the new password must satisfy the shared password rules, and it must differ from the current password.
 
 ### Deactivate Own Prosumer Account
 
@@ -142,12 +162,20 @@ Only an `Active` account may transition to `Deactivated`. A Backoffice user cann
 
 The default access-token lifetime is 60 minutes. Protected policies also query current account status, so deactivation takes effect before token expiry.
 
+## Internal Member Contract
+
+Member 3 validates a reservation owner through `IIdentityService.GetActiveProsumerAsync(nic)`. The method normalizes the NIC and returns the public `UserResponse` only when the account exists, has role `Prosumer`, and has status `Active`. Other modules must not query the `users` collection directly or access `passwordHash`.
+
+Account lifecycle writes record `deactivatedAtUtc` or `reactivatedAtUtc` and `statusChangedByIdentifier` in MongoDB. These audit fields are server-side data and are not included in `UserResponse`.
+
 ## Stable Identity Error Codes
 
 | Code | Meaning |
 | --- | --- |
 | `AUTH_INVALID_CREDENTIALS` | Identifier or password is invalid. |
 | `AUTH_ACCOUNT_INACTIVE` | Account is Pending or Deactivated. |
+| `AUTH_CURRENT_PASSWORD_INVALID` | Current password supplied for a password change is incorrect. |
+| `AUTH_PASSWORD_UNCHANGED` | New password is the same as the current password. |
 | `USER_NIC_EXISTS` | NIC is already registered. |
 | `USER_EMAIL_EXISTS` | Email is already registered. |
 | `USER_IDENTIFIER_EXISTS` | A concurrent duplicate write was rejected. |

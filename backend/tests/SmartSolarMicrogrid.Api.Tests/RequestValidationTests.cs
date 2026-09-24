@@ -17,7 +17,9 @@ public sealed class RequestValidationTests
             "person@example.com",
             "Strong@123",
             "Test",
-            "User");
+            "User",
+            "0771234567",
+            "Colombo");
 
         Assert.Equal(expectedValid, IsValid(request));
     }
@@ -35,7 +37,28 @@ public sealed class RequestValidationTests
             "person@example.com",
             password,
             "Test",
-            "User");
+            "User",
+            "0771234567",
+            "Colombo");
+
+        Assert.Equal(expectedValid, IsValid(request));
+    }
+
+    [Theory]
+    [InlineData("0771234567", true)]
+    [InlineData("+94771234567", true)]
+    [InlineData("123", false)]
+    [InlineData("077-123-4567", false)]
+    public void RegisterProsumer_ValidatesPhoneNumber(string phoneNumber, bool expectedValid)
+    {
+        var request = new RegisterProsumerRequest(
+            "200012345678",
+            "person@example.com",
+            "Strong@123",
+            "Test",
+            "User",
+            phoneNumber,
+            "Colombo");
 
         Assert.Equal(expectedValid, IsValid(request));
     }

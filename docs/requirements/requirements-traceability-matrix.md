@@ -19,7 +19,7 @@ Source references:
 | REQ-06 | Use native Android Java, not a cross-platform framework. | All | Android consumes API | SQLite local cache | Not applicable | All Android screens | Android project and screenshots |
 | REQ-07 | Use SQLite for Android local persistence. | Member 1, Member 3 support | Auth/reference APIs | SQLite tables | Not applicable | Session/reference cache | SQLite data evidence |
 | REQ-08 | Authenticate Backoffice, Grid Operator and Prosumer users. | Member 1 | `identity-api.md` | `users` | Login, role routing | Login, role routing | Login success/failure tests |
-| REQ-09 | Register Prosumer profile using NIC as primary identity. | Member 1 | `POST /api/prosumers/register` | `users` | Prosumer management | Registration | Duplicate NIC test |
+| REQ-09 | Register Prosumer profile using NIC as primary identity. | Member 1 | `POST /api/users/prosumer/register` | `users` | Prosumer management | Registration | Duplicate NIC test |
 | REQ-10 | Manage users and account status. | Member 1 | `identity-api.md` | `users` | User/prosumer management | Profile/status request if implemented | Status update tests |
 | REQ-11 | Enforce role-based authorization. | Member 1 | All protected endpoints | `users` | Auth guard | Auth guard | 401/403 tests |
 | REQ-12 | Create and manage solar grid nodes/stations. | Member 2 | `station-slot-api.md` | `solarStationInfo` | Station dashboard/forms | Nearby station list/map | Station CRUD evidence |
@@ -54,4 +54,3 @@ Source references:
 | Maps | REQ-13 and REQ-26 |
 | Deployment | REQ-03 |
 | Documentation and evidence | REQ-28 |
-

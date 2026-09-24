@@ -71,7 +71,10 @@ public sealed class AuthorizationPolicyTests
 
         public Task<bool> UpdateStatusAsync(
             string identifier,
+            UserStatus expectedStatus,
             UserStatus status,
+            string changedByIdentifier,
+            DateTime changedAtUtc,
             CancellationToken cancellationToken = default) => throw new NotSupportedException();
 
         public Task RecordSuccessfulLoginAsync(

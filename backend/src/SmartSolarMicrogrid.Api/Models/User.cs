@@ -24,6 +24,14 @@ public class User
     [BsonElement("lastName")]
     public string LastName { get; set; } = string.Empty;
 
+    [BsonIgnoreIfNull]
+    [BsonElement("phoneNumber")]
+    public string? PhoneNumber { get; set; }
+
+    [BsonIgnoreIfNull]
+    [BsonElement("address")]
+    public string? Address { get; set; }
+
     [BsonElement("role")]
     [BsonRepresentation(BsonType.String)]
     public UserRole Role { get; set; }
@@ -39,6 +47,18 @@ public class User
     [BsonIgnoreIfNull]
     [BsonElement("lastLoginAtUtc")]
     public DateTime? LastLoginAtUtc { get; set; }
+
+    [BsonIgnoreIfNull]
+    [BsonElement("deactivatedAtUtc")]
+    public DateTime? DeactivatedAtUtc { get; set; }
+
+    [BsonIgnoreIfNull]
+    [BsonElement("reactivatedAtUtc")]
+    public DateTime? ReactivatedAtUtc { get; set; }
+
+    [BsonIgnoreIfNull]
+    [BsonElement("statusChangedByIdentifier")]
+    public string? StatusChangedByIdentifier { get; set; }
 
     [BsonElement("createdAtUtc")]
     public DateTime CreatedAtUtc { get; set; }

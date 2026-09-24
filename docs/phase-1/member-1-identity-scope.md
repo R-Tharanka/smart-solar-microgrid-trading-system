@@ -38,18 +38,19 @@ Recommended fields:
 | `_id` | ObjectId/string | Yes | MongoDB technical identifier. |
 | `nic` | string | Required for Prosumer | Unique prosumer-facing identifier. |
 | `email` | string | Yes | Unique login/contact email. |
-| `username` | string | Optional | Useful for Backoffice/Grid Operator login display. |
-| `fullName` | string | Yes | User display name. |
+| `firstName` | string | Yes | User given name. |
+| `lastName` | string | Yes | User family name. |
 | `phoneNumber` | string | Yes for Prosumer | Contact details. |
 | `address` | string | Required for Prosumer | Profile details. |
 | `role` | enum | Yes | `Backoffice`, `GridOperator`, `Prosumer`. |
-| `status` | enum | Yes | `PendingActivation`, `Active`, `Deactivated`, `Rejected`. |
+| `status` | enum | Yes | `Pending`, `Active`, `Deactivated`. |
 | `passwordHash` | string | Yes | Never store plaintext passwords. |
 | `createdAtUtc` | datetime | Yes | Server-generated. |
 | `updatedAtUtc` | datetime | Yes | Server-generated. |
 | `deactivatedAtUtc` | datetime | Optional | Set on deactivation. |
 | `reactivatedAtUtc` | datetime | Optional | Set on reactivation. |
-| `createdByUserId` | string | Optional | Required for staff accounts where practical. |
+| `createdByIdentifier` | string | Optional | Backoffice email that created a staff account. |
+| `statusChangedByIdentifier` | string | Optional | Business identifier of the lifecycle actor. |
 | `lastLoginAtUtc` | datetime | Optional | Updated on successful login. |
 
 Recommended indexes:
@@ -79,10 +80,10 @@ Rules:
 
 | Deliverable | Details |
 | --- | --- |
-| Models | `User`, `UserRole`, `AccountStatus`. |
-| DTOs | Register, login, auth response, user summary, profile update, status update. |
-| Services | `AuthService`, `UserService`, `PasswordService`, `TokenService`. |
-| Controllers | `AuthController`, `UsersController`, `ProsumersController`. |
+| Models | `User`, `UserRole`, `UserStatus`. |
+| DTOs | Register, login, login response, user response, profile update, password change and staff creation. |
+| Services | `IdentityService`, `JwtTokenGenerator`, account deactivation guard. |
+| Controllers | `UsersController`. |
 | Middleware | Consistent exception/error response middleware. |
 | Configuration | JWT issuer/audience/key, token expiry, MongoDB settings. |
 | Tests/manual checks | Invalid login, duplicate NIC, inactive account login, unauthorized access, own-profile update rule. |
@@ -165,4 +166,3 @@ Rules:
 - API request/response examples for registration, login, `/me`, status update.
 - MongoDB `users` document screenshots with password hash visible but plaintext password absent.
 - Test table showing invalid login, duplicate NIC, role denial and deactivated-account behavior.
-
