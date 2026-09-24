@@ -11,6 +11,7 @@ namespace SmartSolarMicrogrid.Api.Controllers;
 [Route("api/slots")]
 public sealed class BookingSlotsController(IBookingSlotService bookingSlotService) : ControllerBase
 {
+    // Returns one energy slot using its public slot code.
     [HttpGet("{slotCode}")]
     [Authorize(Policy = AuthorizationPolicies.Authenticated)]
     [ProducesResponseType<ApiEnvelope<BookingSlotResponse>>(StatusCodes.Status200OK)]
@@ -22,6 +23,7 @@ public sealed class BookingSlotsController(IBookingSlotService bookingSlotServic
         return Ok(new ApiEnvelope<BookingSlotResponse>(slot));
     }
 
+    // Updates an energy slot when no active reservation prevents the change.
     [HttpPut("{slotCode}")]
     [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
     [ProducesResponseType<ApiEnvelope<BookingSlotResponse>>(StatusCodes.Status200OK)]
@@ -34,6 +36,7 @@ public sealed class BookingSlotsController(IBookingSlotService bookingSlotServic
         return Ok(new ApiEnvelope<BookingSlotResponse>(slot, "Energy booking slot updated successfully."));
     }
 
+    // Allows Backoffice users to make a slot available or unavailable.
     [HttpPatch("{slotCode}/status")]
     [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
     [ProducesResponseType<ApiEnvelope<BookingSlotResponse>>(StatusCodes.Status200OK)]

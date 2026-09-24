@@ -14,6 +14,7 @@ public sealed class StationsController(
     ISolarStationService stationService,
     IBookingSlotService bookingSlotService) : ControllerBase
 {
+    // Creates a new active station. Only Backoffice users may manage station records.
     [HttpPost]
     [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
     [ProducesResponseType<ApiEnvelope<StationResponse>>(StatusCodes.Status201Created)]
@@ -26,6 +27,7 @@ public sealed class StationsController(
             new ApiEnvelope<StationResponse>(station, "Solar station created successfully."));
     }
 
+    // Returns stations, optionally filtered by status and ordered by proximity.
     [HttpGet]
     [Authorize(Policy = AuthorizationPolicies.Authenticated)]
     [ProducesResponseType<ApiEnvelope<IReadOnlyCollection<StationResponse>>>(StatusCodes.Status200OK)]
@@ -39,6 +41,7 @@ public sealed class StationsController(
         return Ok(new ApiEnvelope<IReadOnlyCollection<StationResponse>>(stations, "Stations loaded."));
     }
 
+    // Returns one station using its public business code rather than its MongoDB identifier.
     [HttpGet("{stationCode}")]
     [Authorize(Policy = AuthorizationPolicies.Authenticated)]
     [ProducesResponseType<ApiEnvelope<StationResponse>>(StatusCodes.Status200OK)]
@@ -50,6 +53,7 @@ public sealed class StationsController(
         return Ok(new ApiEnvelope<StationResponse>(station));
     }
 
+    // Replaces the editable information for an existing station.
     [HttpPut("{stationCode}")]
     [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
     [ProducesResponseType<ApiEnvelope<StationResponse>>(StatusCodes.Status200OK)]
@@ -62,6 +66,7 @@ public sealed class StationsController(
         return Ok(new ApiEnvelope<StationResponse>(station, "Solar station updated successfully."));
     }
 
+    // Changes operational status; the service protects deactivation when reservations are active.
     [HttpPatch("{stationCode}/status")]
     [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
     [ProducesResponseType<ApiEnvelope<StationResponse>>(StatusCodes.Status200OK)]
@@ -74,6 +79,7 @@ public sealed class StationsController(
         return Ok(new ApiEnvelope<StationResponse>(station, "Solar station status updated successfully."));
     }
 
+    // Creates an energy slot under an active station.
     [HttpPost("{stationCode}/slots")]
     [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
     [ProducesResponseType<ApiEnvelope<BookingSlotResponse>>(StatusCodes.Status201Created)]
@@ -87,6 +93,7 @@ public sealed class StationsController(
             new ApiEnvelope<BookingSlotResponse>(slot, "Energy booking slot created successfully."));
     }
 
+    // Lists a station's slots with optional UTC date and status filters.
     [HttpGet("{stationCode}/slots")]
     [Authorize(Policy = AuthorizationPolicies.Authenticated)]
     [ProducesResponseType<ApiEnvelope<IReadOnlyCollection<BookingSlotResponse>>>(StatusCodes.Status200OK)]

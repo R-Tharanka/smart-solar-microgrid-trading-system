@@ -11,6 +11,7 @@ public sealed class BookingSlotService(
     IReservationQueryService reservationQueryService,
     ILogger<BookingSlotService> logger) : IBookingSlotService
 {
+    // Creates an available slot after validating its station, schedule, capacity, and overlap.
     public async Task<BookingSlotResponse> CreateAsync(
         string stationCode,
         CreateBookingSlotRequest request,
@@ -55,6 +56,7 @@ public sealed class BookingSlotService(
         return Map(slot, station.StationCode);
     }
 
+    // Returns slots for one station with optional UTC range and status filters.
     public async Task<IReadOnlyCollection<BookingSlotResponse>> GetForStationAsync(
         string stationCode,
         DateTime? fromUtc,
@@ -82,6 +84,7 @@ public sealed class BookingSlotService(
         return slots.Select(slot => Map(slot, station.StationCode)).ToList();
     }
 
+    // Returns one slot and resolves its public station code for the response.
     public async Task<BookingSlotResponse> GetAsync(string slotCode, CancellationToken cancellationToken = default)
     {
         var slot = await FindSlotAsync(slotCode, cancellationToken);
@@ -90,6 +93,7 @@ public sealed class BookingSlotService(
         return Map(slot, stationCode);
     }
 
+    // Updates a slot only when it has no active reservation.
     public async Task<BookingSlotResponse> UpdateAsync(
         string slotCode,
         UpdateBookingSlotRequest request,
@@ -120,6 +124,7 @@ public sealed class BookingSlotService(
         return Map(slot, station.StationCode);
     }
 
+    // Manually changes a slot between Available and Unavailable when business rules permit it.
     public async Task<BookingSlotResponse> ChangeStatusAsync(
         string slotCode,
         ChangeBookingSlotStatusRequest request,
@@ -161,6 +166,7 @@ public sealed class BookingSlotService(
         return Map(slot, stationCode);
     }
 
+    // Enforces UTC, future-time, operating-schedule, capacity, and overlap rules.
     private async Task ValidateSlotAsync(
         SolarStation station,
         DateTime startTimeUtc,
@@ -203,16 +209,20 @@ public sealed class BookingSlotService(
         }
     }
 
+    // Resolves the owning station or raises the station-specific not-found error.
     private async Task<SolarStation> FindStationAsync(string stationCode, CancellationToken cancellationToken) =>
         await stationRepository.FindByCodeAsync(NormalizeCode(stationCode), cancellationToken)
         ?? throw StationSlotException.StationNotFound();
 
+    // Resolves a slot by its public code or raises the slot-specific not-found error.
     private async Task<EnergyBookingSlot> FindSlotAsync(string slotCode, CancellationToken cancellationToken) =>
         await slotRepository.FindByCodeAsync(NormalizeCode(slotCode), cancellationToken)
         ?? throw StationSlotException.SlotNotFound();
 
+    // Keeps public slot codes case-insensitive and consistently stored.
     private static string NormalizeCode(string code) => code.Trim().ToUpperInvariant();
 
+    // Ensures energy cannot be offered at a zero or negative price.
     private static void ValidatePrice(decimal pricePerKwh)
     {
         if (pricePerKwh <= 0)
@@ -223,11 +233,13 @@ public sealed class BookingSlotService(
         }
     }
 
+    // Presents past available slots as expired without deleting historical data.
     private static SlotStatus EffectiveStatus(EnergyBookingSlot slot) =>
         slot.EndTimeUtc <= DateTime.UtcNow && slot.Status == SlotStatus.Available
             ? SlotStatus.Expired
             : slot.Status;
 
+    // Maps the persistence model to the public response without exposing MongoDB ObjectId.
     private static BookingSlotResponse Map(EnergyBookingSlot slot, string stationCode) => new(
         slot.SlotCode,
         stationCode,

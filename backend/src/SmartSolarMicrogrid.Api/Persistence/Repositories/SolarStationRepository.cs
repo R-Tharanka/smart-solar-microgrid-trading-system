@@ -8,16 +8,19 @@ public sealed class SolarStationRepository(MongoDbContext context) : ISolarStati
     private readonly IMongoCollection<SolarStation> _stations =
         context.Database.GetCollection<SolarStation>(CollectionNames.SolarStations);
 
+    // Finds a station by its normalized public business code.
     public async Task<SolarStation?> FindByCodeAsync(
         string stationCode,
         CancellationToken cancellationToken = default) =>
         await _stations.Find(station => station.StationCode == stationCode).FirstOrDefaultAsync(cancellationToken);
 
+    // Finds a station by the internal ObjectId used in cross-collection relationships.
     public async Task<SolarStation?> FindByIdAsync(
         MongoDB.Bson.ObjectId id,
         CancellationToken cancellationToken = default) =>
         await _stations.Find(station => station.Id == id).FirstOrDefaultAsync(cancellationToken);
 
+    // Lists stations in deterministic code order with an optional status filter.
     public Task<List<SolarStation>> GetAllAsync(
         StationStatus? status,
         CancellationToken cancellationToken = default)
@@ -28,6 +31,7 @@ public sealed class SolarStationRepository(MongoDbContext context) : ISolarStati
         return _stations.Find(filter).SortBy(station => station.StationCode).ToListAsync(cancellationToken);
     }
 
+    // Inserts a station and assigns server-controlled audit timestamps.
     public async Task CreateAsync(SolarStation station, CancellationToken cancellationToken = default)
     {
         var now = DateTime.UtcNow;
@@ -36,6 +40,7 @@ public sealed class SolarStationRepository(MongoDbContext context) : ISolarStati
         await _stations.InsertOneAsync(station, cancellationToken: cancellationToken);
     }
 
+    // Replaces an existing station while refreshing its update timestamp.
     public async Task<bool> UpdateAsync(SolarStation station, CancellationToken cancellationToken = default)
     {
         station.UpdatedAtUtc = DateTime.UtcNow;
@@ -46,6 +51,7 @@ public sealed class SolarStationRepository(MongoDbContext context) : ISolarStati
         return result.MatchedCount == 1;
     }
 
+    // Atomically updates only operational status and its audit timestamp.
     public async Task<bool> UpdateStatusAsync(
         string stationCode,
         StationStatus status,

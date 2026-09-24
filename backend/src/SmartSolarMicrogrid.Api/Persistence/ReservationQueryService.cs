@@ -10,14 +10,17 @@ public sealed class ReservationQueryService(MongoDbContext context) : IReservati
     private readonly IMongoCollection<BsonDocument> _reservations =
         context.Database.GetCollection<BsonDocument>(CollectionNames.EnergyReservations);
 
+    // Reports whether a station is referenced by any non-terminal reservation.
     public Task<bool> HasActiveReservationsForStationAsync(
         ObjectId stationId,
         CancellationToken cancellationToken = default) => HasActiveAsync("stationId", stationId, cancellationToken);
 
+    // Reports whether a slot is referenced by any non-terminal reservation.
     public Task<bool> HasActiveReservationsForSlotAsync(
         ObjectId slotId,
         CancellationToken cancellationToken = default) => HasActiveAsync("slotId", slotId, cancellationToken);
 
+    // Performs the shared read-only reservation lookup without owning reservation transitions.
     private async Task<bool> HasActiveAsync(string field, ObjectId id, CancellationToken cancellationToken)
     {
         var filter = new BsonDocument

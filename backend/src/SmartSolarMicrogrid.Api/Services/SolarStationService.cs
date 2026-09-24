@@ -10,6 +10,7 @@ public sealed class SolarStationService(
     IReservationQueryService reservationQueryService,
     ILogger<SolarStationService> logger) : ISolarStationService
 {
+    // Validates and persists a new station with an initial Active status.
     public async Task<StationResponse> CreateAsync(
         CreateStationRequest request,
         CancellationToken cancellationToken = default)
@@ -48,6 +49,7 @@ public sealed class SolarStationService(
         return Map(station);
     }
 
+    // Loads stations and applies optional status filtering and nearest-first ordering.
     public async Task<IReadOnlyCollection<StationResponse>> GetAllAsync(
         string? status,
         double? nearLat,
@@ -89,9 +91,11 @@ public sealed class SolarStationService(
         return stations.Select(Map).ToList();
     }
 
+    // Finds a station by its normalized public station code.
     public async Task<StationResponse> GetAsync(string stationCode, CancellationToken cancellationToken = default) =>
         Map(await FindRequiredAsync(stationCode, cancellationToken));
 
+    // Validates and replaces the editable details of an existing station.
     public async Task<StationResponse> UpdateAsync(
         string stationCode,
         UpdateStationRequest request,
@@ -117,6 +121,7 @@ public sealed class SolarStationService(
         return Map(station);
     }
 
+    // Changes station status after enforcing reservation-safe deactivation.
     public async Task<StationResponse> ChangeStatusAsync(
         string stationCode,
         ChangeStationStatusRequest request,
@@ -154,10 +159,12 @@ public sealed class SolarStationService(
         return Map(station);
     }
 
+    // Returns a station or raises the domain-specific not-found error used by the API.
     private async Task<SolarStation> FindRequiredAsync(string stationCode, CancellationToken cancellationToken) =>
         await stationRepository.FindByCodeAsync(NormalizeCode(stationCode), cancellationToken)
         ?? throw StationSlotException.StationNotFound();
 
+    // Enforces coordinate, capacity, storage, and daily operating-schedule rules.
     private static void ValidateStation(
         double latitude,
         double longitude,
@@ -190,6 +197,7 @@ public sealed class SolarStationService(
         }
     }
 
+    // Creates the longitude-first GeoJSON value required by MongoDB's geospatial index.
     private static StationLocation Location(double longitude, double latitude, string address) => new()
     {
         Type = "Point",
@@ -197,8 +205,10 @@ public sealed class SolarStationService(
         Address = address
     };
 
+    // Keeps public station codes case-insensitive and consistently stored.
     private static string NormalizeCode(string code) => code.Trim().ToUpperInvariant();
 
+    // Produces a lightweight comparison value used for nearest-first station ordering.
     private static double DistanceSquared(
         double latitude1,
         double longitude1,
@@ -210,6 +220,7 @@ public sealed class SolarStationService(
         return latitudeDifference * latitudeDifference + longitudeDifference * longitudeDifference;
     }
 
+    // Trims required text while rejecting values containing only whitespace.
     private static string RequiredText(string value, string fieldName)
     {
         var normalized = value.Trim();
@@ -218,6 +229,7 @@ public sealed class SolarStationService(
             : normalized;
     }
 
+    // Maps the persistence model to the public response without exposing MongoDB ObjectId.
     private static StationResponse Map(SolarStation station) => new(
         station.StationCode,
         station.Name,

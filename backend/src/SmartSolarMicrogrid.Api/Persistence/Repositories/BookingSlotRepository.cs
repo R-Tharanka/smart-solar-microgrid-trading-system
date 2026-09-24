@@ -9,11 +9,13 @@ public sealed class BookingSlotRepository(MongoDbContext context) : IBookingSlot
     private readonly IMongoCollection<EnergyBookingSlot> _slots =
         context.Database.GetCollection<EnergyBookingSlot>(CollectionNames.EnergyBookingSlots);
 
+    // Finds a slot by its normalized public business code.
     public async Task<EnergyBookingSlot?> FindByCodeAsync(
         string slotCode,
         CancellationToken cancellationToken = default) =>
         await _slots.Find(slot => slot.SlotCode == slotCode).FirstOrDefaultAsync(cancellationToken);
 
+    // Lists slots belonging to one station using optional date and status filters.
     public Task<List<EnergyBookingSlot>> GetForStationAsync(
         ObjectId stationId,
         DateTime? fromUtc,
@@ -43,6 +45,7 @@ public sealed class BookingSlotRepository(MongoDbContext context) : IBookingSlot
             .ToListAsync(cancellationToken);
     }
 
+    // Detects any active slot whose time interval intersects the proposed interval.
     public async Task<bool> HasOverlapAsync(
         ObjectId stationId,
         DateTime startTimeUtc,
@@ -63,6 +66,7 @@ public sealed class BookingSlotRepository(MongoDbContext context) : IBookingSlot
         return await _slots.CountDocumentsAsync(filter, cancellationToken: cancellationToken) > 0;
     }
 
+    // Inserts a slot and assigns server-controlled audit timestamps.
     public async Task CreateAsync(EnergyBookingSlot slot, CancellationToken cancellationToken = default)
     {
         var now = DateTime.UtcNow;
@@ -71,6 +75,7 @@ public sealed class BookingSlotRepository(MongoDbContext context) : IBookingSlot
         await _slots.InsertOneAsync(slot, cancellationToken: cancellationToken);
     }
 
+    // Replaces an existing slot while refreshing its update timestamp.
     public async Task<bool> UpdateAsync(EnergyBookingSlot slot, CancellationToken cancellationToken = default)
     {
         slot.UpdatedAtUtc = DateTime.UtcNow;
@@ -81,6 +86,7 @@ public sealed class BookingSlotRepository(MongoDbContext context) : IBookingSlot
         return result.MatchedCount == 1;
     }
 
+    // Atomically updates only slot availability status and its audit timestamp.
     public async Task<bool> UpdateStatusAsync(
         string slotCode,
         SlotStatus status,
