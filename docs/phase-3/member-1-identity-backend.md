@@ -29,6 +29,7 @@ Scope: Identity, authentication, authorization and account management
 - Normalization, DTO validation, guarded state transitions, duplicate-write handling, and RFC 7807 errors.
 - Property-based request DTOs compatible with ASP.NET Core MVC model binding and validation.
 - Automated tests for identity rules, validation, JWT claims and role/account-status authorization.
+- Importable Postman collection with 53 ordered requests, generated test identities, JWT capture, and automated assertions.
 
 ## Secure Configuration
 
@@ -75,7 +76,7 @@ Health endpoints are `/health/live` and `/health/ready`. The readiness endpoint 
 | Deactivation/reactivation transitions | Service tests | Passed |
 | Reservation-aware deactivation | Guard/service test | Passed |
 | MongoDB indexes and persistence | Startup initializer | Requires live Atlas verification |
-| HTTP status/response evidence | Controller contracts | Requires running API/Postman capture |
+| HTTP status/response evidence | Postman collection prepared | Requires Collection Runner capture |
 
 Current automated result: 43 tests passed, 0 failed.
 

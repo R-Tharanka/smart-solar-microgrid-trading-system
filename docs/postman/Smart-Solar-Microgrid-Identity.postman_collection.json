@@ -1,0 +1,829 @@
+{
+  "info": {
+    "_postman_id": "f7316021-61ec-4bd3-aac1-1d3f71a3e003",
+    "name": "Smart Solar Microgrid - Identity Backend",
+    "description": "Complete Phase 3 HTTP verification for Member 1. Run folders in numeric order with the Local environment selected. The collection generates unique test accounts, captures JWTs, verifies authorization boundaries, and restores generated accounts to Active state where possible.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5080", "type": "string" },
+    { "key": "adminEmail", "value": "admin@smartsolar.com", "type": "string" },
+    { "key": "adminPassword", "value": "", "type": "string" },
+    { "key": "prosumerNic", "value": "" },
+    { "key": "prosumerAltNic", "value": "" },
+    { "key": "prosumerEmail", "value": "" },
+    { "key": "prosumerAltEmail", "value": "" },
+    { "key": "prosumerPassword", "value": "Strong@1234" },
+    { "key": "prosumerNewPassword", "value": "NewStrong@5678" },
+    { "key": "prosumerToken", "value": "" },
+    { "key": "operatorEmail", "value": "" },
+    { "key": "operatorPassword", "value": "Operator@1234" },
+    { "key": "operatorToken", "value": "" },
+    { "key": "secondaryAdminEmail", "value": "" },
+    { "key": "secondaryAdminPassword", "value": "Backoffice@1234" },
+    { "key": "adminToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "00 - System and Health",
+      "item": [
+        {
+          "name": "API information",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/system/info",
+            "description": "Public API metadata endpoint."
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.test('Envelope contains API information', () => {",
+              "  pm.expect(json.data.name).to.eql('Smart Solar Microgrid Trading API');",
+              "  pm.expect(json.data.version).to.eql('v1');",
+              "  pm.expect(json.data.utcNow).to.be.a('string');",
+              "});"
+            ]}
+          }]
+        },
+        {
+          "name": "Liveness",
+          "request": { "method": "GET", "url": "{{baseUrl}}/health/live" },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('API process is live', () => pm.response.to.have.status(200));"
+            ]}
+          }]
+        },
+        {
+          "name": "Readiness - MongoDB",
+          "request": { "method": "GET", "url": "{{baseUrl}}/health/ready" },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('API and MongoDB are ready', () => pm.response.to.have.status(200));"
+            ]}
+          }]
+        }
+      ]
+    },
+    {
+      "name": "01 - Prosumer Registration",
+      "item": [
+        {
+          "name": "Register valid Prosumer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nic\": \"{{prosumerNic}}\",\n  \"email\": \"{{prosumerEmail}}\",\n  \"password\": \"{{prosumerPassword}}\",\n  \"firstName\": \"Postman\",\n  \"lastName\": \"Prosumer\",\n  \"phoneNumber\": \"0771234567\",\n  \"address\": \"Colombo\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/users/prosumer/register",
+            "description": "Starts a new test run by generating collision-resistant account identifiers."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": { "type": "text/javascript", "exec": [
+                "const suffix = String(Date.now()).slice(-11);",
+                "const runId = Date.now() + '.' + Math.floor(Math.random() * 100000);",
+                "pm.collectionVariables.set('prosumerNic', '9' + suffix);",
+                "pm.collectionVariables.set('prosumerAltNic', '8' + suffix);",
+                "pm.collectionVariables.set('prosumerEmail', `prosumer.${runId}@example.com`);",
+                "pm.collectionVariables.set('prosumerAltEmail', `prosumer.alt.${runId}@example.com`);",
+                "pm.collectionVariables.set('operatorEmail', `operator.${runId}@example.com`);",
+                "pm.collectionVariables.set('secondaryAdminEmail', `backoffice.${runId}@example.com`);",
+                "pm.collectionVariables.unset('prosumerToken');",
+                "pm.collectionVariables.unset('operatorToken');",
+                "pm.collectionVariables.unset('adminToken');"
+              ]}
+            },
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": [
+                "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                "const json = pm.response.json();",
+                "pm.test('Prosumer is normalized and active', () => {",
+                "  pm.expect(json.data.nic).to.eql(pm.collectionVariables.get('prosumerNic'));",
+                "  pm.expect(json.data.email).to.eql(pm.collectionVariables.get('prosumerEmail'));",
+                "  pm.expect(json.data.role).to.eql('Prosumer');",
+                "  pm.expect(json.data.status).to.eql('Active');",
+                "  pm.expect(json.data.phoneNumber).to.eql('0771234567');",
+                "  pm.expect(json.data).not.to.have.property('passwordHash');",
+                "});"
+              ]}
+            }
+          ]
+        },
+        {
+          "name": "Reject duplicate NIC",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nic\": \"{{prosumerNic}}\",\n  \"email\": \"{{prosumerAltEmail}}\",\n  \"password\": \"{{prosumerPassword}}\",\n  \"firstName\": \"Duplicate\",\n  \"lastName\": \"Nic\",\n  \"phoneNumber\": \"0771234567\",\n  \"address\": \"Kandy\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/users/prosumer/register"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Status is 409', () => pm.response.to.have.status(409));",
+              "pm.test('Error is USER_NIC_EXISTS', () => pm.expect(pm.response.json().errorCode).to.eql('USER_NIC_EXISTS'));"
+            ]}
+          }]
+        },
+        {
+          "name": "Reject duplicate email",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nic\": \"{{prosumerAltNic}}\",\n  \"email\": \"{{prosumerEmail}}\",\n  \"password\": \"{{prosumerPassword}}\",\n  \"firstName\": \"Duplicate\",\n  \"lastName\": \"Email\",\n  \"phoneNumber\": \"0771234567\",\n  \"address\": \"Galle\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/users/prosumer/register"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Status is 409', () => pm.response.to.have.status(409));",
+              "pm.test('Error is USER_EMAIL_EXISTS', () => pm.expect(pm.response.json().errorCode).to.eql('USER_EMAIL_EXISTS'));"
+            ]}
+          }]
+        },
+        {
+          "name": "Reject invalid registration values",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nic\": \"1234\",\n  \"email\": \"not-an-email\",\n  \"password\": \"weak\",\n  \"firstName\": \"\",\n  \"lastName\": \"\",\n  \"phoneNumber\": \"123\",\n  \"address\": \"X\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/users/prosumer/register"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+              "const json = pm.response.json();",
+              "pm.test('Validation problem is returned', () => {",
+              "  pm.expect(json.errorCode).to.eql('VALIDATION_REQUEST');",
+              "  pm.expect(json.errors).to.be.an('object');",
+              "  pm.expect(json.traceId).to.be.a('string');",
+              "});"
+            ]}
+          }]
+        },
+        {
+          "name": "Reject empty registration",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/prosumer/register"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+              "pm.test('Error is VALIDATION_REQUEST', () => pm.expect(pm.response.json().errorCode).to.eql('VALIDATION_REQUEST'));"
+            ]}
+          }]
+        }
+      ]
+    },
+    {
+      "name": "02 - Authentication and Profile",
+      "item": [
+        {
+          "name": "Reject malformed login request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+            "pm.test('Error is VALIDATION_REQUEST', () => pm.expect(pm.response.json().errorCode).to.eql('VALIDATION_REQUEST'));"
+          ]}}]
+        },
+        {
+          "name": "Reject unknown user login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identifier\": \"unknown.user@example.com\",\n  \"password\": \"Wrong@1234\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 401', () => pm.response.to.have.status(401));",
+            "pm.test('Credentials error is stable', () => pm.expect(pm.response.json().errorCode).to.eql('AUTH_INVALID_CREDENTIALS'));"
+          ]}}]
+        },
+        {
+          "name": "Reject wrong Prosumer password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identifier\": \"{{prosumerEmail}}\",\n  \"password\": \"Wrong@1234\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 401', () => pm.response.to.have.status(401));",
+            "pm.test('Credentials error is stable', () => pm.expect(pm.response.json().errorCode).to.eql('AUTH_INVALID_CREDENTIALS'));"
+          ]}}]
+        },
+        {
+          "name": "Login Prosumer and capture JWT",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identifier\": \"{{prosumerNic}}\",\n  \"password\": \"{{prosumerPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "const json = pm.response.json();",
+            "pm.collectionVariables.set('prosumerToken', json.data.accessToken);",
+            "pm.test('Prosumer JWT and account returned', () => {",
+            "  pm.expect(json.data.accessToken).to.be.a('string').and.not.empty;",
+            "  pm.expect(json.data.expiresAtUtc).to.be.a('string');",
+            "  pm.expect(json.data.user.role).to.eql('Prosumer');",
+            "});",
+            "const payload = JSON.parse(Buffer.from(json.data.accessToken.split('.')[1], 'base64').toString());",
+            "pm.test('JWT contains expected Prosumer claims', () => {",
+            "  pm.expect(payload.role).to.eql('Prosumer');",
+            "  pm.expect(payload.user_identifier).to.eql(pm.collectionVariables.get('prosumerNic'));",
+            "  pm.expect(payload.nic).to.eql(pm.collectionVariables.get('prosumerNic'));",
+            "});"
+          ]}}]
+        },
+        {
+          "name": "Get current Prosumer profile",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{prosumerToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users/me"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "pm.test('Own profile is returned', () => {",
+            "  const user = pm.response.json().data;",
+            "  pm.expect(user.nic).to.eql(pm.collectionVariables.get('prosumerNic'));",
+            "  pm.expect(user.email).to.eql(pm.collectionVariables.get('prosumerEmail'));",
+            "});"
+          ]}}]
+        },
+        {
+          "name": "Update current Prosumer profile",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{prosumerToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Prosumer\",\n  \"phoneNumber\": \"+94771234567\",\n  \"address\": \"Colombo 03\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/me"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "pm.test('Allowed profile fields changed', () => {",
+            "  const user = pm.response.json().data;",
+            "  pm.expect(user.firstName).to.eql('Updated');",
+            "  pm.expect(user.phoneNumber).to.eql('+94771234567');",
+            "  pm.expect(user.address).to.eql('Colombo 03');",
+            "  pm.expect(user.nic).to.eql(pm.collectionVariables.get('prosumerNic'));",
+            "});"
+          ]}}]
+        },
+        {
+          "name": "Reject incomplete Prosumer profile update",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{prosumerToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Prosumer\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/me"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+            "pm.test('Service validation is returned', () => pm.expect(pm.response.json().errorCode).to.eql('VALIDATION_REQUEST'));"
+          ]}}]
+        },
+        {
+          "name": "Reject incorrect current password",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{prosumerToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"Wrong@1234\",\n  \"newPassword\": \"{{prosumerNewPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/change-password"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+            "pm.test('Error is AUTH_CURRENT_PASSWORD_INVALID', () => pm.expect(pm.response.json().errorCode).to.eql('AUTH_CURRENT_PASSWORD_INVALID'));"
+          ]}}]
+        },
+        {
+          "name": "Reject unchanged password",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{prosumerToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"{{prosumerPassword}}\",\n  \"newPassword\": \"{{prosumerPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/change-password"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+            "pm.test('Error is AUTH_PASSWORD_UNCHANGED', () => pm.expect(pm.response.json().errorCode).to.eql('AUTH_PASSWORD_UNCHANGED'));"
+          ]}}]
+        },
+        {
+          "name": "Change Prosumer password",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{prosumerToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"{{prosumerPassword}}\",\n  \"newPassword\": \"{{prosumerNewPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/change-password"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 204', () => pm.response.to.have.status(204));",
+            "pm.test('Response body is empty', () => pm.expect(pm.response.text()).to.eql(''));"
+          ]}}]
+        },
+        {
+          "name": "Reject old password after change",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identifier\": \"{{prosumerNic}}\",\n  \"password\": \"{{prosumerPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 401', () => pm.response.to.have.status(401));"
+          ]}}]
+        },
+        {
+          "name": "Login with new password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identifier\": \"{{prosumerEmail}}\",\n  \"password\": \"{{prosumerNewPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "const json = pm.response.json();",
+            "pm.collectionVariables.set('prosumerToken', json.data.accessToken);"
+          ]}}]
+        }
+      ]
+    },
+    {
+      "name": "03 - Authentication and Role Boundaries",
+      "item": [
+        {
+          "name": "Reject missing token",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/users/me" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 401', () => pm.response.to.have.status(401));"
+          ]}}]
+        },
+        {
+          "name": "Reject malformed token",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "not-a-valid-jwt", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users/me"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 401', () => pm.response.to.have.status(401));"
+          ]}}]
+        },
+        {
+          "name": "Prosumer cannot list users",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{prosumerToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+          ]}}]
+        },
+        {
+          "name": "Prosumer cannot create staff",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{prosumerToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"blocked.staff@example.com\",\n  \"password\": \"Blocked@1234\",\n  \"firstName\": \"Blocked\",\n  \"lastName\": \"Staff\",\n  \"role\": \"GridOperator\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/staff"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+          ]}}]
+        },
+        {
+          "name": "Prosumer cannot reactivate users",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{prosumerToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/{{prosumerNic}}/reactivate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+          ]}}]
+        },
+        {
+          "name": "Prosumer cannot deactivate another user",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{prosumerToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/{{adminEmail}}/deactivate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+          ]}}]
+        }
+      ]
+    },
+    {
+      "name": "04 - Backoffice Staff Management",
+      "item": [
+        {
+          "name": "Login Backoffice and capture JWT",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identifier\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/login",
+            "description": "Requires a working existing Backoffice credential. Bootstrap environment values do not reset an existing account password."
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "const json = pm.response.json();",
+            "pm.collectionVariables.set('adminToken', json.data.accessToken);",
+            "pm.test('Backoffice account returned', () => pm.expect(json.data.user.role).to.eql('Backoffice'));",
+            "const payload = JSON.parse(Buffer.from(json.data.accessToken.split('.')[1], 'base64').toString());",
+            "pm.test('JWT contains Backoffice claims', () => {",
+            "  pm.expect(payload.role).to.eql('Backoffice');",
+            "  pm.expect(payload.user_identifier).to.eql(pm.collectionVariables.get('adminEmail').toLowerCase());",
+            "});"
+          ]}}]
+        },
+        {
+          "name": "List users",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "pm.test('Users are returned without hashes or Mongo IDs', () => {",
+            "  const users = pm.response.json().data;",
+            "  pm.expect(users).to.be.an('array');",
+            "  users.forEach(user => {",
+            "    pm.expect(user).not.to.have.property('passwordHash');",
+            "    pm.expect(user).not.to.have.property('id');",
+            "  });",
+            "});"
+          ]}}]
+        },
+        {
+          "name": "Create Grid Operator",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{operatorEmail}}\",\n  \"password\": \"{{operatorPassword}}\",\n  \"firstName\": \"Grid\",\n  \"lastName\": \"Operator\",\n  \"role\": \"GridOperator\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/staff"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+            "pm.test('Grid Operator is active', () => {",
+            "  const user = pm.response.json().data;",
+            "  pm.expect(user.email).to.eql(pm.collectionVariables.get('operatorEmail'));",
+            "  pm.expect(user.role).to.eql('GridOperator');",
+            "  pm.expect(user.status).to.eql('Active');",
+            "  pm.expect(user.nic).to.eql(null);",
+            "});"
+          ]}}]
+        },
+        {
+          "name": "Reject duplicate staff email",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{operatorEmail}}\",\n  \"password\": \"{{operatorPassword}}\",\n  \"firstName\": \"Duplicate\",\n  \"lastName\": \"Operator\",\n  \"role\": \"GridOperator\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/staff"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 409', () => pm.response.to.have.status(409));",
+            "pm.test('Error is USER_EMAIL_EXISTS', () => pm.expect(pm.response.json().errorCode).to.eql('USER_EMAIL_EXISTS'));"
+          ]}}]
+        },
+        {
+          "name": "Reject invalid staff role",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"invalid.role@example.com\",\n  \"password\": \"InvalidRole@1234\",\n  \"firstName\": \"Invalid\",\n  \"lastName\": \"Role\",\n  \"role\": \"Prosumer\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/staff"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+            "pm.test('Error is VALIDATION_REQUEST', () => pm.expect(pm.response.json().errorCode).to.eql('VALIDATION_REQUEST'));"
+          ]}}]
+        },
+        {
+          "name": "Reject weak staff password",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"weak.staff@example.com\",\n  \"password\": \"weak\",\n  \"firstName\": \"Weak\",\n  \"lastName\": \"Password\",\n  \"role\": \"GridOperator\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/staff"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+            "pm.test('Error is VALIDATION_REQUEST', () => pm.expect(pm.response.json().errorCode).to.eql('VALIDATION_REQUEST'));"
+          ]}}]
+        },
+        {
+          "name": "Create secondary Backoffice",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{secondaryAdminEmail}}\",\n  \"password\": \"{{secondaryAdminPassword}}\",\n  \"firstName\": \"Secondary\",\n  \"lastName\": \"Backoffice\",\n  \"role\": \"Backoffice\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/staff"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+            "pm.test('Backoffice role was assigned', () => pm.expect(pm.response.json().data.role).to.eql('Backoffice'));"
+          ]}}]
+        },
+        {
+          "name": "Reject Backoffice self-deactivation",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/{{adminEmail}}/deactivate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 409', () => pm.response.to.have.status(409));",
+            "pm.test('Self-deactivation error is stable', () => pm.expect(pm.response.json().errorCode).to.eql('USER_SELF_ADMIN_DEACTIVATION'));"
+          ]}}]
+        },
+        {
+          "name": "Deactivate secondary Backoffice",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/{{secondaryAdminEmail}}/deactivate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+          ]}}]
+        }
+      ]
+    },
+    {
+      "name": "05 - Grid Operator Authorization",
+      "item": [
+        {
+          "name": "Login Grid Operator and capture JWT",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identifier\": \"{{operatorEmail}}\",\n  \"password\": \"{{operatorPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "const json = pm.response.json();",
+            "pm.collectionVariables.set('operatorToken', json.data.accessToken);",
+            "pm.test('Grid Operator role returned', () => pm.expect(json.data.user.role).to.eql('GridOperator'));"
+          ]}}]
+        },
+        {
+          "name": "Grid Operator can read own profile",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users/me"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "pm.test('Own operator profile returned', () => pm.expect(pm.response.json().data.email).to.eql(pm.collectionVariables.get('operatorEmail')));"
+          ]}}]
+        },
+        {
+          "name": "Grid Operator cannot list users",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+          ]}}]
+        },
+        {
+          "name": "Grid Operator cannot create staff",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"blocked.by.operator@example.com\",\n  \"password\": \"Blocked@1234\",\n  \"firstName\": \"Blocked\",\n  \"lastName\": \"Staff\",\n  \"role\": \"GridOperator\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/staff"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+          ]}}]
+        },
+        {
+          "name": "Grid Operator cannot self-deactivate as Prosumer",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/me/deactivate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+          ]}}]
+        }
+      ]
+    },
+    {
+      "name": "06 - Account Lifecycle",
+      "item": [
+        {
+          "name": "Backoffice deactivates Prosumer",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/{{prosumerNic}}/deactivate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+          ]}}]
+        },
+        {
+          "name": "Deactivated Prosumer cannot login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identifier\": \"{{prosumerNic}}\",\n  \"password\": \"{{prosumerNewPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 403', () => pm.response.to.have.status(403));",
+            "pm.test('Error is AUTH_ACCOUNT_INACTIVE', () => pm.expect(pm.response.json().errorCode).to.eql('AUTH_ACCOUNT_INACTIVE'));"
+          ]}}]
+        },
+        {
+          "name": "Old Prosumer JWT is rejected immediately",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{prosumerToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users/me"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+          ]}}]
+        },
+        {
+          "name": "Backoffice reactivates Prosumer",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/{{prosumerNic}}/reactivate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+          ]}}]
+        },
+        {
+          "name": "Reject reactivating active Prosumer",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/{{prosumerNic}}/reactivate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 409', () => pm.response.to.have.status(409));",
+            "pm.test('Error is USER_INVALID_STATUS', () => pm.expect(pm.response.json().errorCode).to.eql('USER_INVALID_STATUS'));"
+          ]}}]
+        },
+        {
+          "name": "Prosumer login after reactivation",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identifier\": \"{{prosumerNic}}\",\n  \"password\": \"{{prosumerNewPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "pm.collectionVariables.set('prosumerToken', pm.response.json().data.accessToken);"
+          ]}}]
+        },
+        {
+          "name": "Prosumer deactivates own account",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{prosumerToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/me/deactivate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+          ]}}]
+        },
+        {
+          "name": "Backoffice restores self-deactivated Prosumer",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/{{prosumerNic}}/reactivate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+          ]}}]
+        },
+        {
+          "name": "Backoffice deactivates Grid Operator",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/{{operatorEmail}}/deactivate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+          ]}}]
+        },
+        {
+          "name": "Deactivated Grid Operator cannot login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identifier\": \"{{operatorEmail}}\",\n  \"password\": \"{{operatorPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 403', () => pm.response.to.have.status(403));",
+            "pm.test('Error is AUTH_ACCOUNT_INACTIVE', () => pm.expect(pm.response.json().errorCode).to.eql('AUTH_ACCOUNT_INACTIVE'));"
+          ]}}]
+        },
+        {
+          "name": "Old Grid Operator JWT is rejected immediately",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users/me"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+          ]}}]
+        },
+        {
+          "name": "Backoffice restores Grid Operator",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/{{operatorEmail}}/reactivate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+          ]}}]
+        },
+        {
+          "name": "Reject unknown user lifecycle command",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/missing.user@example.com/reactivate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+            "pm.test('Error is USER_NOT_FOUND', () => pm.expect(pm.response.json().errorCode).to.eql('USER_NOT_FOUND'));"
+          ]}}]
+        }
+      ]
+    }
+  ]
+}
