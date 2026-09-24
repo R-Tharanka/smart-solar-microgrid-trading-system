@@ -30,5 +30,6 @@ Phase 1 requirements analysis and project foundation documents:
 - [Member 1 implementation and verification](docs/phase-3/member-1-identity-backend.md)
 - [Implemented identity API contract](docs/api-contracts/identity-api.md)
 - [Member integration contract](docs/phase-3/member-integration-contract.md)
+- [Postman collection and execution guide](docs/postman/README.md)
 
 The ASP.NET Core foundation is under `backend/` and uses MongoDB Atlas. Copy `.env.example` to an untracked `.env`, add the Atlas SRV connection string and run `docker compose up --build`. Verify Atlas connectivity at `http://localhost:5080/health/ready`.
