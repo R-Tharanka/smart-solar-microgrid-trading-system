@@ -55,15 +55,27 @@ public class UserRepository(MongoDbContext context) : IUserRepository
         }
     }
 
-    public async Task<bool> UpdateStatusAsync(string identifier, UserStatus status, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateStatusAsync(
+        string identifier,
+        UserStatus expectedStatus,
+        UserStatus status,
+        string changedByIdentifier,
+        DateTime changedAtUtc,
+        CancellationToken cancellationToken = default)
     {
-        var filter = Builders<User>.Filter.Or(
-            Builders<User>.Filter.Eq(u => u.Email, identifier),
-            Builders<User>.Filter.Eq(u => u.Nic, identifier)
-        );
+        var filter = Builders<User>.Filter.And(
+            Builders<User>.Filter.Or(
+                Builders<User>.Filter.Eq(u => u.Email, identifier),
+                Builders<User>.Filter.Eq(u => u.Nic, identifier)),
+            Builders<User>.Filter.Eq(u => u.Status, expectedStatus));
         var update = Builders<User>.Update
             .Set(u => u.Status, status)
-            .Set(u => u.UpdatedAtUtc, DateTime.UtcNow);
+            .Set(u => u.StatusChangedByIdentifier, changedByIdentifier)
+            .Set(u => u.UpdatedAtUtc, changedAtUtc);
+
+        update = status == UserStatus.Deactivated
+            ? update.Set(u => u.DeactivatedAtUtc, changedAtUtc)
+            : update.Set(u => u.ReactivatedAtUtc, changedAtUtc);
 
         var result = await _users.UpdateOneAsync(filter, update, new UpdateOptions(), cancellationToken);
         return result.MatchedCount == 1;

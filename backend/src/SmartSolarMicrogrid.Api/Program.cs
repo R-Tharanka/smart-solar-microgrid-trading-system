@@ -44,9 +44,20 @@ builder.Services
             SmartSolarMicrogrid.Api.Contracts.Identity.IdentityValidationRules.PasswordPattern),
         SmartSolarMicrogrid.Api.Contracts.Identity.IdentityValidationRules.PasswordError)
     .ValidateOnStart();
+builder.Services
+    .AddOptions<CorsOptions>()
+    .Bind(builder.Configuration.GetSection(CorsOptions.SectionName))
+    .ValidateDataAnnotations()
+    .Validate(options => options.AllowedOrigins.All(origin =>
+        Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
+        (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)),
+        "Every CORS origin must be an absolute HTTP or HTTPS URL.")
+    .ValidateOnStart();
 
 var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
     ?? throw new InvalidOperationException("JWT configuration is missing.");
+var cors = builder.Configuration.GetSection(CorsOptions.SectionName).Get<CorsOptions>()
+    ?? throw new InvalidOperationException("CORS configuration is missing.");
 
 builder.Services.AddSingleton<MongoDbContext>();
 builder.Services.AddSingleton<MongoCollectionInitializer>();
@@ -76,6 +87,13 @@ builder.Services.AddControllers()
         };
     });
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(CorsOptions.ClientApplicationsPolicy, policy =>
+        policy.WithOrigins(cors.AllowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -101,6 +119,7 @@ app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseHttpsRedirection();
+app.UseCors(CorsOptions.ClientApplicationsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

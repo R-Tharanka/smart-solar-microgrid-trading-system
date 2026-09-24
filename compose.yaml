@@ -17,5 +17,6 @@ services:
       BootstrapAdmin__Enabled: ${BOOTSTRAP_ADMIN_ENABLED:-false}
       BootstrapAdmin__Email: ${BOOTSTRAP_ADMIN_EMAIL:-}
       BootstrapAdmin__Password: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      Cors__AllowedOrigins__0: ${WEB_ALLOWED_ORIGIN:-http://localhost:5173}
     ports:
       - "5080:8080"

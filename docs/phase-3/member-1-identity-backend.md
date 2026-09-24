@@ -16,12 +16,16 @@ Scope: Identity, authentication, authorization and account management
 ## Delivered
 
 - Validated MongoDB, JWT and bootstrap configuration.
+- Configuration-driven CORS restricted to the configured web client origins.
 - BCrypt password hashing with no plaintext persistence or logging.
 - Camel-case MongoDB user serialization and unique email / sparse unique NIC indexes.
 - Idempotent migration of user documents created by the earlier Pascal-case prototype.
 - Repository, identity service, JWT generator and controller layers.
 - `Authenticated`, `ProsumerOnly`, `GridOperatorOnly`, `BackofficeOnly`, and shared staff policies.
-- Public registration and login; profile read/update; staff creation; user list; explicit deactivate/reactivate commands.
+- Public registration and login; profile read/update; password change; staff creation; user list; explicit deactivate/reactivate commands.
+- Required Prosumer phone number and address fields in registration, profile updates and responses.
+- Active-Prosumer service lookup for reservation ownership validation without exposing credential data.
+- Account lifecycle timestamps and actor identifier audit fields.
 - Normalization, DTO validation, guarded state transitions, duplicate-write handling, and RFC 7807 errors.
 - Automated tests for identity rules, validation, JWT claims and role/account-status authorization.
 
@@ -33,6 +37,7 @@ Copy `.env.example` to `.env` and set all blank values. Required runtime values 
 MONGODB_CONNECTION_STRING
 MONGODB_DATABASE_NAME
 JWT_SIGNING_KEY
+WEB_ALLOWED_ORIGIN
 ```
 
 The JWT key must contain at least 32 UTF-8 bytes. For first startup only, set:
@@ -70,8 +75,10 @@ Health endpoints are `/health/live` and `/health/ready`. The readiness endpoint 
 | MongoDB indexes and persistence | Startup initializer | Requires live Atlas verification |
 | HTTP status/response evidence | Controller contracts | Requires running API/Postman capture |
 
-Current automated result: 31 tests passed, 0 failed.
+Current automated result: 42 tests passed, 0 failed.
 
 ## Member 3 Integration Contract
 
 The reservation module must preserve the agreed status strings and `prosumerNic` field in `energyReservations`. Member 1 reads those values to block account deactivation during non-terminal workflows. Member 3 remains the only owner of reservation state transitions.
+
+Member 3 must validate reservation ownership with `IIdentityService.GetActiveProsumerAsync(prosumerNic)`. The method rejects missing, non-Prosumer and inactive accounts. The complete frozen handoff is documented in `docs/phase-3/member-integration-contract.md`.

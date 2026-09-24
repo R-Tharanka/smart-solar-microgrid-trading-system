@@ -10,5 +10,7 @@ public record UserResponse(
     string Email,
     string FirstName,
     string LastName,
+    string? PhoneNumber,
+    string? Address,
     string Role,
     string Status);

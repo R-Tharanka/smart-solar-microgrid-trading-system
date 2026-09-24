@@ -38,6 +38,8 @@ The shared behavior in `architecture-database-api-contracts.md` applies to every
 - Dashboards read through repositories or query services owned by each domain; they do not reimplement mutation rules.
 - Contract DTOs are not MongoDB persistence models.
 
+The concrete Phase 3 service and authorization boundary is frozen in `docs/phase-3/member-integration-contract.md`.
+
 ## 4. Change Control
 
 Before changing a route, field, enum, validation rule, status code or authorization policy:

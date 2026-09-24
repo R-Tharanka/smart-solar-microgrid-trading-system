@@ -21,12 +21,16 @@ public sealed class IdentityServiceTests
                 " PERSON@Example.COM ",
                 "Strong@123",
                 " Ada ",
-                " Lovelace "), TestCancellation);
+                " Lovelace ",
+                " 0771234567 ",
+                " Colombo 07 "), TestCancellation);
 
         var saved = Assert.Single(repository.Users);
         Assert.Equal("200012345678", saved.Nic);
         Assert.Equal("person@example.com", saved.Email);
         Assert.Equal("Ada", saved.FirstName);
+        Assert.Equal("0771234567", saved.PhoneNumber);
+        Assert.Equal("Colombo 07", saved.Address);
         Assert.Equal(UserRole.Prosumer, saved.Role);
         Assert.Equal(UserStatus.Active, saved.Status);
         Assert.True(BCrypt.Net.BCrypt.Verify("Strong@123", saved.PasswordHash));
@@ -43,8 +47,8 @@ public sealed class IdentityServiceTests
         repository.Users.Add(Prosumer());
         var service = CreateService(repository);
         var request = duplicateNic
-            ? new RegisterProsumerRequest("200012345678", "other@example.com", "Strong@123", "Test", "User")
-            : new RegisterProsumerRequest("199912345678", "prosumer@example.com", "Strong@123", "Test", "User");
+            ? new RegisterProsumerRequest("200012345678", "other@example.com", "Strong@123", "Test", "User", "0771234567", "Colombo")
+            : new RegisterProsumerRequest("199912345678", "prosumer@example.com", "Strong@123", "Test", "User", "0771234567", "Colombo");
 
         var exception = await Assert.ThrowsAsync<IdentityException>(() =>
             service.RegisterProsumerAsync(request, TestCancellation));
@@ -158,6 +162,8 @@ public sealed class IdentityServiceTests
         await service.DeactivateOwnAccountAsync(user.Nic!, TestCancellation);
 
         Assert.Equal(UserStatus.Deactivated, user.Status);
+        Assert.Equal(user.Nic, user.StatusChangedByIdentifier);
+        Assert.NotNull(user.DeactivatedAtUtc);
     }
 
     [Fact]
@@ -183,9 +189,121 @@ public sealed class IdentityServiceTests
         var service = CreateService(repository);
 
         var exception = await Assert.ThrowsAsync<IdentityException>(() =>
-            service.ReactivateUserAsync("200012345678", TestCancellation));
+            service.ReactivateUserAsync("admin@example.com", "200012345678", TestCancellation));
 
         Assert.Equal("USER_INVALID_STATUS", exception.ErrorCode);
+    }
+
+    [Fact]
+    public async Task ReactivateUser_RecordsActorAndTimestamp()
+    {
+        var repository = new FakeUserRepository();
+        var user = Prosumer();
+        user.Status = UserStatus.Deactivated;
+        repository.Users.Add(user);
+        var service = CreateService(repository);
+
+        await service.ReactivateUserAsync("ADMIN@EXAMPLE.COM", user.Nic!, TestCancellation);
+
+        Assert.Equal(UserStatus.Active, user.Status);
+        Assert.Equal("admin@example.com", user.StatusChangedByIdentifier);
+        Assert.NotNull(user.ReactivatedAtUtc);
+    }
+
+    [Fact]
+    public async Task GetActiveProsumer_ReturnsOnlyActiveProsumer()
+    {
+        var repository = new FakeUserRepository();
+        repository.Users.Add(Prosumer());
+        var service = CreateService(repository);
+
+        var result = await service.GetActiveProsumerAsync(" 200012345678 ", TestCancellation);
+
+        Assert.Equal("200012345678", result.Nic);
+        Assert.Equal("0771234567", result.PhoneNumber);
+    }
+
+    [Fact]
+    public async Task GetActiveProsumer_RejectsDeactivatedProsumer()
+    {
+        var repository = new FakeUserRepository();
+        var user = Prosumer();
+        user.Status = UserStatus.Deactivated;
+        repository.Users.Add(user);
+        var service = CreateService(repository);
+
+        var exception = await Assert.ThrowsAsync<IdentityException>(() =>
+            service.GetActiveProsumerAsync(user.Nic!, TestCancellation));
+
+        Assert.Equal("AUTH_ACCOUNT_INACTIVE", exception.ErrorCode);
+    }
+
+    [Fact]
+    public async Task UpdateProfile_UpdatesProsumerContactFields()
+    {
+        var repository = new FakeUserRepository();
+        var user = Prosumer();
+        repository.Users.Add(user);
+        var service = CreateService(repository);
+
+        var result = await service.UpdateProfileAsync(
+            user.Nic!,
+            new UpdateProfileRequest("Updated", "Name", "+94770000000", "Kandy"),
+            TestCancellation);
+
+        Assert.Equal("+94770000000", result.PhoneNumber);
+        Assert.Equal("Kandy", result.Address);
+    }
+
+    [Fact]
+    public async Task ChangePassword_ReplacesHashAndAllowsNewPassword()
+    {
+        var repository = new FakeUserRepository();
+        var user = Prosumer();
+        repository.Users.Add(user);
+        var service = CreateService(repository);
+
+        await service.ChangePasswordAsync(
+            user.Nic!,
+            new ChangePasswordRequest("Strong@123", "NewStrong@456"),
+            TestCancellation);
+
+        Assert.False(BCrypt.Net.BCrypt.Verify("Strong@123", user.PasswordHash));
+        Assert.True(BCrypt.Net.BCrypt.Verify("NewStrong@456", user.PasswordHash));
+    }
+
+    [Fact]
+    public async Task ChangePassword_RejectsIncorrectCurrentPassword()
+    {
+        var repository = new FakeUserRepository();
+        var user = Prosumer();
+        repository.Users.Add(user);
+        var service = CreateService(repository);
+
+        var exception = await Assert.ThrowsAsync<IdentityException>(() =>
+            service.ChangePasswordAsync(
+                user.Nic!,
+                new ChangePasswordRequest("Wrong@123", "NewStrong@456"),
+                TestCancellation));
+
+        Assert.Equal("AUTH_CURRENT_PASSWORD_INVALID", exception.ErrorCode);
+    }
+
+    [Fact]
+    public async Task ChangePassword_RejectsCurrentPasswordAsNewPassword()
+    {
+        var repository = new FakeUserRepository();
+        var user = Prosumer();
+        repository.Users.Add(user);
+        var service = CreateService(repository);
+
+        var exception = await Assert.ThrowsAsync<IdentityException>(() =>
+            service.ChangePasswordAsync(
+                user.Nic!,
+                new ChangePasswordRequest("Strong@123", "Strong@123"),
+                TestCancellation));
+
+        Assert.Equal("AUTH_PASSWORD_UNCHANGED", exception.ErrorCode);
     }
 
     [Fact]
@@ -233,6 +351,8 @@ public sealed class IdentityServiceTests
         PasswordHash = BCrypt.Net.BCrypt.HashPassword("Strong@123"),
         FirstName = "Test",
         LastName = "Prosumer",
+        PhoneNumber = "0771234567",
+        Address = "Colombo",
         Role = UserRole.Prosumer,
         Status = UserStatus.Active
     };
@@ -302,16 +422,29 @@ public sealed class IdentityServiceTests
 
         public Task<bool> UpdateStatusAsync(
             string identifier,
+            UserStatus expectedStatus,
             UserStatus status,
+            string changedByIdentifier,
+            DateTime changedAtUtc,
             CancellationToken cancellationToken = default)
         {
             var user = Users.SingleOrDefault(item => item.Email == identifier || item.Nic == identifier);
-            if (user is null)
+            if (user is null || user.Status != expectedStatus)
             {
                 return Task.FromResult(false);
             }
 
             user.Status = status;
+            user.StatusChangedByIdentifier = changedByIdentifier;
+            user.UpdatedAtUtc = changedAtUtc;
+            if (status == UserStatus.Deactivated)
+            {
+                user.DeactivatedAtUtc = changedAtUtc;
+            }
+            else
+            {
+                user.ReactivatedAtUtc = changedAtUtc;
+            }
             return Task.FromResult(true);
         }
 

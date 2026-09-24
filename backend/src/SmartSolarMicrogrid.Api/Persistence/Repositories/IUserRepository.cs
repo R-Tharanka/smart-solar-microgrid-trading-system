@@ -11,6 +11,12 @@ public interface IUserRepository
     Task<long> CountActiveBackofficeAsync(CancellationToken cancellationToken = default);
     Task CreateAsync(User user, CancellationToken cancellationToken = default);
     Task UpdateAsync(User user, CancellationToken cancellationToken = default);
-    Task<bool> UpdateStatusAsync(string identifier, UserStatus status, CancellationToken cancellationToken = default);
+    Task<bool> UpdateStatusAsync(
+        string identifier,
+        UserStatus expectedStatus,
+        UserStatus status,
+        string changedByIdentifier,
+        DateTime changedAtUtc,
+        CancellationToken cancellationToken = default);
     Task RecordSuccessfulLoginAsync(string identifier, DateTime loginAtUtc, CancellationToken cancellationToken = default);
 }

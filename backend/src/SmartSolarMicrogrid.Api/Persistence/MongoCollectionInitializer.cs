@@ -34,8 +34,13 @@ public sealed class MongoCollectionInitializer(
             Builders<BsonDocument>.Update.Rename("PasswordHash", "passwordHash"),
             Builders<BsonDocument>.Update.Rename("FirstName", "firstName"),
             Builders<BsonDocument>.Update.Rename("LastName", "lastName"),
+            Builders<BsonDocument>.Update.Rename("PhoneNumber", "phoneNumber"),
+            Builders<BsonDocument>.Update.Rename("Address", "address"),
             Builders<BsonDocument>.Update.Rename("Role", "role"),
             Builders<BsonDocument>.Update.Rename("Status", "status"),
+            Builders<BsonDocument>.Update.Rename("DeactivatedAtUtc", "deactivatedAtUtc"),
+            Builders<BsonDocument>.Update.Rename("ReactivatedAtUtc", "reactivatedAtUtc"),
+            Builders<BsonDocument>.Update.Rename("StatusChangedByIdentifier", "statusChangedByIdentifier"),
             Builders<BsonDocument>.Update.Rename("CreatedAtUtc", "createdAtUtc"),
             Builders<BsonDocument>.Update.Rename("UpdatedAtUtc", "updatedAtUtc"));
 
