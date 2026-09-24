@@ -27,6 +27,7 @@ Scope: Identity, authentication, authorization and account management
 - Active-Prosumer service lookup for reservation ownership validation without exposing credential data.
 - Account lifecycle timestamps and actor identifier audit fields.
 - Normalization, DTO validation, guarded state transitions, duplicate-write handling, and RFC 7807 errors.
+- Property-based request DTOs compatible with ASP.NET Core MVC model binding and validation.
 - Automated tests for identity rules, validation, JWT claims and role/account-status authorization.
 
 ## Secure Configuration
@@ -48,7 +49,7 @@ BOOTSTRAP_ADMIN_EMAIL=<valid staff email>
 BOOTSTRAP_ADMIN_PASSWORD=<strong password>
 ```
 
-After the first Backoffice account is present, set `BOOTSTRAP_ADMIN_ENABLED=false`. Startup skips bootstrap whenever any Backoffice account already exists.
+After the first Backoffice account is present, set `BOOTSTRAP_ADMIN_ENABLED=false`. Startup skips bootstrap whenever any Backoffice account already exists. Changing `BOOTSTRAP_ADMIN_PASSWORD` does not reset the password of an existing account; use the authenticated change-password flow or deliberately recreate the development seed account.
 
 ## Run And Verify
 
@@ -66,6 +67,7 @@ Health endpoints are `/health/live` and `/health/ready`. The readiness endpoint 
 | --- | --- | --- |
 | Registration and duplicate identifiers | Service and DTO tests | Passed |
 | Email, NIC, password, role and required values | DTO/service tests | Passed |
+| ASP.NET Core MVC request-model validation | MVC object-validator regression test | Passed |
 | Correct, wrong, unknown and inactive login | Service tests | Passed |
 | JWT business identifier and role claims | Token test | Passed |
 | Backoffice, Grid Operator and Prosumer policies | Authorization tests | Passed |
@@ -75,7 +77,7 @@ Health endpoints are `/health/live` and `/health/ready`. The readiness endpoint 
 | MongoDB indexes and persistence | Startup initializer | Requires live Atlas verification |
 | HTTP status/response evidence | Controller contracts | Requires running API/Postman capture |
 
-Current automated result: 42 tests passed, 0 failed.
+Current automated result: 43 tests passed, 0 failed.
 
 ## Member 3 Integration Contract
 
