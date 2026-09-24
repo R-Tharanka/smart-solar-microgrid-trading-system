@@ -1,10 +1,44 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using SmartSolarMicrogrid.Api.Contracts.Identity;
 
 namespace SmartSolarMicrogrid.Api.Tests;
 
 public sealed class RequestValidationTests
 {
+    [Fact]
+    public void LoginRequest_IsValidatedByAspNetCoreMvc()
+    {
+        var services = new ServiceCollection()
+            .AddLogging()
+            .AddControllers()
+            .Services
+            .BuildServiceProvider();
+        using (services)
+        {
+            var actionContext = new ActionContext(
+                new DefaultHttpContext { RequestServices = services },
+                new RouteData(),
+                new ActionDescriptor(),
+                new ModelStateDictionary());
+            var validator = services.GetRequiredService<IObjectModelValidator>();
+
+            validator.Validate(
+                actionContext,
+                validationState: null,
+                prefix: string.Empty,
+                model: new LoginRequest("admin@smartsolar.com", "Admin@1234"));
+
+            Assert.True(actionContext.ModelState.IsValid);
+        }
+    }
+
     [Theory]
     [InlineData("123456789V", true)]
     [InlineData("200012345678", true)]
