@@ -11,6 +11,9 @@ public sealed class IdentityException(int statusCode, string errorCode, string m
     public static IdentityException Conflict(string code, string message) =>
         new(StatusCodes.Status409Conflict, code, message);
 
+    public static IdentityException BadRequest(string code, string message) =>
+        new(StatusCodes.Status400BadRequest, code, message);
+
     public static IdentityException Unauthorized(string message = "Invalid credentials.") =>
         new(StatusCodes.Status401Unauthorized, "AUTH_INVALID_CREDENTIALS", message);
 

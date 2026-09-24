@@ -69,6 +69,17 @@ public sealed class UsersController(IIdentityService identityService) : Controll
         return Ok(new ApiEnvelope<UserResponse>(user, "Profile updated successfully."));
     }
 
+    [HttpPost("change-password")]
+    [Authorize(Policy = AuthorizationPolicies.Authenticated)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> ChangePassword(
+        ChangePasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        await identityService.ChangePasswordAsync(CurrentIdentifier(), request, cancellationToken);
+        return NoContent();
+    }
+
     [HttpPost("me/deactivate")]
     [Authorize(Policy = AuthorizationPolicies.ProsumerOnly)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -83,7 +94,7 @@ public sealed class UsersController(IIdentityService identityService) : Controll
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> ReactivateUser(string identifier, CancellationToken cancellationToken)
     {
-        await identityService.ReactivateUserAsync(identifier, cancellationToken);
+        await identityService.ReactivateUserAsync(CurrentIdentifier(), identifier, cancellationToken);
         return NoContent();
     }
 

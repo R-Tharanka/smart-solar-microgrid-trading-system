@@ -1,4 +1,5 @@
 using MongoDB.Driver;
+using System.Text.RegularExpressions;
 using SmartSolarMicrogrid.Api.Contracts.Identity;
 using SmartSolarMicrogrid.Api.Infrastructure;
 using SmartSolarMicrogrid.Api.Models;
@@ -46,6 +47,8 @@ public sealed class IdentityService(
         var email = NormalizeEmail(request.Email);
         var firstName = RequiredText(request.FirstName, "First name");
         var lastName = RequiredText(request.LastName, "Last name");
+        var phoneNumber = RequiredPhone(request.PhoneNumber);
+        var address = RequiredText(request.Address, "Address");
 
         if (await userRepository.FindByNicAsync(nic, cancellationToken) is not null)
         {
@@ -64,6 +67,8 @@ public sealed class IdentityService(
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             FirstName = firstName,
             LastName = lastName,
+            PhoneNumber = phoneNumber,
+            Address = address,
             Role = UserRole.Prosumer,
             Status = UserStatus.Active
         };
@@ -113,6 +118,20 @@ public sealed class IdentityService(
         return MapToResponse(user);
     }
 
+    public async Task<UserResponse> GetActiveProsumerAsync(
+        string nic,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await userRepository.FindByNicAsync(NormalizeNic(nic), cancellationToken);
+        if (user is null || user.Role != UserRole.Prosumer)
+        {
+            throw IdentityException.NotFound();
+        }
+
+        EnsureActive(user);
+        return MapToResponse(user);
+    }
+
     public async Task<UserResponse> UpdateProfileAsync(
         string identifier,
         UpdateProfileRequest request,
@@ -123,10 +142,43 @@ public sealed class IdentityService(
 
         user.FirstName = RequiredText(request.FirstName, "First name");
         user.LastName = RequiredText(request.LastName, "Last name");
+        if (user.Role == UserRole.Prosumer)
+        {
+            user.PhoneNumber = RequiredPhone(request.PhoneNumber ?? string.Empty);
+            user.Address = RequiredText(request.Address ?? string.Empty, "Address");
+        }
+
         await userRepository.UpdateAsync(user, cancellationToken);
 
         logger.LogInformation("Profile updated for {Role} account", user.Role);
         return MapToResponse(user);
+    }
+
+    public async Task ChangePasswordAsync(
+        string identifier,
+        ChangePasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await FindRequiredUserAsync(identifier, cancellationToken);
+        EnsureActive(user);
+
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+        {
+            throw IdentityException.BadRequest(
+                "AUTH_CURRENT_PASSWORD_INVALID",
+                "Current password is incorrect.");
+        }
+
+        if (BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash))
+        {
+            throw IdentityException.BadRequest(
+                "AUTH_PASSWORD_UNCHANGED",
+                "New password must be different from the current password.");
+        }
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        await userRepository.UpdateAsync(user, cancellationToken);
+        logger.LogInformation("Password changed for {Role} account", user.Role);
     }
 
     public async Task DeactivateOwnAccountAsync(
@@ -147,10 +199,11 @@ public sealed class IdentityService(
         }
 
         await accountDeactivationGuard.EnsureCanDeactivateAsync(user.Nic!, cancellationToken);
-        await SetStatusAsync(user, UserStatus.Deactivated, cancellationToken);
+        await SetStatusAsync(user, UserStatus.Deactivated, user.Nic!, cancellationToken);
     }
 
     public async Task ReactivateUserAsync(
+        string actorIdentifier,
         string identifier,
         CancellationToken cancellationToken = default)
     {
@@ -160,7 +213,7 @@ public sealed class IdentityService(
             throw IdentityException.Conflict("USER_INVALID_STATUS", "Only a deactivated account can be reactivated.");
         }
 
-        await SetStatusAsync(user, UserStatus.Active, cancellationToken);
+        await SetStatusAsync(user, UserStatus.Active, actorIdentifier, cancellationToken);
     }
 
     public async Task DeactivateUserAsync(
@@ -192,7 +245,7 @@ public sealed class IdentityService(
             await accountDeactivationGuard.EnsureCanDeactivateAsync(target.Nic!, cancellationToken);
         }
 
-        await SetStatusAsync(target, UserStatus.Deactivated, cancellationToken);
+        await SetStatusAsync(target, UserStatus.Deactivated, actor, cancellationToken);
     }
 
     public async Task<List<UserResponse>> GetUsersAsync(CancellationToken cancellationToken = default)
@@ -221,9 +274,20 @@ public sealed class IdentityService(
         }
     }
 
-    private async Task SetStatusAsync(User user, UserStatus status, CancellationToken cancellationToken)
+    private async Task SetStatusAsync(
+        User user,
+        UserStatus status,
+        string changedByIdentifier,
+        CancellationToken cancellationToken)
     {
-        if (!await userRepository.UpdateStatusAsync(user.Nic ?? user.Email, status, cancellationToken))
+        var normalizedActor = NormalizeIdentifier(changedByIdentifier);
+        if (!await userRepository.UpdateStatusAsync(
+                user.Nic ?? user.Email,
+                user.Status,
+                status,
+                normalizedActor,
+                DateTime.UtcNow,
+                cancellationToken))
         {
             throw IdentityException.NotFound();
         }
@@ -256,12 +320,25 @@ public sealed class IdentityService(
             : normalized;
     }
 
+    private static string RequiredPhone(string value)
+    {
+        var normalized = value.Trim();
+        if (!Regex.IsMatch(normalized, IdentityValidationRules.PhonePattern))
+        {
+            throw IdentityException.Validation(IdentityValidationRules.PhoneError);
+        }
+
+        return normalized;
+    }
+
     private static UserResponse MapToResponse(User user) =>
         new(
             user.Nic,
             user.Email,
             user.FirstName,
             user.LastName,
+            user.PhoneNumber,
+            user.Address,
             user.Role.ToString(),
             user.Status.ToString());
 }

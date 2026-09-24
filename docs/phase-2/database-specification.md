@@ -24,7 +24,7 @@ Authority: Central ASP.NET Core API only
 
 Required fields: `_id`, `email`, `firstName`, `lastName`, `role`, `status`, `passwordHash`, `createdAtUtc`, `updatedAtUtc`.
 
-Prosumer-only field: unique `nic`. Staff accounts keep `nic` absent. `createdByIdentifier` records the Backoffice NIC/email identity that created a staff account, and `lastLoginAtUtc` records successful authentication.
+Prosumer-only fields: unique `nic`, `phoneNumber`, and `address`. Staff accounts keep these fields absent. `createdByIdentifier` records the Backoffice email identity that created a staff account, and `lastLoginAtUtc` records successful authentication. Lifecycle changes record `deactivatedAtUtc`, `reactivatedAtUtc`, and `statusChangedByIdentifier`.
 
 Enums:
 

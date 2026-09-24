@@ -12,8 +12,8 @@ Purpose: Identity, roles, credentials and account lifecycle.
   "_id": "ObjectId",
   "nic": "200012345678",
   "email": "prosumer@example.com",
-  "username": "prosumer01",
-  "fullName": "Sample Prosumer",
+  "firstName": "Sample",
+  "lastName": "Prosumer",
   "phoneNumber": "0771234567",
   "address": "Colombo",
   "role": "Prosumer",
@@ -21,8 +21,11 @@ Purpose: Identity, roles, credentials and account lifecycle.
   "passwordHash": "hashed-password",
   "createdAtUtc": "2026-09-23T00:00:00Z",
   "updatedAtUtc": "2026-09-23T00:00:00Z",
-  "createdByUserId": null,
-  "lastLoginAtUtc": null
+  "createdByIdentifier": null,
+  "lastLoginAtUtc": null,
+  "deactivatedAtUtc": null,
+  "reactivatedAtUtc": null,
+  "statusChangedByIdentifier": null
 }
 ```
 
