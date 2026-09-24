@@ -1,295 +1,159 @@
 # Identity API Contract
 
-Base path: `/api`  
-Authentication: Bearer token for protected endpoints  
+Status: Implemented in Phase 3
 Owner: Member 1
+Base path: `/api/users`
 
-## Shared DTOs
+This contract supersedes the earlier Phase 1 identity route sketch. User-facing operations use NIC for Prosumers and normalized email for staff. MongoDB `_id` is not exposed by this module.
 
-### `ApiResponse<T>`
+## Conventions
+
+- Protected requests use `Authorization: Bearer <accessToken>`.
+- Email is stored lowercase; NIC is stored uppercase.
+- Public Prosumer registration creates an `Active` Prosumer account.
+- Only `Active` accounts satisfy protected authorization policies, including when an older JWT has not expired.
+- Passwords require 8-128 characters, uppercase, lowercase, number, special character, and no whitespace.
+- NIC accepts the Sri Lankan 12-digit form or 9 digits followed by `V`/`X`.
+- Successful resource responses use `{ "data": ..., "message": ... }`.
+- Errors use RFC 7807 Problem Details with `errorCode` and `traceId` extensions.
+
+## Response Models
 
 ```json
 {
-  "success": true,
-  "message": "Request completed successfully.",
-  "data": {}
+  "nic": "200012345678",
+  "email": "prosumer@example.com",
+  "firstName": "Sample",
+  "lastName": "Prosumer",
+  "role": "Prosumer",
+  "status": "Active"
 }
 ```
 
-### `ApiErrorResponse`
-
-```json
-{
-  "success": false,
-  "message": "Validation failed.",
-  "errors": [
-    {
-      "field": "email",
-      "message": "Email is required."
-    }
-  ]
-}
-```
+Login data adds `accessToken`, `expiresAtUtc`, and the user object. Password hashes and MongoDB identifiers are never returned.
 
 ## Endpoints
 
 ### Register Prosumer
 
-`POST /api/prosumers/register`
-
+`POST /api/users/prosumer/register`
 Authorization: Public
-
-Request:
 
 ```json
 {
   "nic": "200012345678",
-  "fullName": "Sample Prosumer",
   "email": "prosumer@example.com",
-  "phoneNumber": "0771234567",
-  "address": "Colombo",
-  "password": "StrongPassword123!"
+  "password": "StrongPassword123!",
+  "firstName": "Sample",
+  "lastName": "Prosumer"
 }
 ```
 
-Validation:
-
-- `nic`, `fullName`, `email`, `phoneNumber`, `address` and `password` are required.
-- `nic` must be unique.
-- `email` must be unique and valid.
-- Password must satisfy the agreed password policy.
-- Role is always assigned as `Prosumer`.
-
-Success: `201 Created`
-
-```json
-{
-  "success": true,
-  "message": "Prosumer registered successfully.",
-  "data": {
-    "userId": "66f000000000000000000001",
-    "nic": "200012345678",
-    "email": "prosumer@example.com",
-    "role": "Prosumer",
-    "status": "Active"
-  }
-}
-```
-
-Errors: `400`, `409`, `500`
+Returns `201 Created`. Duplicate normalized NIC or email returns `409 Conflict`.
 
 ### Login
 
-`POST /api/auth/login`
-
+`POST /api/users/login`
 Authorization: Public
 
-Request:
-
 ```json
 {
-  "emailOrNic": "prosumer@example.com",
+  "identifier": "200012345678",
   "password": "StrongPassword123!"
 }
 ```
 
-Validation:
+`identifier` may be a Prosumer NIC or staff/Prosumer email. Valid credentials for an active account return `200 OK` and a signed JWT. Invalid credentials return `401`; Pending or Deactivated accounts return `403`.
 
-- `emailOrNic` and `password` are required.
-- Deactivated users cannot login.
+### Current Profile
 
-Success: `200 OK`
+`GET /api/users/me`
+Authorization: `Authenticated`
+
+Returns `200 OK` with the authenticated user's profile.
+
+### Update Current Profile
+
+`PUT /api/users/me`
+Authorization: `Authenticated`
 
 ```json
 {
-  "success": true,
-  "message": "Login successful.",
-  "data": {
-    "accessToken": "jwt-token",
-    "expiresAtUtc": "2026-09-23T18:30:00Z",
-    "user": {
-      "userId": "66f000000000000000000001",
-      "nic": "200012345678",
-      "email": "prosumer@example.com",
-      "fullName": "Sample Prosumer",
-      "role": "Prosumer",
-      "status": "Active"
-    }
-  }
+  "firstName": "Updated",
+  "lastName": "Name"
 }
 ```
 
-Errors: `400`, `401`, `403`, `500`
+NIC, email, role and status cannot be changed by this endpoint.
 
-### Current User
+### Deactivate Own Prosumer Account
 
-`GET /api/auth/me`
+`POST /api/users/me/deactivate`
+Authorization: `ProsumerOnly`
 
-Authorization: Any authenticated user
+Returns `204 No Content`. Deactivation is rejected with `409 USER_ACTIVE_RESERVATIONS` while the Prosumer has a `Pending`, `Approved`, `QrIssued`, or `Verified` reservation.
 
-Success: `200 OK`
+### Create Staff
 
-```json
-{
-  "success": true,
-  "message": "Current user loaded.",
-  "data": {
-    "userId": "66f000000000000000000001",
-    "nic": "200012345678",
-    "email": "prosumer@example.com",
-    "fullName": "Sample Prosumer",
-    "role": "Prosumer",
-    "status": "Active"
-  }
-}
-```
-
-Errors: `401`, `403`, `404`
-
-### Create Staff User
-
-`POST /api/users`
-
-Authorization: Backoffice
-
-Request:
+`POST /api/users/staff`
+Authorization: `BackofficeOnly`
 
 ```json
 {
-  "fullName": "Grid Operator 01",
   "email": "operator@example.com",
-  "username": "operator01",
-  "role": "GridOperator",
-  "password": "StrongPassword123!"
+  "password": "StrongPassword123!",
+  "firstName": "Grid",
+  "lastName": "Operator",
+  "role": "GridOperator"
 }
 ```
 
-Validation:
-
-- Role must be `Backoffice` or `GridOperator`.
-- Email must be unique.
-- Only Backoffice users can call this endpoint.
-
-Success: `201 Created`
-
-Errors: `400`, `401`, `403`, `409`
+Role must be `Backoffice` or `GridOperator`. Returns `201 Created`.
 
 ### List Users
 
-`GET /api/users?role=Prosumer&status=Active`
+`GET /api/users`
+Authorization: `BackofficeOnly`
 
-Authorization: Backoffice
+Returns `200 OK` with users sorted by role and email.
 
-Success: `200 OK`
+### Reactivate User
 
-```json
-{
-  "success": true,
-  "message": "Users loaded.",
-  "data": [
-    {
-      "userId": "66f000000000000000000001",
-      "nic": "200012345678",
-      "email": "prosumer@example.com",
-      "fullName": "Sample Prosumer",
-      "role": "Prosumer",
-      "status": "Active"
-    }
-  ]
-}
-```
+`POST /api/users/{identifier}/reactivate`
+Authorization: `BackofficeOnly`
 
-Errors: `401`, `403`
+Only a `Deactivated` account may transition to `Active`. Returns `204 No Content`.
 
-### Get User by Id
+### Deactivate User
 
-`GET /api/users/{userId}`
+`POST /api/users/{identifier}/deactivate`
+Authorization: `BackofficeOnly`
 
-Authorization: Backoffice
+Only an `Active` account may transition to `Deactivated`. A Backoffice user cannot deactivate their own account or the final active Backoffice account. Prosumer reservation protection also applies. Returns `204 No Content`.
 
-Success: `200 OK`
+## JWT Claims
 
-Errors: `401`, `403`, `404`
+- `sub`: NIC for a Prosumer, normalized email for staff.
+- `email`: normalized email.
+- `role`: `Backoffice`, `GridOperator`, or `Prosumer`.
+- `user_identifier`: NIC or email used for account lookup.
+- `nic`: included only for a Prosumer.
+- `jti`, `iat`, `nbf`, and `exp`: token lifecycle claims.
 
-### Update Own Prosumer Profile
+The default access-token lifetime is 60 minutes. Protected policies also query current account status, so deactivation takes effect before token expiry.
 
-`PUT /api/prosumers/me`
+## Stable Identity Error Codes
 
-Authorization: Prosumer
-
-Request:
-
-```json
-{
-  "fullName": "Updated Prosumer",
-  "phoneNumber": "0777654321",
-  "address": "Kandy"
-}
-```
-
-Validation:
-
-- The authenticated user must be a Prosumer.
-- NIC and role cannot be changed through this endpoint.
-- Email change should be handled only if the group explicitly supports email verification.
-
-Success: `200 OK`
-
-Errors: `400`, `401`, `403`, `404`
-
-### Update User Status
-
-`PATCH /api/users/{userId}/status`
-
-Authorization: Backoffice
-
-Request:
-
-```json
-{
-  "status": "Deactivated",
-  "reason": "Requested by user"
-}
-```
-
-Validation:
-
-- Status must be one of `PendingActivation`, `Active`, `Deactivated`, `Rejected`.
-- Backoffice cannot deactivate their own account through this endpoint unless another admin exists and the group explicitly allows it.
-
-Success: `200 OK`
-
-Errors: `400`, `401`, `403`, `404`, `409`
-
-### Change Password
-
-`POST /api/auth/change-password`
-
-Authorization: Any authenticated user
-
-Request:
-
-```json
-{
-  "currentPassword": "OldPassword123!",
-  "newPassword": "NewPassword123!"
-}
-```
-
-Validation:
-
-- Current password must match.
-- New password must satisfy password policy.
-
-Success: `200 OK`
-
-Errors: `400`, `401`, `403`
-
-## Implementation Notes
-
-- Use server-side role claims in the access token.
-- Re-check account status for important protected requests where practical.
-- Never return `passwordHash` to clients.
-- Record `lastLoginAtUtc` on successful login.
-- Use consistent error response format across all modules.
-
+| Code | Meaning |
+| --- | --- |
+| `AUTH_INVALID_CREDENTIALS` | Identifier or password is invalid. |
+| `AUTH_ACCOUNT_INACTIVE` | Account is Pending or Deactivated. |
+| `USER_NIC_EXISTS` | NIC is already registered. |
+| `USER_EMAIL_EXISTS` | Email is already registered. |
+| `USER_IDENTIFIER_EXISTS` | A concurrent duplicate write was rejected. |
+| `USER_NOT_FOUND` | Target account does not exist. |
+| `USER_INVALID_STATUS` | Requested state transition is not allowed. |
+| `USER_ACTIVE_RESERVATIONS` | Prosumer has a non-terminal reservation. |
+| `USER_SELF_ADMIN_DEACTIVATION` | Backoffice attempted to deactivate itself. |
+| `USER_LAST_ADMIN` | Operation would remove the final active Backoffice account. |
+| `VALIDATION_REQUEST` | Request DTO validation failed. |

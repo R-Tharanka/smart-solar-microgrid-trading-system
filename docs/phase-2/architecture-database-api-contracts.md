@@ -17,7 +17,7 @@ Design and establish the central API, persistence model, integration conventions
 | Database | MongoDB Atlas |
 | Driver | Official MongoDB .NET/C# Driver 3.12.0 |
 | Authentication | JWT bearer access tokens |
-| Password storage | ASP.NET Core `PasswordHasher<TUser>` using PBKDF2; plaintext is never persisted or logged |
+| Password storage | BCrypt using `BCrypt.Net-Next`; plaintext is never persisted or logged |
 | Authorization | Role claims plus named ASP.NET Core policies |
 | Validation | Data-annotation/basic shape validation at the API boundary; domain rules in services |
 | Error format | RFC 7807 `ProblemDetails` with stable machine-readable error codes |
@@ -65,7 +65,7 @@ Each Phase 3 domain uses `Controller -> Service -> Repository -> MongoDB`. Contr
 
 ## 5. Authentication and Authorization
 
-JWTs contain `sub` (MongoDB user ID), `role`, `name`, `jti`, `iss`, `aud`, `iat` and `exp`. NIC is not used as the authorization identity. Tokens expire after 60 minutes. Deactivated accounts are rejected at login and must also be checked for sensitive operations.
+JWTs contain `sub` (NIC for Prosumers or normalized email for staff), `email`, `role`, `user_identifier`, `jti`, `iss`, `aud`, `iat` and `exp`. Tokens expire after 60 minutes. Protected policies re-check current account status so Pending or Deactivated accounts are denied immediately.
 
 | Policy | Roles |
 | --- | --- |
@@ -79,7 +79,7 @@ Resource ownership checks occur inside services. A valid Prosumer token alone do
 ## 6. API Conventions
 
 - Base content type: `application/json; charset=utf-8`.
-- Public identifiers in URLs are MongoDB ObjectId strings unless the contract names a business code.
+- Public identifiers in URLs are MongoDB ObjectId strings unless the contract names a business code. Identity/account endpoints use NIC or normalized email and never expose user `_id`.
 - Request DTOs end with `Request`; response DTOs end with `Response`.
 - Commands use nouns and explicit action suffixes where a state transition is involved.
 - Successful single-resource responses use `{ "data": ..., "message": ... }`.

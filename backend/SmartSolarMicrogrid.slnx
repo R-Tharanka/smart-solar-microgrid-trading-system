@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="src/SmartSolarMicrogrid.Api/SmartSolarMicrogrid.Api.csproj" />
+  <Project Path="tests/SmartSolarMicrogrid.Api.Tests/SmartSolarMicrogrid.Api.Tests.csproj" />
 </Solution>

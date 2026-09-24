@@ -1,12 +1,16 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using SmartSolarMicrogrid.Api.Authorization;
 using SmartSolarMicrogrid.Api.Configuration;
 using SmartSolarMicrogrid.Api.Infrastructure;
 using SmartSolarMicrogrid.Api.Middleware;
 using SmartSolarMicrogrid.Api.Persistence;
+using SmartSolarMicrogrid.Api.Persistence.Repositories;
+using SmartSolarMicrogrid.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,15 +26,55 @@ builder.Services
     .Validate(options => Encoding.UTF8.GetByteCount(options.SigningKey) >= 32,
         "JWT signing key must be at least 32 bytes.")
     .ValidateOnStart();
+builder.Services
+    .AddOptions<BootstrapAdminOptions>()
+    .Bind(builder.Configuration.GetSection(BootstrapAdminOptions.SectionName))
+    .Validate(options => !options.Enabled ||
+        (!string.IsNullOrWhiteSpace(options.Email) &&
+         !string.IsNullOrWhiteSpace(options.Password) &&
+         !string.IsNullOrWhiteSpace(options.FirstName) &&
+         !string.IsNullOrWhiteSpace(options.LastName)),
+        "Bootstrap administrator email, password, first name, and last name are required when bootstrapping is enabled.")
+    .Validate(options => !options.Enabled ||
+        new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(options.Email),
+        "Bootstrap administrator email must be valid.")
+    .Validate(options => !options.Enabled ||
+        System.Text.RegularExpressions.Regex.IsMatch(
+            options.Password,
+            SmartSolarMicrogrid.Api.Contracts.Identity.IdentityValidationRules.PasswordPattern),
+        SmartSolarMicrogrid.Api.Contracts.Identity.IdentityValidationRules.PasswordError)
+    .ValidateOnStart();
 
 var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
     ?? throw new InvalidOperationException("JWT configuration is missing.");
 
 builder.Services.AddSingleton<MongoDbContext>();
 builder.Services.AddSingleton<MongoCollectionInitializer>();
+builder.Services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAccountDeactivationGuard, ReservationAccountDeactivationGuard>();
+builder.Services.AddScoped<IIdentityService, IdentityService>();
+builder.Services.AddScoped<IAuthorizationHandler, ActiveUserHandler>();
 builder.Services.AddHealthChecks().AddCheck<MongoDbHealthCheck>("mongodb");
 builder.Services.AddProblemDetails();
-builder.Services.AddControllers();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var problem = new ValidationProblemDetails(context.ModelState)
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Request validation failed",
+                Detail = "One or more request fields are invalid.",
+                Instance = context.HttpContext.Request.Path
+            };
+            problem.Extensions["errorCode"] = "VALIDATION_REQUEST";
+            problem.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+            return new BadRequestObjectResult(problem);
+        };
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services

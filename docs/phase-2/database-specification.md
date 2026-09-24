@@ -22,14 +22,14 @@ Authority: Central ASP.NET Core API only
 
 ### `users` - Member 1
 
-Required fields: `_id`, `email`, `username`, `fullName`, `role`, `status`, `passwordHash`, `createdAtUtc`, `updatedAtUtc`.
+Required fields: `_id`, `email`, `firstName`, `lastName`, `role`, `status`, `passwordHash`, `createdAtUtc`, `updatedAtUtc`.
 
-Prosumer-only field: unique `nic`. Optional profile fields: `phoneNumber`, `address`. Staff accounts keep `nic` absent. `createdByUserId` records Backoffice creation of staff accounts.
+Prosumer-only field: unique `nic`. Staff accounts keep `nic` absent. `createdByIdentifier` records the Backoffice NIC/email identity that created a staff account, and `lastLoginAtUtc` records successful authentication.
 
 Enums:
 
 - `role`: `Backoffice`, `GridOperator`, `Prosumer`.
-- `status`: `Active`, `Deactivated`.
+- `status`: `Pending`, `Active`, `Deactivated`. Phase 3 registration creates `Active`; `Pending` is reserved for a future approval workflow.
 
 Indexes:
 
