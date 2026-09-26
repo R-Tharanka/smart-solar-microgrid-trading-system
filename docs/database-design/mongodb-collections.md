@@ -125,6 +125,7 @@ Purpose: Reservation lifecycle and final energy transfer verification.
   "verifiedAtUtc": null,
   "finalizedByUserId": null,
   "finalizedAtUtc": null,
+  "actualEnergyTransferredKwh": null,
   "createdAtUtc": "2026-09-23T00:00:00Z",
   "updatedAtUtc": "2026-09-23T00:00:00Z",
   "cancelledAtUtc": null,

@@ -12,6 +12,7 @@ namespace SmartSolarMicrogrid.Api.Controllers;
 [ApiController]
 public sealed class TransactionsController(ITransactionService transactionService) : ControllerBase
 {
+    // Allows Backoffice or the owning Prosumer to obtain the secure QR payload.
     [HttpPost("api/reservations/{reservationId}/qr")]
     [Authorize(Policy = AuthorizationPolicies.Authenticated)]
     [ProducesResponseType<ApiEnvelope<QrTransactionResponse>>(StatusCodes.Status200OK)]
@@ -24,6 +25,7 @@ public sealed class TransactionsController(ITransactionService transactionServic
         return Ok(new ApiEnvelope<QrTransactionResponse>(result, "QR transaction issued."));
     }
 
+    // Accepts scanned QR data from an active Grid Operator and records verification audit data.
     [HttpPost("api/transactions/verify")]
     [Authorize(Policy = AuthorizationPolicies.GridOperatorOnly)]
     [ProducesResponseType<ApiEnvelope<VerifiedTransactionResponse>>(StatusCodes.Status200OK)]
@@ -35,6 +37,7 @@ public sealed class TransactionsController(ITransactionService transactionServic
         return Ok(new ApiEnvelope<VerifiedTransactionResponse>(result, "Transaction verified."));
     }
 
+    // Records the delivered energy and completes a previously verified transaction.
     [HttpPost("api/transactions/finalize")]
     [Authorize(Policy = AuthorizationPolicies.GridOperatorOnly)]
     [ProducesResponseType<ApiEnvelope<FinalizedTransactionResponse>>(StatusCodes.Status200OK)]
@@ -46,6 +49,7 @@ public sealed class TransactionsController(ITransactionService transactionServic
         return Ok(new ApiEnvelope<FinalizedTransactionResponse>(result, "Energy transfer finalized."));
     }
 
+    // Provides transaction and audit details to Backoffice and Grid Operator operational screens.
     [HttpGet("api/transactions/{reservationCode}")]
     [Authorize(Policy = AuthorizationPolicies.Staff)]
     [ProducesResponseType<ApiEnvelope<TransactionDetailsResponse>>(StatusCodes.Status200OK)]
@@ -57,6 +61,7 @@ public sealed class TransactionsController(ITransactionService transactionServic
         return Ok(new ApiEnvelope<TransactionDetailsResponse>(result));
     }
 
+    // Audit fields use the stable business identifier established by the identity module.
     private string RequiredIdentifier() => User.FindFirstValue("user_identifier")
         ?? throw new InvalidOperationException("Authenticated token has no business identifier.");
 

@@ -117,16 +117,20 @@ Request:
 ```json
 {
   "reservationCode": "RSV-20260923-0001",
-  "confirmationNote": "Energy transfer completed"
+  "confirmationNote": "Energy transfer completed",
+  "actualEnergyTransferredKwh": 9.8
 }
 ```
+
+`actualEnergyTransferredKwh` is optional for backward compatibility. When omitted, the API records the full reserved `requestedEnergyKwh`. When supplied, it must be greater than zero and cannot exceed the reserved amount.
 
 Validation:
 
 - Authenticated user must be a Grid Operator.
 - Reservation must be `Verified`.
 - Reservation must not already be `Completed`.
-- Finalization must be atomic where practical to prevent duplicate completion.
+- Reservation completion and closure of its reserved booking slot are committed in one MongoDB transaction.
+- The consumed booking slot becomes `Expired`; a failed slot transition rolls back reservation completion.
 
 Success: `200 OK`
 
@@ -137,6 +141,7 @@ Success: `200 OK`
   "data": {
     "reservationCode": "RSV-20260923-0001",
     "status": "Completed",
+    "actualEnergyTransferredKwh": 9.8,
     "finalizedAtUtc": "2026-09-24T05:30:00Z"
   }
 }
