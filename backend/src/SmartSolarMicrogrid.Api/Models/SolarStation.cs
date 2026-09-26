@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Defines MongoDB persistence models for stations and GeoJSON locations.
+// -----------------------------------------------------------------------------
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 

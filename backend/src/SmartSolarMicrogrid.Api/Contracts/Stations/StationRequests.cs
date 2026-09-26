@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Defines validated request contracts for solar-station operations.
+// -----------------------------------------------------------------------------
 using System.ComponentModel.DataAnnotations;
 
 namespace SmartSolarMicrogrid.Api.Contracts.Stations;
@@ -9,8 +12,10 @@ public static class StationValidationRules
 
 public sealed record CreateStationRequest
 {
+    // Supports ASP.NET Core JSON model binding.
     public CreateStationRequest() { }
 
+    // Supports direct construction in services and automated tests.
     public CreateStationRequest(string stationCode, string name, string? description,
         double latitude, double longitude, string address, decimal capacityKwh,
         decimal batteryStorageKwh, TimeSpan openingTime, TimeSpan closingTime) =>
@@ -49,8 +54,10 @@ public sealed record CreateStationRequest
 
 public sealed record UpdateStationRequest
 {
+    // Supports ASP.NET Core JSON model binding.
     public UpdateStationRequest() { }
 
+    // Supports direct construction in services and automated tests.
     public UpdateStationRequest(string name, string? description, double latitude,
         double longitude, string address, decimal capacityKwh, decimal batteryStorageKwh,
         TimeSpan openingTime, TimeSpan closingTime) =>
@@ -86,8 +93,10 @@ public sealed record UpdateStationRequest
 
 public sealed record ChangeStationStatusRequest
 {
+    // Supports ASP.NET Core JSON model binding.
     public ChangeStationStatusRequest() { }
 
+    // Supports direct construction in services and automated tests.
     public ChangeStationStatusRequest(string status, string? reason) =>
         (Status, Reason) = (status, reason);
 

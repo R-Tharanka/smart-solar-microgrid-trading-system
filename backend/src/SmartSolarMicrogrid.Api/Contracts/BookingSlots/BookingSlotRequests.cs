@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Defines validated request contracts for energy booking-slot operations.
+// -----------------------------------------------------------------------------
 using System.ComponentModel.DataAnnotations;
 
 namespace SmartSolarMicrogrid.Api.Contracts.BookingSlots;
@@ -9,8 +12,10 @@ public static class BookingSlotValidationRules
 
 public sealed record CreateBookingSlotRequest
 {
+    // Supports ASP.NET Core JSON model binding.
     public CreateBookingSlotRequest() { }
 
+    // Supports direct construction in services and automated tests.
     public CreateBookingSlotRequest(string slotCode, DateTime startTimeUtc,
         DateTime endTimeUtc, decimal availableEnergyKwh, decimal pricePerKwh) =>
         (SlotCode, StartTimeUtc, EndTimeUtc, AvailableEnergyKwh, PricePerKwh) =
@@ -31,8 +36,10 @@ public sealed record CreateBookingSlotRequest
 
 public sealed record UpdateBookingSlotRequest
 {
+    // Supports ASP.NET Core JSON model binding.
     public UpdateBookingSlotRequest() { }
 
+    // Supports direct construction in services and automated tests.
     public UpdateBookingSlotRequest(DateTime startTimeUtc, DateTime endTimeUtc,
         decimal availableEnergyKwh, decimal pricePerKwh) =>
         (StartTimeUtc, EndTimeUtc, AvailableEnergyKwh, PricePerKwh) =
@@ -50,8 +57,10 @@ public sealed record UpdateBookingSlotRequest
 
 public sealed record ChangeBookingSlotStatusRequest
 {
+    // Supports ASP.NET Core JSON model binding.
     public ChangeBookingSlotStatusRequest() { }
 
+    // Supports direct construction in services and automated tests.
     public ChangeBookingSlotStatusRequest(string status, string? reason) =>
         (Status, Reason) = (status, reason);
 

@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Verifies station and energy-slot business rules with isolated fakes.
+// -----------------------------------------------------------------------------
 using Microsoft.Extensions.Logging.Abstractions;
 using MongoDB.Bson;
 using SmartSolarMicrogrid.Api.Contracts.BookingSlots;
@@ -10,6 +13,7 @@ namespace SmartSolarMicrogrid.Api.Tests;
 
 public sealed class StationSlotServiceTests
 {
+    // Verifies that station creation normalizes its code and assigns Active status.
     [Fact]
     public async Task CreateStation_NormalizesCodeAndCreatesActiveStation()
     {
@@ -24,6 +28,7 @@ public sealed class StationSlotServiceTests
         Assert.Single(stations.Items);
     }
 
+    // Verifies that an existing station code produces a conflict.
     [Fact]
     public async Task CreateStation_RejectsDuplicateCode()
     {
@@ -36,6 +41,7 @@ public sealed class StationSlotServiceTests
         Assert.Equal(StatusCodes.Status409Conflict, exception.StatusCode);
     }
 
+    // Verifies total-capacity and battery-storage constraints.
     [Theory]
     [InlineData(100, 101, "STATION_STORAGE_INVALID")]
     [InlineData(0, 0, "STATION_CAPACITY_INVALID")]
@@ -56,6 +62,7 @@ public sealed class StationSlotServiceTests
         Assert.Equal(expectedCode, exception.ErrorCode);
     }
 
+    // Verifies that active reservations prevent station deactivation.
     [Fact]
     public async Task ChangeStationStatus_WithActiveReservation_IsRejected()
     {
@@ -73,6 +80,7 @@ public sealed class StationSlotServiceTests
         Assert.Equal(StationStatus.Active, stations.Items[0].Status);
     }
 
+    // Verifies that a station without active reservations can be deactivated.
     [Fact]
     public async Task ChangeStationStatus_WithoutReservation_DeactivatesStation()
     {
@@ -88,6 +96,7 @@ public sealed class StationSlotServiceTests
         Assert.Equal(StationStatus.Deactivated, stations.Items[0].Status);
     }
 
+    // Verifies that slots cannot be created for inactive stations.
     [Fact]
     public async Task CreateSlot_ForInactiveStation_IsRejected()
     {
@@ -103,6 +112,7 @@ public sealed class StationSlotServiceTests
         Assert.Equal("STATION_NOT_ACTIVE", exception.ErrorCode);
     }
 
+    // Verifies that intersecting slot periods are rejected.
     [Fact]
     public async Task CreateSlot_RejectsOverlappingPeriod()
     {
@@ -117,6 +127,7 @@ public sealed class StationSlotServiceTests
         Assert.Equal("SLOT_TIME_OVERLAP", exception.ErrorCode);
     }
 
+    // Verifies that slot times must remain within station operating hours.
     [Fact]
     public async Task CreateSlot_RejectsPeriodOutsideOperatingSchedule()
     {
@@ -134,6 +145,7 @@ public sealed class StationSlotServiceTests
         Assert.Equal("SLOT_OUTSIDE_SCHEDULE", exception.ErrorCode);
     }
 
+    // Verifies successful creation of a valid available slot.
     [Fact]
     public async Task CreateSlot_WithValidData_Succeeds()
     {
@@ -150,6 +162,7 @@ public sealed class StationSlotServiceTests
         Assert.Single(slots.Items);
     }
 
+    // Verifies that active reservations prevent slot updates.
     [Fact]
     public async Task UpdateSlot_WithActiveReservation_IsRejected()
     {
@@ -173,6 +186,7 @@ public sealed class StationSlotServiceTests
         Assert.Equal("SLOT_ACTIVE_RESERVATION", exception.ErrorCode);
     }
 
+    // Verifies that reserved slots cannot be made unavailable.
     [Fact]
     public async Task MakeSlotUnavailable_WithActiveReservation_IsRejected()
     {
@@ -192,6 +206,7 @@ public sealed class StationSlotServiceTests
         Assert.Equal("SLOT_ACTIVE_RESERVATION", exception.ErrorCode);
     }
 
+    // Creates the station service with isolated fake dependencies.
     private static SolarStationService StationService(
         FakeStationRepository stations,
         FakeReservationQuery? reservations = null) => new(
@@ -199,6 +214,7 @@ public sealed class StationSlotServiceTests
             reservations ?? new FakeReservationQuery(),
             NullLogger<SolarStationService>.Instance);
 
+    // Creates the booking-slot service with isolated fake dependencies.
     private static BookingSlotService SlotService(
         FakeStationRepository stations,
         FakeSlotRepository slots,
@@ -208,18 +224,22 @@ public sealed class StationSlotServiceTests
             reservations ?? new FakeReservationQuery(),
             NullLogger<BookingSlotService>.Instance);
 
+    // Builds a valid station request that tests may customize.
     private static CreateStationRequest ValidStation(string code = "STN-CMB-001") => new(
         code, "Colombo Solar Hub", "Main node", 6.9271, 79.8612, "Colombo",
         120.5m, 80m, TimeSpan.FromHours(8), TimeSpan.FromHours(20));
 
+    // Builds a valid future slot request within station operating hours.
     private static CreateBookingSlotRequest ValidSlot()
     {
         var start = FutureDay().AddHours(10);
         return new CreateBookingSlotRequest("SLT-CMB-001", start, start.AddHours(1), 15m, 45m);
     }
 
+    // Returns a stable future UTC date for slot tests.
     private static DateTime FutureDay() => DateTime.UtcNow.Date.AddDays(2);
 
+    // Builds an active station persistence model for fake repositories.
     private static SolarStation Station() => new()
     {
         Id = ObjectId.GenerateNewId(),
@@ -233,6 +253,7 @@ public sealed class StationSlotServiceTests
         Status = StationStatus.Active
     };
 
+    // Builds an available slot persistence model for fake repositories.
     private static EnergyBookingSlot Slot(ObjectId stationId)
     {
         var start = FutureDay().AddHours(10);
@@ -256,9 +277,11 @@ public sealed class StationSlotServiceTests
         public bool StationHasActive { get; init; }
         public bool SlotHasActive { get; init; }
 
+        // Returns the configured station-reservation result for the current test.
         public Task<bool> HasActiveReservationsForStationAsync(ObjectId stationId, CancellationToken cancellationToken = default) =>
             Task.FromResult(StationHasActive);
 
+        // Returns the configured slot-reservation result for the current test.
         public Task<bool> HasActiveReservationsForSlotAsync(ObjectId slotId, CancellationToken cancellationToken = default) =>
             Task.FromResult(SlotHasActive);
     }
@@ -267,15 +290,19 @@ public sealed class StationSlotServiceTests
     {
         public List<SolarStation> Items { get; } = [];
 
+        // Finds a fake station by public code.
         public Task<SolarStation?> FindByCodeAsync(string stationCode, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.SingleOrDefault(item => item.StationCode == stationCode));
 
+        // Finds a fake station by internal identifier.
         public Task<SolarStation?> FindByIdAsync(ObjectId id, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
 
+        // Lists fake stations with an optional status filter.
         public Task<List<SolarStation>> GetAllAsync(StationStatus? status, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.Where(item => status is null || item.Status == status).ToList());
 
+        // Adds a station to the in-memory test collection.
         public Task CreateAsync(SolarStation station, CancellationToken cancellationToken = default)
         {
             station.Id = ObjectId.GenerateNewId();
@@ -285,9 +312,11 @@ public sealed class StationSlotServiceTests
             return Task.CompletedTask;
         }
 
+        // Reports whether the station exists in the fake collection.
         public Task<bool> UpdateAsync(SolarStation station, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.Any(item => item.Id == station.Id));
 
+        // Changes station status inside the fake collection.
         public Task<bool> UpdateStatusAsync(string stationCode, StationStatus status, CancellationToken cancellationToken = default)
         {
             var station = Items.SingleOrDefault(item => item.StationCode == stationCode);
@@ -302,15 +331,19 @@ public sealed class StationSlotServiceTests
         public List<EnergyBookingSlot> Items { get; } = [];
         public bool ForceOverlap { get; init; }
 
+        // Finds a fake slot by public code.
         public Task<EnergyBookingSlot?> FindByCodeAsync(string slotCode, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.SingleOrDefault(item => item.SlotCode == slotCode));
 
+        // Lists fake slots belonging to the requested station.
         public Task<List<EnergyBookingSlot>> GetForStationAsync(ObjectId stationId, DateTime? fromUtc, DateTime? toUtc, SlotStatus? status, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.Where(item => item.StationId == stationId).ToList());
 
+        // Simulates or calculates overlapping slot periods for service tests.
         public Task<bool> HasOverlapAsync(ObjectId stationId, DateTime startTimeUtc, DateTime endTimeUtc, ObjectId? excludedId = null, CancellationToken cancellationToken = default) =>
             Task.FromResult(ForceOverlap || Items.Any(item => item.StationId == stationId && item.Id != excludedId && item.StartTimeUtc < endTimeUtc && item.EndTimeUtc > startTimeUtc));
 
+        // Adds a slot to the in-memory test collection.
         public Task CreateAsync(EnergyBookingSlot slot, CancellationToken cancellationToken = default)
         {
             slot.Id = ObjectId.GenerateNewId();
@@ -320,9 +353,11 @@ public sealed class StationSlotServiceTests
             return Task.CompletedTask;
         }
 
+        // Reports whether the slot exists in the fake collection.
         public Task<bool> UpdateAsync(EnergyBookingSlot slot, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.Any(item => item.Id == slot.Id));
 
+        // Changes slot status inside the fake collection.
         public Task<bool> UpdateStatusAsync(string slotCode, SlotStatus status, CancellationToken cancellationToken = default)
         {
             var slot = Items.SingleOrDefault(item => item.SlotCode == slotCode);
@@ -331,9 +366,11 @@ public sealed class StationSlotServiceTests
             return Task.FromResult(true);
         }
 
+        // Finds a fake slot by its internal identifier.
         public Task<EnergyBookingSlot?> FindByIdAsync(ObjectId id, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
 
+        // Changes fake slot status using its internal identifier.
         public Task<bool> UpdateStatusByIdAsync(ObjectId id, SlotStatus status, CancellationToken cancellationToken = default)
         {
             var slot = Items.SingleOrDefault(item => item.Id == id);

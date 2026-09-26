@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Defines station-management use cases exposed to API controllers.
+// -----------------------------------------------------------------------------
 using SmartSolarMicrogrid.Api.Contracts.Stations;
 
 namespace SmartSolarMicrogrid.Api.Services;

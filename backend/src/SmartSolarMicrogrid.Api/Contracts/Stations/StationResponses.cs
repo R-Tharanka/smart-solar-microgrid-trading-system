@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Defines the public station response without exposing MongoDB identifiers.
+// -----------------------------------------------------------------------------
 namespace SmartSolarMicrogrid.Api.Contracts.Stations;
 
 public record StationResponse(

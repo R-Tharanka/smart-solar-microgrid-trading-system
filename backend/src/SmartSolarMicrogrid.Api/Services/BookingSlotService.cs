@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Enforces slot schedule, capacity, overlap, and availability rules.
+// -----------------------------------------------------------------------------
 using MongoDB.Driver;
 using SmartSolarMicrogrid.Api.Contracts.BookingSlots;
 using SmartSolarMicrogrid.Api.Models;

@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Exposes authenticated HTTP endpoints for individual energy-slot operations.
+// -----------------------------------------------------------------------------
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartSolarMicrogrid.Api.Authorization;
