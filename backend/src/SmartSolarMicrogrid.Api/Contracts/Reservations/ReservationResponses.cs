@@ -11,6 +11,7 @@ public sealed record ReservationResponse(
     DateTime ScheduledStartTimeUtc,
     DateTime ScheduledEndTimeUtc,
     string Status,
+    string? ConfirmationNote,
     DateTime CreatedAtUtc,
     DateTime UpdatedAtUtc);
 

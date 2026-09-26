@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using MongoDB.Bson;
 using SmartSolarMicrogrid.Api.Contracts.Reservations;
@@ -179,14 +180,24 @@ public sealed class ReservationService(
             throw ReservationException.Validation("RESERVATION_ENERGY_INVALID",
                 $"Requested energy ({request.RequestedEnergyKwh} kWh) exceeds the slot's available energy ({slot.AvailableEnergyKwh} kWh).");
 
-        // Update only the user-editable field. All QR/transaction fields are preserved via full replace.
-        reservation.RequestedEnergyKwh = request.RequestedEnergyKwh;
+        // Editable statuses — used as the conditional filter in the atomic update.
+        ReadOnlyCollection<ReservationStatus> editableStatuses =
+            new([ReservationStatus.Pending, ReservationStatus.Approved]);
 
-        if (!await reservationRepository.UpdateAsync(reservation, cancellationToken))
+        // Atomically update ONLY requestedEnergyKwh and updatedAtUtc.
+        // UpdateEnergyAsync conditions the filter on id, prosumerNic, and editable statuses,
+        // so QR/transaction fields owned by Member 4 are never touched by this operation.
+        if (!await reservationRepository.UpdateEnergyAsync(
+                reservation.Id, prosumerNic, editableStatuses,
+                request.RequestedEnergyKwh, now, cancellationToken))
+        {
             throw ReservationException.Conflict("RESERVATION_INVALID_STATUS",
-                "The reservation could not be updated. It may have changed since it was loaded.");
+                "The reservation could not be updated. Its status may have changed.");
+        }
 
         logger.LogInformation("Reservation {Code} updated by Prosumer {Nic}", reservation.ReservationCode, prosumerNic);
+        reservation.RequestedEnergyKwh = request.RequestedEnergyKwh;
+        reservation.UpdatedAtUtc = now;
         return MapToResponse(reservation);
     }
 
@@ -218,9 +229,11 @@ public sealed class ReservationService(
             throw ReservationException.Validation("RESERVATION_NOTICE_PERIOD",
                 $"Reservations must be cancelled at least {NoticePeriodHours} hours before the scheduled start.");
 
-        // Atomically transition to Cancelled.
+        var trimmedReason = string.IsNullOrWhiteSpace(request.Reason) ? null : request.Reason.Trim();
+
+        // Atomically transition to Cancelled and persist the reason.
         if (!await reservationRepository.UpdateStatusAsync(
-                reservation.Id, reservation.Status, ReservationStatus.Cancelled, now, cancellationToken))
+                reservation.Id, reservation.Status, ReservationStatus.Cancelled, now, trimmedReason, cancellationToken))
         {
             throw ReservationException.Conflict("RESERVATION_INVALID_STATUS",
                 "The reservation could not be cancelled. Its status may have changed.");
@@ -232,6 +245,7 @@ public sealed class ReservationService(
         await slotRepository.UpdateStatusByIdAsync(reservation.SlotId, SlotStatus.Available, cancellationToken);
 
         reservation.Status = ReservationStatus.Cancelled;
+        reservation.ConfirmationNote = trimmedReason;
         reservation.UpdatedAtUtc = now;
 
         logger.LogInformation("Reservation {Code} cancelled by Prosumer {Nic}", reservation.ReservationCode, prosumerNic);
@@ -255,7 +269,7 @@ public sealed class ReservationService(
 
         var now = UtcNow();
         if (!await reservationRepository.UpdateStatusAsync(
-                reservation.Id, ReservationStatus.Pending, ReservationStatus.Approved, now, cancellationToken))
+                reservation.Id, ReservationStatus.Pending, ReservationStatus.Approved, now, cancellationToken: cancellationToken))
         {
             throw ReservationException.Conflict("RESERVATION_APPROVAL_INVALID",
                 "The reservation could not be approved. Its status may have changed.");
@@ -289,8 +303,11 @@ public sealed class ReservationService(
                 "A rejection reason is required.");
 
         var now = UtcNow();
-        if (!await reservationRepository.UpdateStatusAsync(
-                reservation.Id, ReservationStatus.Pending, ReservationStatus.Rejected, now, cancellationToken))
+        var trimmedReason = request.Reason.Trim();
+
+        // RejectWithNoteAsync atomically sets status=Rejected, confirmationNote=reason, updatedAtUtc
+        // in a single MongoDB UpdateOne conditioned on status==Pending.
+        if (!await reservationRepository.RejectWithNoteAsync(reservation.Id, trimmedReason, now, cancellationToken))
         {
             throw ReservationException.Conflict("RESERVATION_APPROVAL_INVALID",
                 "The reservation could not be rejected. Its status may have changed.");
@@ -300,9 +317,10 @@ public sealed class ReservationService(
         await slotRepository.UpdateStatusByIdAsync(reservation.SlotId, SlotStatus.Available, cancellationToken);
 
         reservation.Status = ReservationStatus.Rejected;
+        reservation.ConfirmationNote = trimmedReason;
         reservation.UpdatedAtUtc = now;
 
-        logger.LogInformation("Reservation {Code} rejected. Reason: {Reason}", reservation.ReservationCode, request.Reason.Trim());
+        logger.LogInformation("Reservation {Code} rejected. Reason: {Reason}", reservation.ReservationCode, trimmedReason);
         return MapToResponse(reservation);
     }
 
@@ -401,6 +419,7 @@ public sealed class ReservationService(
         new(r.Id.ToString(), r.ReservationCode, r.ProsumerNic,
             r.StationId.ToString(), r.SlotId.ToString(), r.RequestedEnergyKwh,
             r.ScheduledStartTimeUtc, r.ScheduledEndTimeUtc, r.Status.ToString(),
+            r.ConfirmationNote,
             r.CreatedAtUtc, r.UpdatedAtUtc);
 
     private static ReservationSummaryResponse MapToSummary(EnergyReservation r) =>

@@ -482,6 +482,131 @@ public sealed class ReservationServiceTests
     }
 
     // -------------------------------------------------------------------------
+    // Issue 1 — Update modifies ONLY requested energy
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Update_ModifiesOnlyRequestedEnergy()
+    {
+        var r = PendingReservation();
+        var originalSlotId = r.SlotId;
+        var slot = AvailableSlot(energy: 50m);
+        slot.Id = originalSlotId;
+        var repo = new FakeReservationRepository(r);
+        var service = Service(repo, slots: new FakeSlotRepository(slot));
+
+        var result = await service.UpdateAsync(r.Id.ToString(), r.ProsumerNic,
+            new UpdateReservationRequest(25m), TestContext.Current.CancellationToken);
+
+        Assert.Equal(25m, result.RequestedEnergyKwh);
+        Assert.Equal(25m, r.RequestedEnergyKwh);
+        Assert.Equal(originalSlotId.ToString(), result.SlotId);
+        Assert.Equal(originalSlotId, r.SlotId);
+    }
+
+    [Fact]
+    public async Task Update_DoesNotOverwriteQrOrTransactionFields()
+    {
+        // Arrange: a Pending reservation that already has QR/transaction data written by Member 4.
+        var r = PendingReservation();
+        r.QrTokenHash = "somehash";
+        r.QrExpiresAtUtc = Now.AddHours(2);
+        r.VerifiedByUserId = "operator@example.com";
+        r.VerifiedAtUtc = Now.AddHours(1);
+        r.FinalizedByUserId = "operator@example.com";
+        r.FinalizedAtUtc = Now.AddHours(1);
+
+        var slot = AvailableSlot(energy: 50m);
+        slot.Id = r.SlotId;
+        var repo = new FakeReservationRepository(r);
+        var service = Service(repo, slots: new FakeSlotRepository(slot));
+
+        // Act: Prosumer updates energy.
+        await service.UpdateAsync(r.Id.ToString(), r.ProsumerNic,
+            new UpdateReservationRequest(25m), TestContext.Current.CancellationToken);
+
+        // Assert: energy was updated.
+        Assert.Equal(25m, r.RequestedEnergyKwh);
+
+        // Assert: Member 4 QR/transaction fields are unchanged.
+        Assert.Equal("somehash", r.QrTokenHash);
+        Assert.NotNull(r.QrExpiresAtUtc);
+        Assert.Equal("operator@example.com", r.VerifiedByUserId);
+        Assert.NotNull(r.VerifiedAtUtc);
+        Assert.Equal("operator@example.com", r.FinalizedByUserId);
+        Assert.NotNull(r.FinalizedAtUtc);
+    }
+
+    // -------------------------------------------------------------------------
+    // Issue 2 — Rejection reason is persisted into confirmationNote
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Reject_PersistsReasonIntoConfirmationNote()
+    {
+        const string reason = "Station under maintenance";
+        var r = PendingReservation();
+        var slot = AvailableSlot(status: SlotStatus.Reserved);
+        slot.Id = r.SlotId;
+        var repo = new FakeReservationRepository(r);
+        var slotRepo = new FakeSlotRepository(slot);
+
+        var result = await Service(repo, slots: slotRepo).RejectAsync(r.Id.ToString(),
+            new RejectReservationRequest(reason), TestContext.Current.CancellationToken);
+
+        // Status transitions.
+        Assert.Equal("Rejected", result.Status);
+        Assert.Equal(ReservationStatus.Rejected, r.Status);
+
+        // Rejection reason is available in the response ConfirmationNote.
+        Assert.Equal(reason, result.ConfirmationNote);
+
+        // Rejection reason is also persisted on the in-memory domain object (as the fake does).
+        Assert.Equal(reason, r.ConfirmationNote);
+
+        // Slot was restored.
+        Assert.Equal(SlotStatus.Available, slotRepo.Slot.Status);
+    }
+
+    // -------------------------------------------------------------------------
+    // Issue 4 — Cancellation reason is persisted
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Cancel_PersistsReasonIntoConfirmationNote()
+    {
+        const string reason = "Schedule changed";
+        var r = PendingReservation();
+        var slot = AvailableSlot(status: SlotStatus.Reserved);
+        slot.Id = r.SlotId;
+        var repo = new FakeReservationRepository(r);
+        var slotRepo = new FakeSlotRepository(slot);
+
+        var result = await Service(repo, slots: slotRepo).CancelAsync(r.Id.ToString(), r.ProsumerNic,
+            new CancelReservationRequest(reason), TestContext.Current.CancellationToken);
+
+        Assert.Equal("Cancelled", result.Status);
+        Assert.Equal(reason, result.ConfirmationNote);
+        Assert.Equal(reason, r.ConfirmationNote);
+    }
+
+    [Fact]
+    public async Task Reject_LeadingTrailingWhitespaceTrimmedBeforePersisting()
+    {
+        var r = PendingReservation();
+        var slot = AvailableSlot(status: SlotStatus.Reserved);
+        slot.Id = r.SlotId;
+        var repo = new FakeReservationRepository(r);
+
+        var result = await Service(repo, slots: new FakeSlotRepository(slot)).RejectAsync(
+            r.Id.ToString(), new RejectReservationRequest("  Needs review  "),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal("Needs review", result.ConfirmationNote);
+        Assert.Equal("Needs review", r.ConfirmationNote);
+    }
+
+    // -------------------------------------------------------------------------
     // Fakes
     // -------------------------------------------------------------------------
 
@@ -527,17 +652,54 @@ public sealed class ReservationServiceTests
             return Task.FromResult(true);
         }
 
+        public Task<bool> UpdateEnergyAsync(
+            MongoDB.Bson.ObjectId id,
+            string prosumerNic,
+            IReadOnlyCollection<ReservationStatus> allowedStatuses,
+            decimal requestedEnergyKwh,
+            DateTime changedAtUtc,
+            CancellationToken cancellationToken = default)
+        {
+            var item = _items.FirstOrDefault(r =>
+                r.Id == id &&
+                string.Equals(r.ProsumerNic, prosumerNic, StringComparison.OrdinalIgnoreCase) &&
+                allowedStatuses.Contains(r.Status));
+            if (item == null) return Task.FromResult(false);
+            item.RequestedEnergyKwh = requestedEnergyKwh;
+            item.UpdatedAtUtc = changedAtUtc;
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> RejectWithNoteAsync(
+            MongoDB.Bson.ObjectId id,
+            string rejectionReason,
+            DateTime changedAtUtc,
+            CancellationToken cancellationToken = default)
+        {
+            var item = _items.FirstOrDefault(r => r.Id == id && r.Status == ReservationStatus.Pending);
+            if (item == null) return Task.FromResult(false);
+            item.Status = ReservationStatus.Rejected;
+            item.ConfirmationNote = rejectionReason;
+            item.UpdatedAtUtc = changedAtUtc;
+            return Task.FromResult(true);
+        }
+
         public Task<bool> UpdateStatusAsync(
             MongoDB.Bson.ObjectId id,
             ReservationStatus expectedStatus,
             ReservationStatus newStatus,
             DateTime changedAtUtc,
+            string? confirmationNote = null,
             CancellationToken cancellationToken = default)
         {
             var item = _items.FirstOrDefault(r => r.Id == id && r.Status == expectedStatus);
             if (item == null) return Task.FromResult(false);
             item.Status = newStatus;
             item.UpdatedAtUtc = changedAtUtc;
+            if (confirmationNote != null)
+            {
+                item.ConfirmationNote = confirmationNote;
+            }
             return Task.FromResult(true);
         }
 
