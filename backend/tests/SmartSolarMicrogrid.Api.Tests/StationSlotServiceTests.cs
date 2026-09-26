@@ -330,5 +330,16 @@ public sealed class StationSlotServiceTests
             slot.Status = status;
             return Task.FromResult(true);
         }
+
+        public Task<EnergyBookingSlot?> FindByIdAsync(ObjectId id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
+
+        public Task<bool> UpdateStatusByIdAsync(ObjectId id, SlotStatus status, CancellationToken cancellationToken = default)
+        {
+            var slot = Items.SingleOrDefault(item => item.Id == id);
+            if (slot is null) return Task.FromResult(false);
+            slot.Status = status;
+            return Task.FromResult(true);
+        }
     }
 }

@@ -8,6 +8,9 @@ public interface IBookingSlotRepository
     /// <summary>Finds a slot by its public code.</summary>
     Task<EnergyBookingSlot?> FindByCodeAsync(string slotCode, CancellationToken cancellationToken = default);
 
+    /// <summary>Finds a slot by its internal ObjectId.</summary>
+    Task<EnergyBookingSlot?> FindByIdAsync(ObjectId id, CancellationToken cancellationToken = default);
+
     /// <summary>Lists slots for one station using optional filters.</summary>
     Task<List<EnergyBookingSlot>> GetForStationAsync(
         ObjectId stationId,
@@ -28,6 +31,9 @@ public interface IBookingSlotRepository
     /// <summary>Replaces an existing energy slot.</summary>
     Task<bool> UpdateAsync(EnergyBookingSlot slot, CancellationToken cancellationToken = default);
 
-    /// <summary>Updates only a slot's availability status.</summary>
+    /// <summary>Updates only a slot's availability status by its public code.</summary>
     Task<bool> UpdateStatusAsync(string slotCode, SlotStatus status, CancellationToken cancellationToken = default);
+
+    /// <summary>Updates only a slot's availability status by its internal ObjectId.</summary>
+    Task<bool> UpdateStatusByIdAsync(ObjectId id, SlotStatus status, CancellationToken cancellationToken = default);
 }

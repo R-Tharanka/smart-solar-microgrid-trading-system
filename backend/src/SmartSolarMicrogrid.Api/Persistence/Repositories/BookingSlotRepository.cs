@@ -15,6 +15,12 @@ public sealed class BookingSlotRepository(MongoDbContext context) : IBookingSlot
         CancellationToken cancellationToken = default) =>
         await _slots.Find(slot => slot.SlotCode == slotCode).FirstOrDefaultAsync(cancellationToken);
 
+    // Finds a slot by its internal ObjectId (used when only the ObjectId is available, e.g., from EnergyReservation).
+    public async Task<EnergyBookingSlot?> FindByIdAsync(
+        ObjectId id,
+        CancellationToken cancellationToken = default) =>
+        await _slots.Find(slot => slot.Id == id).FirstOrDefaultAsync(cancellationToken);
+
     // Lists slots belonging to one station using optional date and status filters.
     public Task<List<EnergyBookingSlot>> GetForStationAsync(
         ObjectId stationId,
@@ -86,7 +92,7 @@ public sealed class BookingSlotRepository(MongoDbContext context) : IBookingSlot
         return result.MatchedCount == 1;
     }
 
-    // Atomically updates only slot availability status and its audit timestamp.
+    // Atomically updates only slot availability status and its audit timestamp (by public code).
     public async Task<bool> UpdateStatusAsync(
         string slotCode,
         SlotStatus status,
@@ -97,6 +103,22 @@ public sealed class BookingSlotRepository(MongoDbContext context) : IBookingSlot
             .Set(slot => slot.UpdatedAtUtc, DateTime.UtcNow);
         var result = await _slots.UpdateOneAsync(
             slot => slot.SlotCode == slotCode,
+            update,
+            cancellationToken: cancellationToken);
+        return result.MatchedCount == 1;
+    }
+
+    // Atomically updates only slot availability status by its internal ObjectId.
+    public async Task<bool> UpdateStatusByIdAsync(
+        ObjectId id,
+        SlotStatus status,
+        CancellationToken cancellationToken = default)
+    {
+        var update = Builders<EnergyBookingSlot>.Update
+            .Set(slot => slot.Status, status)
+            .Set(slot => slot.UpdatedAtUtc, DateTime.UtcNow);
+        var result = await _slots.UpdateOneAsync(
+            slot => slot.Id == id,
             update,
             cancellationToken: cancellationToken);
         return result.MatchedCount == 1;
