@@ -16,4 +16,7 @@ public sealed class TransactionException(int statusCode, string errorCode, strin
 
     public static TransactionException InvalidToken() =>
         new(StatusCodes.Status400BadRequest, "QR_TOKEN_INVALID", "The QR transaction token is invalid.");
+
+    public static TransactionException Validation(string code, string message) =>
+        new(StatusCodes.Status422UnprocessableEntity, code, message);
 }

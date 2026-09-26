@@ -100,14 +100,24 @@ public sealed class TransactionService(
         {
             throw TransactionException.Conflict("FINALIZE_STATUS_INVALID", "Only a verified transaction can be finalized.");
         }
+        var transferredEnergy = request.ActualEnergyTransferredKwh ?? reservation.RequestedEnergyKwh;
+        if (transferredEnergy <= 0 || transferredEnergy > reservation.RequestedEnergyKwh)
+        {
+            throw TransactionException.Validation(
+                "TRANSFER_ENERGY_INVALID",
+                "Actual transferred energy must be greater than zero and cannot exceed the reserved energy.");
+        }
         var now = UtcNow();
-        if (!await repository.FinalizeAsync(code, operatorIdentifier, request.ConfirmationNote.Trim(), now, cancellationToken))
+        if (!await repository.FinalizeAsync(
+                code, reservation.SlotId, operatorIdentifier, request.ConfirmationNote.Trim(),
+                transferredEnergy, now, cancellationToken))
         {
             throw TransactionException.Conflict("FINALIZE_CONFLICT", "The transaction was already finalized or changed.");
         }
 
         logger.LogInformation("Transaction {ReservationCode} finalized by {OperatorIdentifier}", code, operatorIdentifier);
-        return new FinalizedTransactionResponse(code, ReservationStatus.Completed.ToString(), now);
+        return new FinalizedTransactionResponse(
+            code, ReservationStatus.Completed.ToString(), transferredEnergy, now);
     }
 
     public async Task<TransactionDetailsResponse> GetAsync(
@@ -121,7 +131,8 @@ public sealed class TransactionService(
             reservation.StationId.ToString(), reservation.SlotId.ToString(), reservation.RequestedEnergyKwh,
             reservation.ScheduledStartTimeUtc, reservation.ScheduledEndTimeUtc, reservation.Status.ToString(),
             reservation.QrExpiresAtUtc, reservation.VerifiedByUserId, reservation.VerifiedAtUtc,
-            reservation.FinalizedByUserId, reservation.FinalizedAtUtc, reservation.ConfirmationNote);
+            reservation.FinalizedByUserId, reservation.FinalizedAtUtc,
+            reservation.ActualEnergyTransferredKwh, reservation.ConfirmationNote);
     }
 
     private DateTime UtcNow() => timeProvider.GetUtcNow().UtcDateTime;

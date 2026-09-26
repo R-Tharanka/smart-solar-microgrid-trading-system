@@ -8,4 +8,5 @@ public sealed record VerifyTransactionRequest(
 
 public sealed record FinalizeTransactionRequest(
     [property: Required, StringLength(40, MinimumLength = 3)] string ReservationCode,
-    [property: Required, StringLength(500, MinimumLength = 2)] string ConfirmationNote);
+    [property: Required, StringLength(500, MinimumLength = 2)] string ConfirmationNote,
+    [property: Range(typeof(decimal), "0.001", "999999999")] decimal? ActualEnergyTransferredKwh = null);

@@ -16,6 +16,7 @@ public sealed record VerifiedTransactionResponse(
 public sealed record FinalizedTransactionResponse(
     string ReservationCode,
     string Status,
+    decimal ActualEnergyTransferredKwh,
     DateTime FinalizedAtUtc);
 
 public sealed record TransactionDetailsResponse(
@@ -33,4 +34,5 @@ public sealed record TransactionDetailsResponse(
     DateTime? VerifiedAtUtc,
     string? FinalizedByIdentifier,
     DateTime? FinalizedAtUtc,
+    decimal? ActualEnergyTransferredKwh,
     string? ConfirmationNote);

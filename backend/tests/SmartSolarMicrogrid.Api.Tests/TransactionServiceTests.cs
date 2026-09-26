@@ -88,8 +88,38 @@ public sealed class TransactionServiceTests
             service.FinalizeAsync(request, "operator@example.com", TestContext.Current.CancellationToken));
 
         Assert.Equal("Completed", result.Status);
+        Assert.Equal(repository.Item.RequestedEnergyKwh, result.ActualEnergyTransferredKwh);
         Assert.Equal("FINALIZE_STATUS_INVALID", error.ErrorCode);
         Assert.Equal("Transfer complete", repository.Item.ConfirmationNote);
+        Assert.Equal(repository.Item.RequestedEnergyKwh, repository.Item.ActualEnergyTransferredKwh);
+    }
+
+    [Fact]
+    public async Task Finalize_RecordsOperatorReportedEnergy()
+    {
+        var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Verified));
+        var request = new FinalizeTransactionRequest(
+            repository.Item.ReservationCode, "Partial transfer completed", 8.5m);
+
+        var result = await Service(repository).FinalizeAsync(
+            request, "operator@example.com", TestContext.Current.CancellationToken);
+
+        Assert.Equal(8.5m, result.ActualEnergyTransferredKwh);
+        Assert.Equal(8.5m, repository.Item.ActualEnergyTransferredKwh);
+    }
+
+    [Fact]
+    public async Task Finalize_RejectsEnergyAboveReservation()
+    {
+        var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Verified));
+        var request = new FinalizeTransactionRequest(
+            repository.Item.ReservationCode, "Transfer completed", 10.1m);
+
+        var error = await Assert.ThrowsAsync<TransactionException>(() => Service(repository).FinalizeAsync(
+            request, "operator@example.com", TestContext.Current.CancellationToken));
+
+        Assert.Equal("TRANSFER_ENERGY_INVALID", error.ErrorCode);
+        Assert.Equal(ReservationStatus.Verified, repository.Item.Status);
     }
 
     private static TransactionService Service(ITransactionRepository repository) =>
@@ -147,13 +177,16 @@ public sealed class TransactionServiceTests
             return Task.FromResult(true);
         }
 
-        public Task<bool> FinalizeAsync(string reservationCode, string operatorIdentifier, string confirmationNote,
-            DateTime finalizedAtUtc, CancellationToken cancellationToken = default)
+        public Task<bool> FinalizeAsync(string reservationCode, ObjectId slotId, string operatorIdentifier,
+            string confirmationNote, decimal actualEnergyTransferredKwh, DateTime finalizedAtUtc,
+            CancellationToken cancellationToken = default)
         {
-            if (reservationCode != Item.ReservationCode || Item.Status != ReservationStatus.Verified) return Task.FromResult(false);
+            if (reservationCode != Item.ReservationCode || slotId != Item.SlotId ||
+                Item.Status != ReservationStatus.Verified) return Task.FromResult(false);
             Item.Status = ReservationStatus.Completed;
             Item.FinalizedByUserId = operatorIdentifier;
             Item.FinalizedAtUtc = finalizedAtUtc;
+            Item.ActualEnergyTransferredKwh = actualEnergyTransferredKwh;
             Item.ConfirmationNote = confirmationNote;
             return Task.FromResult(true);
         }

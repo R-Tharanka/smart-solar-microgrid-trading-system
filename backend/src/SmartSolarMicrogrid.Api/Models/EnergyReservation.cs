@@ -52,6 +52,10 @@ public sealed class EnergyReservation
     [BsonIgnoreIfNull, BsonElement("finalizedAtUtc")]
     public DateTime? FinalizedAtUtc { get; set; }
 
+    [BsonIgnoreIfNull, BsonElement("actualEnergyTransferredKwh")]
+    [BsonRepresentation(BsonType.Decimal128)]
+    public decimal? ActualEnergyTransferredKwh { get; set; }
+
     [BsonIgnoreIfNull, BsonElement("confirmationNote")]
     public string? ConfirmationNote { get; set; }
 
