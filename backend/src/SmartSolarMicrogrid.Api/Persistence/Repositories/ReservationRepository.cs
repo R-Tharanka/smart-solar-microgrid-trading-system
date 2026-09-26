@@ -100,6 +100,49 @@ public sealed class ReservationRepository(MongoDbContext context) : IReservation
         return result.ModifiedCount == 1;
     }
 
+    // Atomically updates only requestedEnergyKwh and updatedAtUtc.
+    // The filter conditions on id, prosumerNic, and allowed statuses ensure that:
+    // (a) only the owning Prosumer's reservation is modified,
+    // (b) only editable-status reservations are modified,
+    // (c) QR/verification/finalization fields owned by Member 4 are never overwritten.
+    public async Task<bool> UpdateEnergyAsync(
+        ObjectId id,
+        string prosumerNic,
+        IReadOnlyCollection<ReservationStatus> allowedStatuses,
+        decimal requestedEnergyKwh,
+        DateTime changedAtUtc,
+        CancellationToken cancellationToken = default)
+    {
+        var builder = Builders<EnergyReservation>.Filter;
+        var filter = builder.Eq(r => r.Id, id)
+            & builder.Eq(r => r.ProsumerNic, prosumerNic)
+            & builder.In(r => r.Status, allowedStatuses);
+        var update = Builders<EnergyReservation>.Update
+            .Set(r => r.RequestedEnergyKwh, requestedEnergyKwh)
+            .Set(r => r.UpdatedAtUtc, changedAtUtc);
+        var result = await _reservations.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
+        return result.ModifiedCount == 1;
+    }
+
+    // Atomically transitions a Pending reservation to Rejected and persists the rejection reason
+    // into the existing confirmationNote field. Conditioned on status == Pending to prevent
+    // inadvertently rejecting a reservation that has already advanced (e.g., Approved).
+    public async Task<bool> RejectWithNoteAsync(
+        ObjectId id,
+        string rejectionReason,
+        DateTime changedAtUtc,
+        CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<EnergyReservation>.Filter.Where(r =>
+            r.Id == id && r.Status == ReservationStatus.Pending);
+        var update = Builders<EnergyReservation>.Update
+            .Set(r => r.Status, ReservationStatus.Rejected)
+            .Set(r => r.ConfirmationNote, rejectionReason)
+            .Set(r => r.UpdatedAtUtc, changedAtUtc);
+        var result = await _reservations.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
+        return result.ModifiedCount == 1;
+    }
+
     // Runs a single aggregation pipeline to count documents per status for the dashboard.
     public async Task<Dictionary<ReservationStatus, long>> GetStatusCountsAsync(
         CancellationToken cancellationToken = default)

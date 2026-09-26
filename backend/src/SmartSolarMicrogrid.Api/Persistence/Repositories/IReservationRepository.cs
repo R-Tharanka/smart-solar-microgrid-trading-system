@@ -30,6 +30,31 @@ public interface IReservationRepository
     Task<bool> UpdateAsync(EnergyReservation reservation, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Atomically updates only <c>requestedEnergyKwh</c> and <c>updatedAtUtc</c>.
+    /// The conditional filter checks id, prosumerNic, and that the status is one of the editable statuses
+    /// so that QR/transaction fields owned by Member 4 are never touched.
+    /// Returns true only when exactly one document was modified.
+    /// </summary>
+    Task<bool> UpdateEnergyAsync(
+        ObjectId id,
+        string prosumerNic,
+        IReadOnlyCollection<ReservationStatus> allowedStatuses,
+        decimal requestedEnergyKwh,
+        DateTime changedAtUtc,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Atomically transitions a reservation from Pending to Rejected, persists the rejection reason
+    /// into <c>confirmationNote</c>, and refreshes <c>updatedAtUtc</c>.
+    /// Returns true only when exactly one document was modified.
+    /// </summary>
+    Task<bool> RejectWithNoteAsync(
+        ObjectId id,
+        string rejectionReason,
+        DateTime changedAtUtc,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Atomically transitions a reservation from <paramref name="expectedStatus"/> to
     /// <paramref name="newStatus"/> and refreshes the update timestamp.
     /// Returns true only when exactly one document was modified.
