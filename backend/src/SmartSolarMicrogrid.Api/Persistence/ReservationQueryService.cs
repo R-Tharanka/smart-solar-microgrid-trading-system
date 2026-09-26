@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Provides read-only reservation checks for safe station and slot changes.
+// -----------------------------------------------------------------------------
 using MongoDB.Bson;
 using MongoDB.Driver;
 using SmartSolarMicrogrid.Api.Services;

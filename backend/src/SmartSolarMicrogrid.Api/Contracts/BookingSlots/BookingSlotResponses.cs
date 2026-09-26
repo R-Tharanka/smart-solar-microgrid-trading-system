@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Defines the public slot response without exposing MongoDB identifiers.
+// -----------------------------------------------------------------------------
 namespace SmartSolarMicrogrid.Api.Contracts.BookingSlots;
 
 public record BookingSlotResponse(

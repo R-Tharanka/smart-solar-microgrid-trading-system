@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Represents station and slot failures with stable API error codes.
+// -----------------------------------------------------------------------------
 namespace SmartSolarMicrogrid.Api.Services;
 
 public sealed class StationSlotException(int statusCode, string errorCode, string message) : Exception(message)

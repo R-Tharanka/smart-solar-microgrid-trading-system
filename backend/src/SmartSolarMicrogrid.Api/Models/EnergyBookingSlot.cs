@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Defines the MongoDB persistence model for station energy slots.
+// -----------------------------------------------------------------------------
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 

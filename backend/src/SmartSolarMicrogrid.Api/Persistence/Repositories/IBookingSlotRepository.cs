@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Defines persistence operations required by the booking-slot service.
+// -----------------------------------------------------------------------------
 using MongoDB.Bson;
 using SmartSolarMicrogrid.Api.Models;
 

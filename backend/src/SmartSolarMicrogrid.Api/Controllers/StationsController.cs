@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Manages authenticated HTTP endpoints for station and station-slot management.
+// -----------------------------------------------------------------------------
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartSolarMicrogrid.Api.Authorization;

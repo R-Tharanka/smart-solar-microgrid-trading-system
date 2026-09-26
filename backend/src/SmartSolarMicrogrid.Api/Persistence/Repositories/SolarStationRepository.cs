@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Implements MongoDB persistence for solar-station records.
+// -----------------------------------------------------------------------------
 using MongoDB.Driver;
 using SmartSolarMicrogrid.Api.Models;
 

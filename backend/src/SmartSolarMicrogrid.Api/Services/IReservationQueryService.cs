@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Defines the narrow read-only boundary to Member 3 reservation data.
+// -----------------------------------------------------------------------------
 using MongoDB.Bson;
 
 namespace SmartSolarMicrogrid.Api.Services;

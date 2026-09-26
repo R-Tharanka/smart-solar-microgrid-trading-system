@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Enforces station validation, lifecycle, and proximity-ordering rules.
+// -----------------------------------------------------------------------------
 using MongoDB.Driver;
 using SmartSolarMicrogrid.Api.Contracts.Stations;
 using SmartSolarMicrogrid.Api.Models;

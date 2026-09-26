@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Defines booking-slot use cases exposed to API controllers.
+// -----------------------------------------------------------------------------
 using SmartSolarMicrogrid.Api.Contracts.BookingSlots;
 
 namespace SmartSolarMicrogrid.Api.Services;

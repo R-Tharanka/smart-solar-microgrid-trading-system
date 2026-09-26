@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Implements MongoDB persistence and overlap queries for energy slots.
+// -----------------------------------------------------------------------------
 using MongoDB.Bson;
 using MongoDB.Driver;
 using SmartSolarMicrogrid.Api.Models;

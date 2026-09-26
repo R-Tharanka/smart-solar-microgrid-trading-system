@@ -1,3 +1,6 @@
+// -----------------------------------------------------------------------------
+// Defines persistence operations required by the station domain service.
+// -----------------------------------------------------------------------------
 using SmartSolarMicrogrid.Api.Models;
 
 namespace SmartSolarMicrogrid.Api.Persistence.Repositories;
