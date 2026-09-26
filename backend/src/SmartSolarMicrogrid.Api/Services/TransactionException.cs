@@ -2,6 +2,7 @@ namespace SmartSolarMicrogrid.Api.Services;
 
 public sealed class TransactionException(int statusCode, string errorCode, string message) : Exception(message)
 {
+    // HTTP status and stable client-facing code are converted to Problem Details by the global handler.
     public int StatusCode { get; } = statusCode;
     public string ErrorCode { get; } = errorCode;
 
