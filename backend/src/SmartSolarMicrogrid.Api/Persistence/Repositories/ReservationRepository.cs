@@ -89,13 +89,21 @@ public sealed class ReservationRepository(MongoDbContext context) : IReservation
         ReservationStatus expectedStatus,
         ReservationStatus newStatus,
         DateTime changedAtUtc,
+        string? confirmationNote = null,
         CancellationToken cancellationToken = default)
     {
         var filter = Builders<EnergyReservation>.Filter.Where(r =>
             r.Id == id && r.Status == expectedStatus);
+        
         var update = Builders<EnergyReservation>.Update
             .Set(r => r.Status, newStatus)
             .Set(r => r.UpdatedAtUtc, changedAtUtc);
+
+        if (confirmationNote != null)
+        {
+            update = update.Set(r => r.ConfirmationNote, confirmationNote);
+        }
+
         var result = await _reservations.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
         return result.ModifiedCount == 1;
     }

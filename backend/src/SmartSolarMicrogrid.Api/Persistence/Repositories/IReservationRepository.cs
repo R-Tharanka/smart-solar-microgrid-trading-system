@@ -56,7 +56,7 @@ public interface IReservationRepository
 
     /// <summary>
     /// Atomically transitions a reservation from <paramref name="expectedStatus"/> to
-    /// <paramref name="newStatus"/> and refreshes the update timestamp.
+    /// <paramref name="newStatus"/>, updates the update timestamp, and optionally persists a confirmation note.
     /// Returns true only when exactly one document was modified.
     /// </summary>
     Task<bool> UpdateStatusAsync(
@@ -64,6 +64,7 @@ public interface IReservationRepository
         ReservationStatus expectedStatus,
         ReservationStatus newStatus,
         DateTime changedAtUtc,
+        string? confirmationNote = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>Returns status counts for the operational dashboard.</summary>

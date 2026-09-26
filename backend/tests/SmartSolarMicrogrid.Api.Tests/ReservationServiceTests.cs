@@ -482,8 +482,27 @@ public sealed class ReservationServiceTests
     }
 
     // -------------------------------------------------------------------------
-    // Issue 1 — Atomic update does NOT overwrite QR/transaction fields
+    // Issue 1 — Update modifies ONLY requested energy
     // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Update_ModifiesOnlyRequestedEnergy()
+    {
+        var r = PendingReservation();
+        var originalSlotId = r.SlotId;
+        var slot = AvailableSlot(energy: 50m);
+        slot.Id = originalSlotId;
+        var repo = new FakeReservationRepository(r);
+        var service = Service(repo, slots: new FakeSlotRepository(slot));
+
+        var result = await service.UpdateAsync(r.Id.ToString(), r.ProsumerNic,
+            new UpdateReservationRequest(25m), TestContext.Current.CancellationToken);
+
+        Assert.Equal(25m, result.RequestedEnergyKwh);
+        Assert.Equal(25m, r.RequestedEnergyKwh);
+        Assert.Equal(originalSlotId.ToString(), result.SlotId);
+        Assert.Equal(originalSlotId, r.SlotId);
+    }
 
     [Fact]
     public async Task Update_DoesNotOverwriteQrOrTransactionFields()
@@ -547,6 +566,28 @@ public sealed class ReservationServiceTests
 
         // Slot was restored.
         Assert.Equal(SlotStatus.Available, slotRepo.Slot.Status);
+    }
+
+    // -------------------------------------------------------------------------
+    // Issue 4 — Cancellation reason is persisted
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Cancel_PersistsReasonIntoConfirmationNote()
+    {
+        const string reason = "Schedule changed";
+        var r = PendingReservation();
+        var slot = AvailableSlot(status: SlotStatus.Reserved);
+        slot.Id = r.SlotId;
+        var repo = new FakeReservationRepository(r);
+        var slotRepo = new FakeSlotRepository(slot);
+
+        var result = await Service(repo, slots: slotRepo).CancelAsync(r.Id.ToString(), r.ProsumerNic,
+            new CancelReservationRequest(reason), TestContext.Current.CancellationToken);
+
+        Assert.Equal("Cancelled", result.Status);
+        Assert.Equal(reason, result.ConfirmationNote);
+        Assert.Equal(reason, r.ConfirmationNote);
     }
 
     [Fact]
@@ -648,12 +689,17 @@ public sealed class ReservationServiceTests
             ReservationStatus expectedStatus,
             ReservationStatus newStatus,
             DateTime changedAtUtc,
+            string? confirmationNote = null,
             CancellationToken cancellationToken = default)
         {
             var item = _items.FirstOrDefault(r => r.Id == id && r.Status == expectedStatus);
             if (item == null) return Task.FromResult(false);
             item.Status = newStatus;
             item.UpdatedAtUtc = changedAtUtc;
+            if (confirmationNote != null)
+            {
+                item.ConfirmationNote = confirmationNote;
+            }
             return Task.FromResult(true);
         }
 

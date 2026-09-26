@@ -229,9 +229,11 @@ public sealed class ReservationService(
             throw ReservationException.Validation("RESERVATION_NOTICE_PERIOD",
                 $"Reservations must be cancelled at least {NoticePeriodHours} hours before the scheduled start.");
 
-        // Atomically transition to Cancelled.
+        var trimmedReason = string.IsNullOrWhiteSpace(request.Reason) ? null : request.Reason.Trim();
+
+        // Atomically transition to Cancelled and persist the reason.
         if (!await reservationRepository.UpdateStatusAsync(
-                reservation.Id, reservation.Status, ReservationStatus.Cancelled, now, cancellationToken))
+                reservation.Id, reservation.Status, ReservationStatus.Cancelled, now, trimmedReason, cancellationToken))
         {
             throw ReservationException.Conflict("RESERVATION_INVALID_STATUS",
                 "The reservation could not be cancelled. Its status may have changed.");
@@ -243,6 +245,7 @@ public sealed class ReservationService(
         await slotRepository.UpdateStatusByIdAsync(reservation.SlotId, SlotStatus.Available, cancellationToken);
 
         reservation.Status = ReservationStatus.Cancelled;
+        reservation.ConfirmationNote = trimmedReason;
         reservation.UpdatedAtUtc = now;
 
         logger.LogInformation("Reservation {Code} cancelled by Prosumer {Nic}", reservation.ReservationCode, prosumerNic);
@@ -266,7 +269,7 @@ public sealed class ReservationService(
 
         var now = UtcNow();
         if (!await reservationRepository.UpdateStatusAsync(
-                reservation.Id, ReservationStatus.Pending, ReservationStatus.Approved, now, cancellationToken))
+                reservation.Id, ReservationStatus.Pending, ReservationStatus.Approved, now, cancellationToken: cancellationToken))
         {
             throw ReservationException.Conflict("RESERVATION_APPROVAL_INVALID",
                 "The reservation could not be approved. Its status may have changed.");
