@@ -6,6 +6,7 @@ import GridOperatorDashboard from './pages/gridoperator/Dashboard';
 import Stations from './pages/backoffice/Stations';
 import Slots from './pages/backoffice/Slots';
 import Reservations from './pages/backoffice/Reservations';
+import Prosumers from './pages/backoffice/Prosumers';
 
 function App() {
   return (
@@ -17,6 +18,11 @@ function App() {
         <Route path="/backoffice" element={
           <ProtectedRoute allowedRoles={['Backoffice']}>
             <BackofficeDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/backoffice/prosumers" element={
+          <ProtectedRoute allowedRoles={['Backoffice']}>
+            <Prosumers />
           </ProtectedRoute>
         } />
         <Route path="/backoffice/stations" element={
