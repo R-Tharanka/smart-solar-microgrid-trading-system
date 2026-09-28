@@ -8,3 +8,5 @@ docs/references
 .env
 **/bin/
 **/obj/
+
+node_modules
