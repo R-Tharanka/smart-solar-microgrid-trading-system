@@ -24,16 +24,18 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      // Temporary logic until backend API is fully inspected and connected
-      // The assignment states we shouldn't create fake auth, but we need
-      // this structure to connect to the actual backend.
-      const response = await apiClient.post('/auth/login', { email, password });
+      const response = await apiClient.post('/users/login', { identifier: email, password });
       
-      const { token, role, id, name } = response.data;
+      const { accessToken, user: backendUser } = response.data.data;
       
-      const userData = { id, name, email, role };
+      const userData = { 
+        id: backendUser.nic || backendUser.email, 
+        name: `${backendUser.firstName} ${backendUser.lastName}`, 
+        email: backendUser.email, 
+        role: backendUser.role 
+      };
       
-      localStorage.setItem('token', token);
+      localStorage.setItem('token', accessToken);
       localStorage.setItem('user', JSON.stringify(userData));
       
       setUser(userData);
