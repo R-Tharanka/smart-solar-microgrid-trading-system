@@ -3,6 +3,10 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import Login from './pages/Login';
 import BackofficeDashboard from './pages/backoffice/Dashboard';
 import GridOperatorDashboard from './pages/gridoperator/Dashboard';
+import Stations from './pages/backoffice/Stations';
+import Slots from './pages/backoffice/Slots';
+import Reservations from './pages/backoffice/Reservations';
+import Prosumers from './pages/backoffice/Prosumers';
 
 function App() {
   return (
@@ -16,11 +20,46 @@ function App() {
             <BackofficeDashboard />
           </ProtectedRoute>
         } />
+        <Route path="/backoffice/prosumers" element={
+          <ProtectedRoute allowedRoles={['Backoffice']}>
+            <Prosumers />
+          </ProtectedRoute>
+        } />
+        <Route path="/backoffice/stations" element={
+          <ProtectedRoute allowedRoles={['Backoffice']}>
+            <Stations />
+          </ProtectedRoute>
+        } />
+        <Route path="/backoffice/slots" element={
+          <ProtectedRoute allowedRoles={['Backoffice']}>
+            <Slots />
+          </ProtectedRoute>
+        } />
+        <Route path="/backoffice/reservations" element={
+          <ProtectedRoute allowedRoles={['Backoffice']}>
+            <Reservations />
+          </ProtectedRoute>
+        } />
 
         {/* Grid Operator Routes */}
         <Route path="/grid-operator" element={
           <ProtectedRoute allowedRoles={['GridOperator']}>
             <GridOperatorDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/grid-operator/stations" element={
+          <ProtectedRoute allowedRoles={['GridOperator']}>
+            <Stations />
+          </ProtectedRoute>
+        } />
+        <Route path="/grid-operator/slots" element={
+          <ProtectedRoute allowedRoles={['GridOperator']}>
+            <Slots />
+          </ProtectedRoute>
+        } />
+        <Route path="/grid-operator/reservations" element={
+          <ProtectedRoute allowedRoles={['GridOperator']}>
+            <Reservations />
           </ProtectedRoute>
         } />
 
