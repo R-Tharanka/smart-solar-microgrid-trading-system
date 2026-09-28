@@ -5,6 +5,7 @@ import BackofficeDashboard from './pages/backoffice/Dashboard';
 import GridOperatorDashboard from './pages/gridoperator/Dashboard';
 import Stations from './pages/backoffice/Stations';
 import Slots from './pages/backoffice/Slots';
+import Reservations from './pages/backoffice/Reservations';
 
 function App() {
   return (
@@ -28,6 +29,11 @@ function App() {
             <Slots />
           </ProtectedRoute>
         } />
+        <Route path="/backoffice/reservations" element={
+          <ProtectedRoute allowedRoles={['Backoffice']}>
+            <Reservations />
+          </ProtectedRoute>
+        } />
 
         {/* Grid Operator Routes */}
         <Route path="/grid-operator" element={
@@ -43,6 +49,11 @@ function App() {
         <Route path="/grid-operator/slots" element={
           <ProtectedRoute allowedRoles={['GridOperator']}>
             <Slots />
+          </ProtectedRoute>
+        } />
+        <Route path="/grid-operator/reservations" element={
+          <ProtectedRoute allowedRoles={['GridOperator']}>
+            <Reservations />
           </ProtectedRoute>
         } />
 
