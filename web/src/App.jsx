@@ -3,6 +3,7 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import Login from './pages/Login';
 import BackofficeDashboard from './pages/backoffice/Dashboard';
 import GridOperatorDashboard from './pages/gridoperator/Dashboard';
+import Stations from './pages/backoffice/Stations';
 
 function App() {
   return (
@@ -16,11 +17,21 @@ function App() {
             <BackofficeDashboard />
           </ProtectedRoute>
         } />
+        <Route path="/backoffice/stations" element={
+          <ProtectedRoute allowedRoles={['Backoffice']}>
+            <Stations />
+          </ProtectedRoute>
+        } />
 
         {/* Grid Operator Routes */}
         <Route path="/grid-operator" element={
           <ProtectedRoute allowedRoles={['GridOperator']}>
             <GridOperatorDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/grid-operator/stations" element={
+          <ProtectedRoute allowedRoles={['GridOperator']}>
+            <Stations />
           </ProtectedRoute>
         } />
 

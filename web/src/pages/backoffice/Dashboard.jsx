@@ -5,7 +5,7 @@ const BackofficeDashboard = () => {
   const navItems = [
     { name: 'Dashboard', path: '/backoffice' },
     { name: 'Prosumer Management', path: '/backoffice/prosumers' },
-    { name: 'Microgrid Nodes', path: '/backoffice/nodes' },
+    { name: 'Microgrid Nodes', path: '/backoffice/stations' },
     { name: 'Energy Slots', path: '/backoffice/slots' },
     { name: 'Reservations', path: '/backoffice/reservations' },
   ];
