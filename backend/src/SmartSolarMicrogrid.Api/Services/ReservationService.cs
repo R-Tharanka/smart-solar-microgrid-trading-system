@@ -90,12 +90,8 @@ public sealed class ReservationService(
             Status = ReservationStatus.Pending
         };
 
-        // Persist reservation first; the partial unique index on slotId for active statuses
-        // will reject a duplicate if a concurrent request beats us.
+        // Pending requests do not consume slot energy. Energy is allocated only when staff approves.
         await reservationRepository.CreateAsync(reservation, cancellationToken);
-
-        // Change slot status to Reserved.
-        await slotRepository.UpdateStatusByIdAsync(slotOid, SlotStatus.Reserved, cancellationToken);
 
         logger.LogInformation(
             "Reservation {Code} created for Prosumer {Nic} on slot {SlotId}",
@@ -176,13 +172,25 @@ public sealed class ReservationService(
             throw ReservationException.Validation("RESERVATION_ENERGY_INVALID",
                 "Requested energy must be greater than zero.");
 
-        if (request.RequestedEnergyKwh > slot.AvailableEnergyKwh)
+        var editableEnergy = reservation.Status == ReservationStatus.Approved
+            ? slot.AvailableEnergyKwh + reservation.RequestedEnergyKwh
+            : slot.AvailableEnergyKwh;
+        if (request.RequestedEnergyKwh > editableEnergy)
             throw ReservationException.Validation("RESERVATION_ENERGY_INVALID",
-                $"Requested energy ({request.RequestedEnergyKwh} kWh) exceeds the slot's available energy ({slot.AvailableEnergyKwh} kWh).");
+                $"Requested energy ({request.RequestedEnergyKwh} kWh) exceeds the energy available to this reservation ({editableEnergy} kWh).");
 
         // Editable statuses — used as the conditional filter in the atomic update.
         ReadOnlyCollection<ReservationStatus> editableStatuses =
             new([ReservationStatus.Pending, ReservationStatus.Approved]);
+
+        var energyDifference = request.RequestedEnergyKwh - reservation.RequestedEnergyKwh;
+        if (reservation.Status == ReservationStatus.Approved && energyDifference > 0 &&
+            !await slotRepository.AllocateEnergyAsync(reservation.SlotId, energyDifference, cancellationToken))
+        {
+            throw ReservationException.Conflict(
+                "RESERVATION_SLOT_CAPACITY",
+                "The slot no longer has enough remaining energy for this update.");
+        }
 
         // Atomically update ONLY requestedEnergyKwh and updatedAtUtc.
         // UpdateEnergyAsync conditions the filter on id, prosumerNic, and editable statuses,
@@ -191,8 +199,17 @@ public sealed class ReservationService(
                 reservation.Id, prosumerNic, editableStatuses,
                 request.RequestedEnergyKwh, now, cancellationToken))
         {
+            if (reservation.Status == ReservationStatus.Approved && energyDifference > 0)
+            {
+                await slotRepository.RestoreEnergyAsync(reservation.SlotId, energyDifference, cancellationToken);
+            }
             throw ReservationException.Conflict("RESERVATION_INVALID_STATUS",
                 "The reservation could not be updated. Its status may have changed.");
+        }
+
+        if (reservation.Status == ReservationStatus.Approved && energyDifference < 0)
+        {
+            await slotRepository.RestoreEnergyAsync(reservation.SlotId, -energyDifference, cancellationToken);
         }
 
         logger.LogInformation("Reservation {Code} updated by Prosumer {Nic}", reservation.ReservationCode, prosumerNic);
@@ -230,6 +247,7 @@ public sealed class ReservationService(
                 $"Reservations must be cancelled at least {NoticePeriodHours} hours before the scheduled start.");
 
         var trimmedReason = string.IsNullOrWhiteSpace(request.Reason) ? null : request.Reason.Trim();
+        var wasApproved = reservation.Status == ReservationStatus.Approved;
 
         // Atomically transition to Cancelled and persist the reason.
         if (!await reservationRepository.UpdateStatusAsync(
@@ -239,10 +257,12 @@ public sealed class ReservationService(
                 "The reservation could not be cancelled. Its status may have changed.");
         }
 
-        // Restore the slot only if no other active reservation now holds it.
-        // The partial unique index guarantees at most one active reservation per slot, so we can
-        // safely restore the slot to Available after we have atomically cancelled this reservation.
-        await slotRepository.UpdateStatusByIdAsync(reservation.SlotId, SlotStatus.Available, cancellationToken);
+        // Pending requests have allocated nothing; approved cancellations return their allocation.
+        if (wasApproved)
+        {
+            await slotRepository.RestoreEnergyAsync(
+                reservation.SlotId, reservation.RequestedEnergyKwh, cancellationToken);
+        }
 
         reservation.Status = ReservationStatus.Cancelled;
         reservation.ConfirmationNote = trimmedReason;
@@ -268,9 +288,19 @@ public sealed class ReservationService(
                 $"Only a Pending reservation can be approved. Current status: '{reservation.Status}'.");
 
         var now = UtcNow();
+        if (!await slotRepository.AllocateEnergyAsync(
+                reservation.SlotId, reservation.RequestedEnergyKwh, cancellationToken))
+        {
+            throw ReservationException.Conflict(
+                "RESERVATION_SLOT_CAPACITY",
+                "The slot no longer has enough remaining energy to approve this reservation.");
+        }
+
         if (!await reservationRepository.UpdateStatusAsync(
                 reservation.Id, ReservationStatus.Pending, ReservationStatus.Approved, now, cancellationToken: cancellationToken))
         {
+            await slotRepository.RestoreEnergyAsync(
+                reservation.SlotId, reservation.RequestedEnergyKwh, cancellationToken);
             throw ReservationException.Conflict("RESERVATION_APPROVAL_INVALID",
                 "The reservation could not be approved. Its status may have changed.");
         }
@@ -312,9 +342,6 @@ public sealed class ReservationService(
             throw ReservationException.Conflict("RESERVATION_APPROVAL_INVALID",
                 "The reservation could not be rejected. Its status may have changed.");
         }
-
-        // Restore the slot to Available so it can be reserved again.
-        await slotRepository.UpdateStatusByIdAsync(reservation.SlotId, SlotStatus.Available, cancellationToken);
 
         reservation.Status = ReservationStatus.Rejected;
         reservation.ConfirmationNote = trimmedReason;

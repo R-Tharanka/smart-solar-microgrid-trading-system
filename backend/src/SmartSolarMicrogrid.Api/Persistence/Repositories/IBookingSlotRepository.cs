@@ -39,4 +39,10 @@ public interface IBookingSlotRepository
 
     /// <summary>Updates only a slot's availability status by its internal ObjectId.</summary>
     Task<bool> UpdateStatusByIdAsync(ObjectId id, SlotStatus status, CancellationToken cancellationToken = default);
+
+    /// <summary>Atomically allocates approved energy and marks an empty slot fully reserved.</summary>
+    Task<bool> AllocateEnergyAsync(ObjectId id, decimal energyKwh, CancellationToken cancellationToken = default);
+
+    /// <summary>Returns previously allocated energy and makes the slot available again.</summary>
+    Task<bool> RestoreEnergyAsync(ObjectId id, decimal energyKwh, CancellationToken cancellationToken = default);
 }

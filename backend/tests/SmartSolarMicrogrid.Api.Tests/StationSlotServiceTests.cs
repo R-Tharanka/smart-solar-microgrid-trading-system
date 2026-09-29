@@ -378,5 +378,27 @@ public sealed class StationSlotServiceTests
             slot.Status = status;
             return Task.FromResult(true);
         }
+
+        // Allocates energy from an available fake slot for repository consumers.
+        public Task<bool> AllocateEnergyAsync(ObjectId id, decimal energyKwh, CancellationToken cancellationToken = default)
+        {
+            var slot = Items.SingleOrDefault(item =>
+                item.Id == id && item.Status is SlotStatus.Available or SlotStatus.Reserved &&
+                item.AvailableEnergyKwh >= energyKwh);
+            if (slot is null || energyKwh <= 0) return Task.FromResult(false);
+            slot.AvailableEnergyKwh -= energyKwh;
+            slot.Status = slot.AvailableEnergyKwh == 0 ? SlotStatus.Reserved : SlotStatus.Available;
+            return Task.FromResult(true);
+        }
+
+        // Restores energy to a non-expired fake slot.
+        public Task<bool> RestoreEnergyAsync(ObjectId id, decimal energyKwh, CancellationToken cancellationToken = default)
+        {
+            var slot = Items.SingleOrDefault(item => item.Id == id && item.Status != SlotStatus.Expired);
+            if (slot is null || energyKwh <= 0) return Task.FromResult(false);
+            slot.AvailableEnergyKwh += energyKwh;
+            slot.Status = SlotStatus.Available;
+            return Task.FromResult(true);
+        }
     }
 }
