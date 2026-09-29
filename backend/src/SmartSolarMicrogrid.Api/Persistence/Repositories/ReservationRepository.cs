@@ -169,7 +169,7 @@ public sealed class ReservationRepository(MongoDbContext context) : IReservation
 
         return results.ToDictionary(
             doc => Enum.Parse<ReservationStatus>(doc["_id"].AsString),
-            doc => doc["count"].AsInt64);
+            doc => doc["count"].ToInt64());
     }
 
     // Counts reservations by status for a single Prosumer.
@@ -190,6 +190,6 @@ public sealed class ReservationRepository(MongoDbContext context) : IReservation
 
         return results.ToDictionary(
             doc => Enum.Parse<ReservationStatus>(doc["_id"].AsString),
-            doc => doc["count"].AsInt64);
+            doc => doc["count"].ToInt64());
     }
 }

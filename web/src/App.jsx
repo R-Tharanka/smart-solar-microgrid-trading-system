@@ -15,6 +15,7 @@ import Slots from './pages/backoffice/Slots';
 import Staff from './pages/backoffice/Staff';
 import Stations from './pages/backoffice/Stations';
 import GridOperatorDashboard from './pages/gridoperator/Dashboard';
+import Transactions from './pages/gridoperator/Transactions';
 import ProsumerHome from './pages/prosumer/Home';
 import ProtectedRoute, { PublicOnlyRoute } from './routes/ProtectedRoute';
 
@@ -38,11 +39,13 @@ function App() {
         <Route path="/backoffice/stations" element={<ProtectedRoute allowedRoles={['Backoffice']}><Stations /></ProtectedRoute>} />
         <Route path="/backoffice/slots" element={<ProtectedRoute allowedRoles={['Backoffice']}><Slots /></ProtectedRoute>} />
         <Route path="/backoffice/reservations" element={<ProtectedRoute allowedRoles={['Backoffice']}><Reservations /></ProtectedRoute>} />
+        <Route path="/backoffice/transactions" element={<ProtectedRoute allowedRoles={['Backoffice']}><Transactions /></ProtectedRoute>} />
 
         <Route path="/grid-operator" element={<ProtectedRoute allowedRoles={['GridOperator']}><GridOperatorDashboard /></ProtectedRoute>} />
         <Route path="/grid-operator/stations" element={<ProtectedRoute allowedRoles={['GridOperator']}><Stations /></ProtectedRoute>} />
         <Route path="/grid-operator/slots" element={<ProtectedRoute allowedRoles={['GridOperator']}><Slots /></ProtectedRoute>} />
         <Route path="/grid-operator/reservations" element={<ProtectedRoute allowedRoles={['GridOperator']}><Reservations /></ProtectedRoute>} />
+        <Route path="/grid-operator/transactions" element={<ProtectedRoute allowedRoles={['GridOperator']}><Transactions /></ProtectedRoute>} />
 
         <Route path="/prosumer" element={<ProtectedRoute allowedRoles={['Prosumer']}><ProsumerHome /></ProtectedRoute>} />
         <Route path="/account/profile" element={<ProtectedRoute allowedRoles={allRoles}><Profile /></ProtectedRoute>} />

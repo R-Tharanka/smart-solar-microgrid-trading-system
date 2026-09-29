@@ -4,6 +4,7 @@ import {
   ChartBarSquareIcon,
   LockClosedIcon,
   MapPinIcon,
+  QrCodeIcon,
   Squares2X2Icon,
   SunIcon,
   UserCircleIcon,
@@ -23,6 +24,7 @@ export const navigationByRole = {
     { name: 'Microgrid Nodes', path: '/backoffice/stations', icon: MapPinIcon },
     { name: 'Energy Slots', path: '/backoffice/slots', icon: BoltIcon },
     { name: 'Reservations', path: '/backoffice/reservations', icon: CalendarDaysIcon },
+    { name: 'Transactions', path: '/backoffice/transactions', icon: QrCodeIcon },
     ...accountItems,
   ],
   GridOperator: [
@@ -30,6 +32,7 @@ export const navigationByRole = {
     { name: 'Stations', path: '/grid-operator/stations', icon: MapPinIcon },
     { name: 'Slots', path: '/grid-operator/slots', icon: BoltIcon },
     { name: 'Reservations', path: '/grid-operator/reservations', icon: CalendarDaysIcon },
+    { name: 'Transactions', path: '/grid-operator/transactions', icon: QrCodeIcon },
     ...accountItems,
   ],
   Prosumer: [
