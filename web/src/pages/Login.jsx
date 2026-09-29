@@ -7,7 +7,8 @@ import {
   SunIcon,
 } from '@heroicons/react/24/outline';
 import { useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import BrandMark from '../components/BrandMark';
 import Alert from '../components/ui/Alert';
 import Button from '../components/ui/Button';
 import FormField from '../components/ui/FormField';
@@ -52,19 +53,25 @@ export default function Login() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-10 sm:px-6">
-      <div className="absolute inset-x-0 top-0 h-1 bg-emerald-400" aria-hidden="true" />
-      <div className="absolute left-0 top-24 hidden h-px w-1/3 bg-cyan-400/30 lg:block" aria-hidden="true" />
-      <div className="absolute bottom-24 right-0 hidden h-px w-1/3 bg-emerald-400/30 lg:block" aria-hidden="true" />
+    <div className="relative min-h-screen overflow-hidden bg-graphite-950">
+      <img src="/assets/microgrid-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-25" aria-hidden="true" />
+      <div className="network-grid absolute inset-0" aria-hidden="true" />
+      <div className="absolute inset-0 bg-gradient-to-r from-graphite-950 via-graphite-950/95 to-graphite-950/75" aria-hidden="true" />
+      <header className="relative z-10 mx-auto flex h-20 max-w-[1500px] items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Link to="/" aria-label="Return to homepage"><BrandMark inverse /></Link>
+        <Link to="/" className="text-sm font-semibold text-slate-300 transition hover:text-white">Back to home</Link>
+      </header>
 
-      <main className="relative w-full max-w-md">
-        <div className="mb-7 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg border border-emerald-300/40 bg-emerald-400/10 text-emerald-300 shadow-[0_0_30px_rgba(52,211,153,0.16)]">
-            <BoltIcon className="h-8 w-8" aria-hidden="true" />
-          </div>
-          <h1 className="mt-5 text-2xl font-bold text-white sm:text-3xl">Smart Solar Microgrid</h1>
-          <p className="mt-2 text-sm text-slate-400">Secure access to energy trading operations</p>
-        </div>
+      <main className="relative z-10 mx-auto grid min-h-[calc(100vh-5rem)] max-w-[1500px] items-center gap-12 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_28rem] lg:px-8">
+        <section className="hidden max-w-xl lg:block">
+          <p className="text-sm font-bold uppercase text-emerald-300" style={{ letterSpacing: '0.08em' }}>Secure operations access</p>
+          <h1 className="mt-4 text-5xl font-bold leading-tight text-white">Your role.<br />Your energy workspace.</h1>
+          <p className="mt-5 text-base leading-7 text-slate-300">Sign in with your staff email or Prosumer business identifier. The platform will route you to the tools authorized for your account.</p>
+          <div className="mt-8 flex gap-6 border-t border-white/10 pt-6 text-sm text-slate-400"><span className="flex items-center gap-2"><LockClosedIcon className="h-4 w-4 text-emerald-300" /> Protected routes</span><span className="flex items-center gap-2"><SignalIcon className="h-4 w-4 text-cyan-300" /> Central API</span></div>
+        </section>
+
+        <div className="w-full max-w-md justify-self-center lg:justify-self-end">
+          <div className="mb-6 text-center lg:hidden"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-md border border-emerald-300/40 bg-emerald-400/10 text-emerald-300 shadow-energy"><BoltIcon className="h-7 w-7" /></div><h1 className="mt-4 text-2xl font-bold text-white">Secure workspace access</h1></div>
 
         <section className="rounded-lg border border-white/10 bg-white p-6 shadow-2xl sm:p-8" aria-labelledby="login-heading">
           <div className="mb-6 flex items-center justify-between gap-4">
@@ -134,6 +141,7 @@ export default function Login() {
           <span className="flex items-center justify-center gap-1"><SunIcon className="h-4 w-4 text-amber-400" /> Solar</span>
           <span className="flex items-center justify-center gap-1"><SignalIcon className="h-4 w-4 text-cyan-400" /> Grid</span>
           <span className="flex items-center justify-center gap-1"><BoltIcon className="h-4 w-4 text-emerald-400" /> Trading</span>
+        </div>
         </div>
       </main>
     </div>

@@ -111,7 +111,7 @@ export default function Staff() {
         )}
       />
 
-      <section className="mb-5 grid gap-3 border-b border-slate-200 pb-5 sm:grid-cols-3" aria-label="Staff filters">
+      <section className="app-panel-muted mb-5 grid gap-4 p-4 sm:grid-cols-3" aria-label="Staff filters">
         <FormField id="staff-search" label="Search" type="search" placeholder="Name or email" value={search} onChange={(e) => setSearch(e.target.value)} />
         <FormField id="staff-role-filter" label="Role" as="select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
           <option value="All">All staff roles</option>
@@ -125,7 +125,7 @@ export default function Staff() {
         </FormField>
       </section>
 
-      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white" aria-label="Staff account list">
+      <section className="app-table-wrap" aria-label="Staff account list">
         {loading ? <LoadingState label="Loading staff accounts..." /> : null}
         {!loading && error ? <ErrorState message={error} onRetry={loadStaff} /> : null}
         {!loading && !error && filteredStaff.length === 0 ? (
@@ -135,13 +135,13 @@ export default function Staff() {
         {!loading && !error && filteredStaff.length > 0 ? (
           <>
             <div className="hidden overflow-x-auto md:block">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
+              <table className="app-table">
+                <thead>
                   <tr>
                     {['Staff member', 'Role', 'Status', 'Account', 'Actions'].map((heading) => <th key={heading} className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{heading}</th>)}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody>
                   {filteredStaff.map((account) => {
                     const isCurrent = account.email === user.email;
                     return (

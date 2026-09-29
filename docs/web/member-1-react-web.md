@@ -1,8 +1,60 @@
-# Member 1 React Web Implementation
+# React Web Implementation and UI System
 
-Status: Implementation complete; final live API evidence pending  
-Owner: Member 1  
+Status: UI modernization complete; final live API evidence pending
+Owners: Shared web client, with Member 1 identity/account workflows
 Audit date: 2026-09-29
+
+## Public Home and Route Behavior
+
+The root route now supports a public Home/Index page without changing authenticated role destinations:
+
+| Visitor state at `/` | Destination |
+| --- | --- |
+| Session is still hydrating | Full-page secure-session loading state |
+| Unauthenticated | Public Home/Index page |
+| Backoffice | `/backoffice` |
+| Grid Operator | `/grid-operator` |
+| Prosumer | `/prosumer` |
+
+The Home/Index page introduces the real system through a generated project-owned microgrid hero image, system workflow, role responsibilities, implemented capabilities, smart-grid relationship visualization, actual project technologies, final sign-in action and project footer. It contains no authenticated records or fabricated operational metrics.
+
+## Shared Design System
+
+- Graphite structural surfaces with light operational workspaces.
+- Emerald is the primary energy/action color; cyan identifies grid/network context; amber and red retain warning/error meaning.
+- Consistent 6px controls and 8px panels/dialogs, restrained shadows and thin borders.
+- `Segoe UI Variable` with local system fallbacks; no remote font dependency.
+- Shared `Button`, `IconButton`, `FormField`, `StatusBadge`, `Panel`, `MetricCard`, `Modal`, `ConfirmDialog`, `Alert`, `Toast`, `PageHeader`, `SectionHeader`, loading, empty and error states.
+- Tables share one high-contrast header and row treatment. Staff, Prosumer, station, slot and reservation lists switch to card/list views on small screens.
+
+## Application Shell
+
+The authenticated shell uses one role-aware navigation configuration for all members' pages. Desktop uses a fixed graphite navigation sidebar; smaller screens use an accessible Headless UI drawer. The top bar provides page context, current-user identity, role, profile access, sign out and mobile navigation.
+
+## Motion and Reduced Motion
+
+Motion is limited to page entrance, energy-path movement, loading indicators, dialog transitions, navigation states and subtle hover feedback. The global `prefers-reduced-motion` rule reduces non-essential animation and transition durations.
+
+## Brand Assets
+
+- `web/src/components/BrandMark.jsx`: original solar, connected-node and energy-path identity used in public and authenticated interfaces.
+- `web/public/favicon.svg`: matching project-owned favicon.
+- `web/public/assets/microgrid-hero.png`: generated project-owned hero visual with no text, logos or fake interface data.
+- `web/index.html`: updated favicon, theme color and system description metadata.
+
+## Full-Web Visual Alignment
+
+The same visual system is applied to login, Backoffice and Grid Operator dashboards, Prosumer home, staff and Prosumer management, stations, energy slots, reservations, profile, password security, access denied and not found. Existing endpoint calls and business workflows were retained. No transaction/operator React page exists in the current checkout, so the modernization did not fabricate one.
+
+## Responsive Strategy
+
+- Fluid page padding and a 1500px maximum operational workspace.
+- Desktop sidebar becomes a mobile drawer below the large breakpoint.
+- Multi-column forms collapse to one column.
+- Management tables become touch-friendly record cards below the medium breakpoint.
+- Dialogs use viewport-aware maximum heights and internal scrolling.
+- Public sections use responsive grids and avoid fixed-width content.
+- Supported verification targets: 1440, 1280, 1024, 768, 390 and 360 CSS pixels.
 
 ## Scope Completed
 

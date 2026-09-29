@@ -5,6 +5,7 @@ import { AuthContext } from './context/AuthContext';
 import AccessDenied from './pages/AccessDenied';
 import NotFound from './pages/NotFound';
 import Login from './pages/Login';
+import Home from './pages/Home';
 import Profile from './pages/account/Profile';
 import Security from './pages/account/Security';
 import BackofficeDashboard from './pages/backoffice/Dashboard';
@@ -22,7 +23,7 @@ const allRoles = ['Backoffice', 'GridOperator', 'Prosumer'];
 function WorkspaceRedirect() {
   const { user, loading, homePath } = useContext(AuthContext);
   if (loading) return <FullPageLoading />;
-  return <Navigate to={user ? homePath : '/login'} replace />;
+  return user ? <Navigate to={homePath} replace /> : <Home />;
 }
 
 function App() {

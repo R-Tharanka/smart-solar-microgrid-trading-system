@@ -79,7 +79,7 @@ export default function Prosumers() {
         actions={<Button variant="secondary" icon={ArrowPathIcon} onClick={loadProsumers} disabled={loading}>Refresh</Button>}
       />
 
-      <section className="mb-5 grid gap-3 border-b border-slate-200 pb-5 sm:grid-cols-2" aria-label="Prosumer filters">
+      <section className="app-panel-muted mb-5 grid gap-4 p-4 sm:grid-cols-2" aria-label="Prosumer filters">
         <FormField id="prosumer-search" label="Search" type="search" placeholder="NIC, name or email" value={search} onChange={(e) => setSearch(e.target.value)} />
         <FormField id="prosumer-status" label="Status" as="select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="All">All statuses</option>
@@ -89,7 +89,7 @@ export default function Prosumers() {
         </FormField>
       </section>
 
-      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white" aria-label="Prosumer account list">
+      <section className="app-table-wrap" aria-label="Prosumer account list">
         {loading ? <LoadingState label="Loading Prosumer accounts..." /> : null}
         {!loading && error ? <ErrorState message={error} onRetry={loadProsumers} /> : null}
         {!loading && !error && filteredProsumers.length === 0 ? <EmptyState title="No Prosumers found" description="No accounts match the current search and status filter." /> : null}
@@ -97,9 +97,9 @@ export default function Prosumers() {
         {!loading && !error && filteredProsumers.length > 0 ? (
           <>
             <div className="hidden overflow-x-auto md:block">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50"><tr>{['Prosumer', 'NIC', 'Contact', 'Status', 'Actions'].map((heading) => <th key={heading} className="px-5 py-3 text-left text-xs font-semibold uppercase text-slate-500">{heading}</th>)}</tr></thead>
-                <tbody className="divide-y divide-slate-100">
+              <table className="app-table">
+                <thead><tr>{['Prosumer', 'NIC', 'Contact', 'Status', 'Actions'].map((heading) => <th key={heading}>{heading}</th>)}</tr></thead>
+                <tbody>
                   {filteredProsumers.map((prosumer) => (
                     <tr key={prosumer.nic} className="hover:bg-slate-50">
                       <td className="px-5 py-4 font-semibold text-slate-900">{prosumer.firstName} {prosumer.lastName}</td>

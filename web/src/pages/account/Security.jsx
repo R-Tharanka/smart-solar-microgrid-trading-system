@@ -63,7 +63,7 @@ export default function Security() {
     <MainLayout title="Account security">
       <PageHeader eyebrow="Authentication" title="Change password" description="Update your password through the central identity service. Password values are never stored by the web client." />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,680px)_320px]">
-        <form onSubmit={submit} className="rounded-lg border border-slate-200 bg-white p-5 sm:p-6" noValidate>
+        <form onSubmit={submit} className="app-panel p-5 sm:p-6" noValidate>
           <div className="mb-5 flex items-center gap-3 border-b border-slate-200 pb-4">
             <KeyIcon className="h-6 w-6 text-emerald-600" aria-hidden="true" />
             <h2 className="font-semibold text-slate-900">Password credentials</h2>

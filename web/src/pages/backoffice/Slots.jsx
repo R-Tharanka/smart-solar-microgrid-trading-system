@@ -1,14 +1,23 @@
-import React, { useState, useEffect, useContext } from 'react';
+import { useCallback, useState, useEffect, useContext } from 'react';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import MainLayout from '../../layouts/MainLayout';
 import apiClient from '../../services/api';
 import SlotStatusBadge from '../../components/slots/SlotStatusBadge';
 import SlotForm from '../../components/slots/SlotForm';
 import SlotDetails from '../../components/slots/SlotDetails';
 import { AuthContext } from '../../context/AuthContext';
+import Alert from '../../components/ui/Alert';
+import Button from '../../components/ui/Button';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import FormField from '../../components/ui/FormField';
+import PageHeader from '../../components/ui/PageHeader';
+import { EmptyState, LoadingState } from '../../components/ui/PageState';
+import { useToast } from '../../context/ToastContext';
 
 const Slots = () => {
   const { user } = useContext(AuthContext);
   const isBackoffice = user?.role === 'Backoffice';
+  const { notify } = useToast();
   
   const [stations, setStations] = useState([]);
   const [selectedStationCode, setSelectedStationCode] = useState('');
@@ -22,6 +31,8 @@ const Slots = () => {
   
   const [showDetails, setShowDetails] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [statusTarget, setStatusTarget] = useState(null);
+  const [statusChanging, setStatusChanging] = useState(false);
 
   // Load stations on mount
   useEffect(() => {
@@ -32,7 +43,7 @@ const Slots = () => {
         if (response.data.data.length > 0) {
           setSelectedStationCode(response.data.data[0].stationCode);
         }
-      } catch (err) {
+      } catch {
         setError('Failed to load stations.');
       }
     };
@@ -40,7 +51,7 @@ const Slots = () => {
   }, []);
 
   // Load slots when station changes
-  const fetchSlots = async () => {
+  const fetchSlots = useCallback(async () => {
     if (!selectedStationCode) return;
     
     try {
@@ -48,16 +59,16 @@ const Slots = () => {
       setError('');
       const response = await apiClient.get(`/stations/${selectedStationCode}/slots`);
       setSlots(response.data.data);
-    } catch (err) {
+    } catch {
       setError('Failed to load slots for the selected station.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedStationCode]);
 
   useEffect(() => {
     fetchSlots();
-  }, [selectedStationCode]);
+  }, [fetchSlots]);
 
   const handleStationChange = (e) => {
     setSelectedStationCode(e.target.value);
@@ -65,7 +76,7 @@ const Slots = () => {
 
   const handleAdd = () => {
     if (!selectedStationCode) {
-      alert('Please select a station first.');
+      notify('Select a station before creating an energy slot.', 'error');
       return;
     }
     setEditingSlot(null);
@@ -87,21 +98,21 @@ const Slots = () => {
     fetchSlots();
   };
 
-  const handleStatusChange = async (slotCode, currentStatus) => {
-    const newStatus = currentStatus === 'Available' ? 'Unavailable' : 'Available';
-    const confirmMessage = `Are you sure you want to mark slot ${slotCode} as ${newStatus}?`;
-    
-    if (!window.confirm(confirmMessage)) return;
-
+  const handleStatusChange = async () => {
+    if (!statusTarget) return;
+    const newStatus = statusTarget.status === 'Available' ? 'Unavailable' : 'Available';
     try {
-      await apiClient.patch(`/slots/${slotCode}/status`, {
+      setStatusChanging(true);
+      await apiClient.patch(`/slots/${statusTarget.slotCode}/status`, {
         status: newStatus,
         reason: 'Status changed via Web Portal'
       });
-      fetchSlots();
+      await fetchSlots();
+      notify(`Slot ${statusTarget.slotCode} is now ${newStatus.toLowerCase()}.`);
+      setStatusTarget(null);
     } catch (err) {
-      alert('Failed to change status: ' + (err.response?.data?.detail || err.response?.data?.message || 'Unknown error'));
-    }
+      notify(err.response?.data?.detail || 'The slot status could not be changed.', 'error');
+    } finally { setStatusChanging(false); }
   };
 
   const navItems = isBackoffice ? [
@@ -118,51 +129,26 @@ const Slots = () => {
   ];
 
   return (
-    <MainLayout title="Energy Slots" roleNav={navItems}>
-      <div className="mb-6 flex justify-between items-center flex-wrap gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-slate-800">Energy Slots</h2>
-          <p className="text-sm text-slate-500">Manage available energy booking slots for stations.</p>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <label htmlFor="station-select" className="text-sm font-medium text-slate-700">Station:</label>
-            <select
-              id="station-select"
-              value={selectedStationCode}
-              onChange={handleStationChange}
-              className="mt-1 block w-48 pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-            >
+    <MainLayout title="Energy slots" roleNav={navItems}>
+      <PageHeader eyebrow="Availability" title="Energy slots" description="Inspect and manage time-bound energy capacity for each station." actions={isBackoffice ? <Button icon={PlusIcon} onClick={handleAdd}>Add slot</Button> : null} />
+      <div className="app-panel-muted mb-5 p-4">
+          <FormField as="select" id="station-select" label="Microgrid station" value={selectedStationCode} onChange={handleStationChange} className="max-w-xl">
               {stations.map(station => (
                 <option key={station.stationCode} value={station.stationCode}>
                   {station.stationCode} - {station.name}
                 </option>
               ))}
-            </select>
-          </div>
-
-          {isBackoffice && (
-            <button
-              onClick={handleAdd}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-            >
-              + Add Slot
-            </button>
-          )}
-        </div>
+            </FormField>
       </div>
 
       {error && (
-        <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
+        <Alert className="mb-5" title="Unable to load energy slots">{error}</Alert>
       )}
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg border border-slate-200">
+      <div className="app-table-wrap hidden md:block">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+          <table className="app-table">
+            <thead>
               <tr>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Slot Code</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Time Window (UTC)</th>
@@ -171,7 +157,7 @@ const Slots = () => {
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-200">
+            <tbody>
               {loading ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
@@ -220,7 +206,7 @@ const Slots = () => {
                           
                           {/* Only show toggle for Available/Unavailable, or whatever the current status is */}
                           <button 
-                            onClick={() => handleStatusChange(slot.slotCode, slot.status)}
+                            onClick={() => setStatusTarget(slot)}
                             className={`${slot.status === 'Available' ? 'text-amber-600 hover:text-amber-900' : 'text-emerald-600 hover:text-emerald-900'}`}
                           >
                             {slot.status === 'Available' ? 'Make Unavailable' : 'Make Available'}
@@ -235,6 +221,7 @@ const Slots = () => {
           </table>
         </div>
       </div>
+      <div className="space-y-3 md:hidden">{loading ? <div className="app-panel"><LoadingState label="Loading energy slots..." /></div> : slots.length === 0 ? <div className="app-panel"><EmptyState title="No energy slots found" description={selectedStationCode ? 'This station does not currently have energy slots.' : 'Select a station to view its slots.'} /></div> : slots.map(slot => <article key={slot.slotCode} className="app-panel p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-mono text-xs font-bold text-emerald-700">{slot.slotCode}</p><p className="mt-2 text-sm font-semibold text-slate-900">{new Date(slot.startTimeUtc).toLocaleString()}</p><p className="text-xs text-slate-500">to {new Date(slot.endTimeUtc).toLocaleString()}</p></div><SlotStatusBadge status={slot.status} /></div><div className="mt-4 flex gap-6 border-y border-slate-100 py-3 text-sm"><span><span className="block text-xs text-slate-500">Energy</span>{slot.availableEnergyKwh} kWh</span><span><span className="block text-xs text-slate-500">Price</span>${slot.pricePerKwh} / kWh</span></div><div className="mt-3 flex flex-wrap gap-3 text-sm font-bold"><button onClick={() => handleView(slot)} className="text-emerald-700">View</button>{isBackoffice ? <><button onClick={() => handleEdit(slot)} className="text-cyan-700">Edit</button><button onClick={() => setStatusTarget(slot)} className={slot.status === 'Available' ? 'text-amber-700' : 'text-emerald-700'}>{slot.status === 'Available' ? 'Make unavailable' : 'Make available'}</button></> : null}</div></article>)}</div>
 
       {showForm && (
         <SlotForm 
@@ -251,6 +238,7 @@ const Slots = () => {
           onClose={() => setShowDetails(false)} 
         />
       )}
+      <ConfirmDialog open={Boolean(statusTarget)} title={`${statusTarget?.status === 'Available' ? 'Make unavailable' : 'Make available'}`} description={`Change the availability of ${statusTarget?.slotCode || 'this slot'}?`} confirmLabel={statusTarget?.status === 'Available' ? 'Make unavailable' : 'Make available'} danger={statusTarget?.status === 'Available'} loading={statusChanging} onClose={() => setStatusTarget(null)} onConfirm={handleStatusChange} />
     </MainLayout>
   );
 };

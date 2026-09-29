@@ -102,7 +102,7 @@ export default function Profile() {
       <PageHeader eyebrow="Account identity" title="My profile" description="Review your server-managed identity and update the profile fields available to your role." />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <form onSubmit={save} className="rounded-lg border border-slate-200 bg-white p-5 sm:p-6" noValidate>
+        <form onSubmit={save} className="app-panel p-5 sm:p-6" noValidate>
           <div className="mb-5 flex items-center gap-3 border-b border-slate-200 pb-4">
             <IdentificationIcon className="h-6 w-6 text-emerald-600" aria-hidden="true" />
             <div><h2 className="font-semibold text-slate-900">Profile information</h2><p className="text-sm text-slate-500">Role and account status cannot be edited here.</p></div>
@@ -126,7 +126,7 @@ export default function Profile() {
         </form>
 
         <aside className="space-y-5">
-          <section className="rounded-lg border border-slate-200 bg-slate-950 p-5 text-white">
+          <section className="network-grid rounded-lg border border-slate-800 bg-graphite-950 p-5 text-white shadow-energy">
             <CheckBadgeIcon className="h-7 w-7 text-emerald-400" aria-hidden="true" />
             <h2 className="mt-3 font-semibold">Account access</h2>
             <dl className="mt-4 space-y-4 text-sm">
@@ -137,7 +137,7 @@ export default function Profile() {
           </section>
 
           {user.role === 'Prosumer' ? (
-            <section className="rounded-lg border border-red-200 bg-white p-5">
+            <section className="app-panel border-red-200 p-5">
               <h2 className="font-semibold text-slate-900">Account deactivation</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">Deactivation is blocked while you have a non-terminal reservation.</p>
               <Button className="mt-4 w-full" variant="danger" icon={PowerIcon} onClick={() => setDeactivateOpen(true)}>Deactivate my account</Button>

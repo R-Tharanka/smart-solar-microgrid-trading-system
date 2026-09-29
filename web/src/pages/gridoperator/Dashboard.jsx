@@ -1,107 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowPathIcon, BoltIcon, CalendarDaysIcon, CheckCircleIcon, ClockIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import MainLayout from '../../layouts/MainLayout';
 import apiClient from '../../services/api';
+import Alert from '../../components/ui/Alert';
+import Button from '../../components/ui/Button';
+import PageHeader from '../../components/ui/PageHeader';
+import { LoadingState } from '../../components/ui/PageState';
+import { MetricCard, Panel, SectionHeader } from '../../components/ui/Surface';
 
-const GridOperatorDashboard = () => {
+export default function GridOperatorDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const fetchStats = async () => {
     try {
-      setLoading(true);
-      setError('');
+      setLoading(true); setError('');
       const response = await apiClient.get('/dashboard/summary');
       setStats(response.data.data);
-    } catch (err) {
-      setError('Failed to load dashboard summary. ' + (err.response?.data?.detail || ''));
-    } finally {
-      setLoading(false);
-    }
+    } catch (requestError) {
+      setError(requestError.response?.data?.detail || 'Operational information is temporarily unavailable.');
+    } finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  useEffect(() => { fetchStats(); }, []);
 
-  const navItems = [
-    { name: 'Dashboard', path: '/grid-operator' },
-    { name: 'Stations / Nodes', path: '/grid-operator/stations' },
-    { name: 'Slots', path: '/grid-operator/slots' },
-    { name: 'Bookings / Reservations', path: '/grid-operator/reservations' },
+  const workspaces = [
+    ['/grid-operator/stations', MapPinIcon, 'Microgrid nodes', 'Review station capacity and status'],
+    ['/grid-operator/slots', BoltIcon, 'Energy slots', 'Inspect current energy availability'],
+    ['/grid-operator/reservations', CalendarDaysIcon, 'Reservations', 'Track booking progress and details'],
   ];
 
   return (
-    <MainLayout title="Grid Operator Dashboard" roleNav={navItems}>
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold text-slate-800">Grid Operations Overview</h2>
-          <p className="text-sm text-slate-500">Monitor reservation metrics and microgrid activity.</p>
-        </div>
-        <button
-          onClick={fetchStats}
-          className="inline-flex items-center px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-        >
-          Refresh
-        </button>
-      </div>
-
-      {error && (
-        <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="py-12 text-center text-slate-500">
-          Loading dashboard metrics...
-        </div>
-      ) : stats ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-            <h3 className="text-sm font-medium text-slate-500 mb-1">Total Reservations</h3>
-            <p className="text-3xl font-bold text-blue-600">{stats.totalCount}</p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-            <h3 className="text-sm font-medium text-slate-500 mb-1">Pending Approval</h3>
-            <p className="text-3xl font-bold text-yellow-600">{stats.pendingCount}</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-            <h3 className="text-sm font-medium text-slate-500 mb-1">Approved Bookings</h3>
-            <p className="text-3xl font-bold text-emerald-600">{stats.approvedCount}</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-            <h3 className="text-sm font-medium text-slate-500 mb-1">Completed</h3>
-            <p className="text-3xl font-bold text-indigo-600">{stats.completedCount}</p>
-          </div>
-
-        </div>
-      ) : null}
-
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-        <h3 className="text-lg font-medium text-slate-800 mb-4">Quick Navigation</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link to="/grid-operator/stations" className="block p-4 text-center border rounded-lg hover:bg-slate-50 transition-colors">
-            <span className="block font-medium text-purple-600 mb-1">View Stations</span>
-            <span className="text-xs text-slate-500">Monitor active microgrid nodes</span>
-          </Link>
-          <Link to="/grid-operator/slots" className="block p-4 text-center border rounded-lg hover:bg-slate-50 transition-colors">
-            <span className="block font-medium text-amber-600 mb-1">View Energy Slots</span>
-            <span className="text-xs text-slate-500">Check current availability</span>
-          </Link>
-          <Link to="/grid-operator/reservations" className="block p-4 text-center border rounded-lg hover:bg-slate-50 transition-colors">
-            <span className="block font-medium text-blue-600 mb-1">View Reservations</span>
-            <span className="text-xs text-slate-500">Track booking status</span>
-          </Link>
-        </div>
-      </div>
+    <MainLayout title="Grid operations overview">
+      <PageHeader eyebrow="Operations" title="Grid operations" description="Monitor reservation activity and open the operational tools assigned to your role." actions={<Button variant="secondary" icon={ArrowPathIcon} onClick={fetchStats} loading={loading}>Refresh</Button>} />
+      {error ? <Alert title="Unable to refresh dashboard" className="mb-6">{error}</Alert> : null}
+      {loading ? <Panel><LoadingState label="Loading grid metrics..." /></Panel> : stats ? <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><MetricCard label="Total reservations" value={stats.totalCount} icon={CalendarDaysIcon} tone="cyan" /><MetricCard label="Pending approval" value={stats.pendingCount} icon={ClockIcon} tone="amber" /><MetricCard label="Approved bookings" value={stats.approvedCount} icon={CheckCircleIcon} /><MetricCard label="Completed" value={stats.completedCount} icon={BoltIcon} tone="cyan" /></div> : null}
+      <Panel className="p-5 sm:p-6"><SectionHeader title="Operational workspaces" description="Open the live records available through the central API." /><div className="mt-5 grid gap-3 md:grid-cols-3">{workspaces.map(([path, Icon, title, description]) => <Link key={path} to={path} className="group flex min-h-28 items-start gap-4 rounded-md border border-slate-200 p-4 transition hover:border-cyan-300 hover:bg-cyan-50/50"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-slate-900 text-cyan-300"><Icon className="h-5 w-5" /></span><span><span className="font-bold text-slate-900 group-hover:text-cyan-800">{title}</span><span className="mt-1 block text-sm leading-5 text-slate-500">{description}</span></span></Link>)}</div></Panel>
     </MainLayout>
   );
-};
-
-export default GridOperatorDashboard;
+}

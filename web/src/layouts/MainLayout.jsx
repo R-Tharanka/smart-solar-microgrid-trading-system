@@ -2,30 +2,27 @@ import { Dialog, DialogPanel } from '@headlessui/react';
 import {
   ArrowRightStartOnRectangleIcon,
   Bars3Icon,
-  BoltIcon,
+  ChevronRightIcon,
+  UserCircleIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useContext, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { navigationByRole } from '../config/navigation';
+import BrandMark from '../components/BrandMark';
 
 function SidebarContent({ user, onNavigate, onLogout }) {
   const navItems = navigationByRole[user?.role] || [];
 
   return (
-    <div className="flex h-full flex-col bg-slate-950 text-slate-300">
-      <div className="flex h-20 items-center gap-3 border-b border-white/10 px-5">
-        <span className="flex h-10 w-10 items-center justify-center rounded-md border border-emerald-400/40 bg-emerald-400/10 text-emerald-300">
-          <BoltIcon className="h-6 w-6" aria-hidden="true" />
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-white">Smart Solar Grid</p>
-          <p className="truncate text-xs text-emerald-300">{user?.role} control</p>
-        </div>
+    <div className="network-grid flex h-full flex-col bg-graphite-950 text-slate-300">
+      <div className="flex h-20 items-center border-b border-white/10 px-5">
+        <BrandMark inverse />
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-5" aria-label="Primary navigation">
+      <div className="px-5 pt-5"><p className="text-[11px] font-bold uppercase text-slate-500" style={{ letterSpacing: '0.08em' }}>{user?.role} workspace</p></div>
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-3" aria-label="Primary navigation">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -34,22 +31,23 @@ function SidebarContent({ user, onNavigate, onLogout }) {
               to={item.path}
               end={item.end}
               onClick={onNavigate}
-              className={({ isActive }) => `flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              className={({ isActive }) => `group flex min-h-11 items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-semibold transition-all ${
                 isActive
-                  ? 'bg-emerald-400/15 text-emerald-200 ring-1 ring-inset ring-emerald-400/30'
-                  : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                  ? 'border-emerald-400 bg-emerald-400/10 text-emerald-200'
+                  : 'border-transparent text-slate-400 hover:bg-white/5 hover:text-white'
               }`}
             >
               <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
               <span>{item.name}</span>
+              <ChevronRightIcon className="ml-auto h-4 w-4 opacity-0 transition group-hover:opacity-50" aria-hidden="true" />
             </NavLink>
           );
         })}
       </nav>
 
-      <div className="border-t border-white/10 p-4">
+      <div className="border-t border-white/10 bg-black/10 p-4">
         <div className="mb-3 flex items-center gap-3 px-1">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-400/15 text-sm font-bold text-cyan-200">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-cyan-400/20 bg-cyan-400/10 text-sm font-bold text-cyan-200">
             {(user?.firstName || user?.email || 'U').charAt(0).toUpperCase()}
           </span>
           <div className="min-w-0 flex-1">
@@ -105,7 +103,7 @@ export default function MainLayout({ children, title }) {
       </Dialog>
 
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-slate-200/80 bg-white/90 px-4 shadow-sm backdrop-blur-md sm:px-6 lg:px-8">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
@@ -115,18 +113,19 @@ export default function MainLayout({ children, title }) {
           >
             <Bars3Icon className="h-6 w-6" aria-hidden="true" />
           </button>
-          <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">Microgrid operations</p>
+          <div className="min-w-0 flex-1">
+            <p className="eyebrow">Microgrid operations</p>
             <h2 className="truncate text-base font-semibold text-slate-900 sm:text-lg">{title}</h2>
           </div>
-          <span className="ml-auto hidden items-center gap-2 text-xs text-slate-500 sm:flex">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
-            Secure session
-          </span>
+          <Link to="/account/profile" className="hidden min-h-10 items-center gap-3 rounded-md px-2 transition hover:bg-slate-100 sm:flex" aria-label="Open account profile">
+            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-emerald-300"><UserCircleIcon className="h-5 w-5" /></span>
+            <span className="max-w-40 text-right"><span className="block truncate text-sm font-semibold text-slate-800">{user?.name || user?.email}</span><span className="block text-xs text-slate-500">{user?.role}</span></span>
+          </Link>
+          <button type="button" onClick={handleLogout} className="hidden rounded-md p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600 sm:block" aria-label="Sign out" title="Sign out"><ArrowRightStartOnRectangleIcon className="h-5 w-5" /></button>
         </header>
 
-        <main className="px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto w-full max-w-[1500px]">{children}</div>
+        <main className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+          <div className="page-enter mx-auto w-full max-w-[1500px]">{children}</div>
         </main>
       </div>
     </div>
