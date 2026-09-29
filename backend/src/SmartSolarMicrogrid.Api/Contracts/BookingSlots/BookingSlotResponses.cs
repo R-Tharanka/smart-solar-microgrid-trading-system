@@ -4,6 +4,7 @@
 namespace SmartSolarMicrogrid.Api.Contracts.BookingSlots;
 
 public record BookingSlotResponse(
+    string Id,
     string SlotCode,
     string StationCode,
     DateTime StartTimeUtc,

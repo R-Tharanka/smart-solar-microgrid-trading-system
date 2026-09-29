@@ -4,6 +4,7 @@
 namespace SmartSolarMicrogrid.Api.Contracts.Stations;
 
 public record StationResponse(
+    string Id,
     string StationCode,
     string Name,
     string Description,

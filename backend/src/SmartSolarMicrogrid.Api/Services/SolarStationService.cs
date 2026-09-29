@@ -234,6 +234,7 @@ public sealed class SolarStationService(
 
     // Maps the persistence model to the public response without exposing MongoDB ObjectId.
     private static StationResponse Map(SolarStation station) => new(
+        station.Id.ToString(),
         station.StationCode,
         station.Name,
         station.Description,
