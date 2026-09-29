@@ -1,10 +1,11 @@
 import { EyeIcon, EyeSlashIcon, KeyIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import Alert from '../../components/ui/Alert';
 import Button from '../../components/ui/Button';
 import FormField from '../../components/ui/FormField';
 import PageHeader from '../../components/ui/PageHeader';
 import { useToast } from '../../context/ToastContext';
+import { AuthContext } from '../../context/AuthContext';
 import MainLayout from '../../layouts/MainLayout';
 import apiClient from '../../services/api';
 import { firstValidationMessage, getApiError } from '../../utils/apiError';
@@ -12,6 +13,7 @@ import { firstValidationMessage, getApiError } from '../../utils/apiError';
 const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s])\S{8,128}$/;
 
 export default function Security() {
+  const { user } = useContext(AuthContext);
   const { notify } = useToast();
   const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [errors, setErrors] = useState({});
@@ -64,6 +66,7 @@ export default function Security() {
       <PageHeader eyebrow="Authentication" title="Change password" description="Update your password through the central identity service. Password values are never stored by the web client." />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,680px)_320px]">
         <form onSubmit={submit} className="app-panel p-5 sm:p-6" noValidate>
+          <input type="email" name="username" autoComplete="username" value={user?.email || ''} readOnly className="sr-only" tabIndex={-1} aria-hidden="true" />
           <div className="mb-5 flex items-center gap-3 border-b border-slate-200 pb-4">
             <KeyIcon className="h-6 w-6 text-emerald-600" aria-hidden="true" />
             <h2 className="font-semibold text-slate-900">Password credentials</h2>
