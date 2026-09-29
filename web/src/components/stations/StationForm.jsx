@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../../services/api';
+import StationLocationPicker from './StationLocationPicker';
+
+// Converts API TimeSpan values into the HH:mm:ss format accepted by a time input.
+const formatTimeForInput = (value, fallback) => {
+  if (!value) return fallback;
+  const match = String(value).match(/^(\d{2}):(\d{2})(?::(\d{2}))?/);
+  return match ? `${match[1]}:${match[2]}:${match[3] || '00'}` : fallback;
+};
 
 const StationForm = ({ station, onClose, onSuccess }) => {
   const isEditing = !!station;
@@ -30,8 +38,8 @@ const StationForm = ({ station, onClose, onSuccess }) => {
         address: station.address || '',
         capacityKwh: station.capacityKwh || 0,
         batteryStorageKwh: station.batteryStorageKwh || 0,
-        openingTime: station.openingTime || '06:00:00',
-        closingTime: station.closingTime || '18:00:00'
+        openingTime: formatTimeForInput(station.openingTime, '06:00:00'),
+        closingTime: formatTimeForInput(station.closingTime, '18:00:00')
       });
     }
   }, [station, isEditing]);
@@ -50,12 +58,32 @@ const StationForm = ({ station, onClose, onSuccess }) => {
     }));
   };
 
+  // Applies coordinates and, when available, the address selected on the map.
+  const handleLocationChange = (location) => {
+    setFormData((current) => ({
+      ...current,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      address: location.address ?? current.address,
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
 
     try {
+      if (formData.capacityKwh <= 0) {
+        throw new Error('Station capacity must be greater than zero.');
+      }
+      if (formData.batteryStorageKwh < 0 || formData.batteryStorageKwh > formData.capacityKwh) {
+        throw new Error('Battery storage cannot be negative or exceed station capacity.');
+      }
+      if (formData.openingTime >= formData.closingTime) {
+        throw new Error('Opening time must be earlier than closing time.');
+      }
+
       if (isEditing) {
         // Exclude stationCode from the update payload
         const updatePayload = { ...formData };
@@ -66,7 +94,7 @@ const StationForm = ({ station, onClose, onSuccess }) => {
       }
       onSuccess();
     } catch (err) {
-      setError(err.response?.data?.detail || err.response?.data?.message || 'An error occurred while saving the station.');
+      setError(err.response?.data?.detail || err.response?.data?.message || err.message || 'An error occurred while saving the station.');
     } finally {
       setIsSubmitting(false);
     }
@@ -81,7 +109,7 @@ const StationForm = ({ station, onClose, onSuccess }) => {
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className="legacy-dialog inline-block w-full max-w-3xl align-bottom sm:my-8 sm:align-middle">
+        <div className="legacy-dialog relative z-10 inline-block w-full max-w-3xl align-bottom sm:my-8 sm:align-middle">
           <form onSubmit={handleSubmit}>
             <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               <h3 className="text-xl leading-6 font-semibold text-slate-900 mb-4">
@@ -120,6 +148,12 @@ const StationForm = ({ station, onClose, onSuccess }) => {
                   <input type="number" step="0.01" name="batteryStorageKwh" value={formData.batteryStorageKwh} onChange={handleChange} required
                          className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                 </div>
+
+                <StationLocationPicker
+                  latitude={formData.latitude}
+                  longitude={formData.longitude}
+                  onLocationChange={handleLocationChange}
+                />
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-slate-700">Address</label>
