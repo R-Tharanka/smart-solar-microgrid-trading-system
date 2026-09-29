@@ -1,58 +1,113 @@
-import React, { createContext, useState, useEffect } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import apiClient from '../services/api';
+import {
+  clearAuthSession,
+  homePathForRole,
+  normalizeUser,
+  readAuthSession,
+  writeAuthSession,
+} from '../utils/auth';
 
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sessionNotice, setSessionNotice] = useState('');
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    
-    if (storedUser && token) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-      }
+    let active = true;
+    const stored = readAuthSession();
+
+    const handleSessionEnded = (event) => {
+      if (!active) return;
+      setUser(null);
+      setSessionNotice(event.detail?.reason || 'Your session ended. Sign in again.');
+    };
+
+    window.addEventListener('auth:session-ended', handleSessionEnded);
+
+    if (!stored) {
+      setLoading(false);
+      return () => {
+        active = false;
+        window.removeEventListener('auth:session-ended', handleSessionEnded);
+      };
     }
-    setLoading(false);
+
+    setUser(stored.user);
+    apiClient.get('/users/me')
+      .then((response) => {
+        if (!active) return;
+        const currentUser = normalizeUser(response.data.data);
+        setUser(currentUser);
+        writeAuthSession({ token: stored.token, user: currentUser, expiresAtUtc: stored.expiresAtUtc });
+      })
+      .catch((error) => {
+        if (!active) return;
+        if (error.response?.status === 403) {
+          clearAuthSession();
+          setUser(null);
+          setSessionNotice('This account is no longer active.');
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+      window.removeEventListener('auth:session-ended', handleSessionEnded);
+    };
   }, []);
 
-  const login = async (email, password) => {
-    try {
-      const response = await apiClient.post('/users/login', { identifier: email, password });
-      
-      const { accessToken, user: backendUser } = response.data.data;
-      
-      const userData = { 
-        id: backendUser.nic || backendUser.email, 
-        name: `${backendUser.firstName} ${backendUser.lastName}`, 
-        email: backendUser.email, 
-        role: backendUser.role 
-      };
-      
-      localStorage.setItem('token', accessToken);
-      localStorage.setItem('user', JSON.stringify(userData));
-      
-      setUser(userData);
-      return userData;
-    } catch (error) {
-      throw error;
-    }
-  };
+  const login = useCallback(async (identifier, password) => {
+    const response = await apiClient.post(
+      '/users/login',
+      { identifier: identifier.trim(), password },
+      { skipAuthHandling: true },
+    );
+    const { accessToken, expiresAtUtc, user: backendUser } = response.data.data;
+    const userData = normalizeUser(backendUser);
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    writeAuthSession({ token: accessToken, user: userData, expiresAtUtc });
+    setSessionNotice('');
+    setUser(userData);
+    return userData;
+  }, []);
+
+  const logout = useCallback((notice = '') => {
+    clearAuthSession();
     setUser(null);
-  };
+    setSessionNotice(notice);
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    const response = await apiClient.get('/users/me');
+    const currentUser = normalizeUser(response.data.data);
+    const stored = readAuthSession();
+    if (stored) {
+      writeAuthSession({ ...stored, user: currentUser });
+    }
+    setUser(currentUser);
+    return currentUser;
+  }, []);
+
+  const clearSessionNotice = useCallback(() => setSessionNotice(''), []);
+
+  const value = useMemo(() => ({
+    user,
+    loading,
+    login,
+    logout,
+    refreshUser,
+    sessionNotice,
+    clearSessionNotice,
+    homePath: homePathForRole(user?.role),
+  }), [clearSessionNotice, loading, login, logout, refreshUser, sessionNotice, user]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

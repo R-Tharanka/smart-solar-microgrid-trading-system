@@ -1,5 +1,7 @@
 # Phase 2 Verification and Team Handoff
 
+> Historical record: this file records Phase 2 checks performed on 2026-09-23. For the repository-wide implementation and evidence status audited on 2026-09-29, see `docs/project-status/full-system-progress-report.md`.
+
 ## Atlas Setup
 
 1. Create an Atlas project and cluster.

@@ -1,3 +1,8 @@
+// -----------------------------------------------------------------------------
+// File: AuthorizationPolicies.cs
+// Member 1: Identity, Authentication, Authorization and Account Management
+// Purpose: Configures active-account and role-based authorization policies.
+// -----------------------------------------------------------------------------
 using Microsoft.AspNetCore.Authorization;
 
 namespace SmartSolarMicrogrid.Api.Authorization;
@@ -12,6 +17,7 @@ public static class AuthorizationPolicies
 
     public static void Configure(AuthorizationOptions options)
     {
+        // Register each named policy against the active-account requirement and allowed roles.
         options.AddPolicy(Authenticated, policy => Active(policy));
         options.AddPolicy(Staff, policy =>
             Active(policy).RequireRole(AppRoles.Backoffice, AppRoles.GridOperator));
@@ -23,6 +29,9 @@ public static class AuthorizationPolicies
             Active(policy).RequireRole(AppRoles.Prosumer));
     }
 
-    private static AuthorizationPolicyBuilder Active(AuthorizationPolicyBuilder policy) =>
-        policy.RequireAuthenticatedUser().AddRequirements(new ActiveUserRequirement());
+    private static AuthorizationPolicyBuilder Active(AuthorizationPolicyBuilder policy)
+    {
+        // Apply the common authenticated and active-account requirements.
+        return policy.RequireAuthenticatedUser().AddRequirements(new ActiveUserRequirement());
+    }
 }

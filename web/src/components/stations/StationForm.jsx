@@ -58,7 +58,8 @@ const StationForm = ({ station, onClose, onSuccess }) => {
     try {
       if (isEditing) {
         // Exclude stationCode from the update payload
-        const { stationCode, ...updatePayload } = formData;
+        const updatePayload = { ...formData };
+        delete updatePayload.stationCode;
         await apiClient.put(`/stations/${station.stationCode}`, updatePayload);
       } else {
         await apiClient.post('/stations', formData);
@@ -75,12 +76,12 @@ const StationForm = ({ station, onClose, onSuccess }) => {
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div className="absolute inset-0 bg-slate-500 opacity-75" onClick={onClose}></div>
+          <div className="absolute inset-0 bg-graphite-950/75 backdrop-blur-sm" onClick={onClose}></div>
         </div>
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+        <div className="legacy-dialog inline-block w-full max-w-3xl align-bottom sm:my-8 sm:align-middle">
           <form onSubmit={handleSubmit}>
             <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               <h3 className="text-xl leading-6 font-semibold text-slate-900 mb-4">

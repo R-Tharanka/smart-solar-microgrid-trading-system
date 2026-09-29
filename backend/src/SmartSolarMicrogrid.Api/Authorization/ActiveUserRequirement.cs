@@ -1,3 +1,8 @@
+// -----------------------------------------------------------------------------
+// File: ActiveUserRequirement.cs
+// Member 1: Identity, Authentication, Authorization and Account Management
+// Purpose: Prevents inactive accounts from satisfying protected API policies.
+// -----------------------------------------------------------------------------
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using SmartSolarMicrogrid.Api.Models;
@@ -14,6 +19,7 @@ public sealed class ActiveUserHandler(IUserRepository userRepository)
         AuthorizationHandlerContext context,
         ActiveUserRequirement requirement)
     {
+        // Resolve the authenticated business identifier and confirm the account is still active.
         var identifier = context.User.FindFirstValue("user_identifier");
         if (string.IsNullOrWhiteSpace(identifier))
         {
