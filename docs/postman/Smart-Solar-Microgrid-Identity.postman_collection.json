@@ -13,6 +13,7 @@
     { "key": "prosumerAltNic", "value": "" },
     { "key": "prosumerEmail", "value": "" },
     { "key": "prosumerAltEmail", "value": "" },
+    { "key": "prosumerAdminUpdatedEmail", "value": "" },
     { "key": "prosumerPassword", "value": "Strong@1234" },
     { "key": "prosumerNewPassword", "value": "NewStrong@5678" },
     { "key": "prosumerToken", "value": "" },
@@ -95,6 +96,7 @@
                 "pm.collectionVariables.set('prosumerAltNic', '8' + suffix);",
                 "pm.collectionVariables.set('prosumerEmail', `prosumer.${runId}@example.com`);",
                 "pm.collectionVariables.set('prosumerAltEmail', `prosumer.alt.${runId}@example.com`);",
+                "pm.collectionVariables.set('prosumerAdminUpdatedEmail', `prosumer.admin.updated.${runId}@example.com`);",
                 "pm.collectionVariables.set('operatorEmail', `operator.${runId}@example.com`);",
                 "pm.collectionVariables.set('secondaryAdminEmail', `backoffice.${runId}@example.com`);",
                 "pm.collectionVariables.unset('prosumerToken');",
@@ -459,7 +461,7 @@
       ]
     },
     {
-      "name": "04 - Backoffice Staff Management",
+      "name": "04 - Backoffice Account Management",
       "item": [
         {
           "name": "Login Backoffice and capture JWT",
@@ -498,6 +500,45 @@
             "    pm.expect(user).not.to.have.property('passwordHash');",
             "    pm.expect(user).not.to.have.property('id');",
             "  });",
+            "});"
+          ]}}]
+        },
+        {
+          "name": "Create Prosumer as Backoffice",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nic\": \"{{prosumerAltNic}}\",\n  \"email\": \"{{prosumerAltEmail}}\",\n  \"password\": \"{{prosumerPassword}}\",\n  \"firstName\": \"Admin\",\n  \"lastName\": \"Created\",\n  \"phoneNumber\": \"0777654321\",\n  \"address\": \"Kandy\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/prosumers"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+            "const user = pm.response.json().data;",
+            "pm.test('Backoffice created an active Prosumer', () => {",
+            "  pm.expect(user.nic).to.eql(pm.collectionVariables.get('prosumerAltNic'));",
+            "  pm.expect(user.role).to.eql('Prosumer');",
+            "  pm.expect(user.status).to.eql('Active');",
+            "});"
+          ]}}]
+        },
+        {
+          "name": "Update Prosumer as Backoffice",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{prosumerAdminUpdatedEmail}}\",\n  \"firstName\": \"Admin\",\n  \"lastName\": \"Updated\",\n  \"phoneNumber\": \"+94777654321\",\n  \"address\": \"Colombo 03\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/prosumers/{{prosumerAltNic}}"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "const user = pm.response.json().data;",
+            "pm.test('Contact fields changed and identity stayed stable', () => {",
+            "  pm.expect(user.nic).to.eql(pm.collectionVariables.get('prosumerAltNic'));",
+            "  pm.expect(user.email).to.eql(pm.collectionVariables.get('prosumerAdminUpdatedEmail'));",
+            "  pm.expect(user.lastName).to.eql('Updated');",
+            "  pm.expect(user.role).to.eql('Prosumer');",
             "});"
           ]}}]
         },
@@ -651,6 +692,32 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": { "mode": "raw", "raw": "{\n  \"email\": \"blocked.by.operator@example.com\",\n  \"password\": \"Blocked@1234\",\n  \"firstName\": \"Blocked\",\n  \"lastName\": \"Staff\",\n  \"role\": \"GridOperator\"\n}", "options": { "raw": { "language": "json" } } },
             "url": "{{baseUrl}}/api/users/staff"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+          ]}}]
+        },
+        {
+          "name": "Grid Operator cannot create Prosumer",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nic\": \"199912345678\",\n  \"email\": \"blocked.prosumer@example.com\",\n  \"password\": \"Blocked@1234\",\n  \"firstName\": \"Blocked\",\n  \"lastName\": \"Prosumer\",\n  \"phoneNumber\": \"0771234567\",\n  \"address\": \"Colombo\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/prosumers"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+          ]}}]
+        },
+        {
+          "name": "Grid Operator cannot update Prosumer",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"blocked.update@example.com\",\n  \"firstName\": \"Blocked\",\n  \"lastName\": \"Update\",\n  \"phoneNumber\": \"0771234567\",\n  \"address\": \"Colombo\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/users/prosumers/{{prosumerNic}}"
           },
           "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
             "pm.test('Status is 403', () => pm.response.to.have.status(403));"

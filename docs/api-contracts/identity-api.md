@@ -11,6 +11,7 @@ This contract supersedes the earlier Phase 1 identity route sketch. User-facing 
 - Protected requests use `Authorization: Bearer <accessToken>`.
 - Email is stored lowercase; NIC is stored uppercase.
 - Public Prosumer registration creates an `Active` Prosumer account.
+- Backoffice may create and update Prosumer accounts through dedicated `BackofficeOnly` endpoints.
 - Only `Active` accounts satisfy protected authorization policies, including when an older JWT has not expired.
 - Passwords require 8-128 characters, uppercase, lowercase, number, special character, and no whitespace.
 - NIC accepts the Sri Lankan 12-digit form or 9 digits followed by `V`/`X`.
@@ -54,6 +55,30 @@ Authorization: Public
 ```
 
 Returns `201 Created`. Duplicate normalized NIC or email returns `409 Conflict`.
+
+### Create Prosumer as Backoffice
+
+`POST /api/users/prosumers`
+Authorization: `BackofficeOnly`
+
+Uses the same validated request body as public registration. The new account is `Active`, always has role `Prosumer`, and records the authenticated Backoffice email in `createdByIdentifier`. Duplicate normalized NIC or email returns `409 Conflict`.
+
+### Update Prosumer as Backoffice
+
+`PUT /api/users/prosumers/{nic}`
+Authorization: `BackofficeOnly`
+
+```json
+{
+  "email": "updated@example.com",
+  "firstName": "Updated",
+  "lastName": "Prosumer",
+  "phoneNumber": "+94771234567",
+  "address": "Colombo 03"
+}
+```
+
+Returns the updated public profile. NIC, role, status, and password are immutable in this operation. Email remains globally unique. Backoffice may correct the contact profile of an active or deactivated Prosumer; lifecycle changes continue to use the dedicated deactivate/reactivate commands.
 
 ### Login
 
@@ -142,7 +167,7 @@ Returns `200 OK` with users sorted by role and email.
 `POST /api/users/{identifier}/reactivate`
 Authorization: `BackofficeOnly`
 
-Only a `Deactivated` account may transition to `Active`. Returns `204 No Content`.
+Only a `Deactivated` account may transition to `Active`. The endpoint is not available to Grid Operators or Prosumers, including self-reactivation. Returns `204 No Content`.
 
 ### Deactivate User
 
@@ -166,7 +191,7 @@ The default access-token lifetime is 60 minutes. Protected policies also query c
 
 Member 3 validates a reservation owner through `IIdentityService.GetActiveProsumerAsync(nic)`. The method normalizes the NIC and returns the public `UserResponse` only when the account exists, has role `Prosumer`, and has status `Active`. Other modules must not query the `users` collection directly or access `passwordHash`.
 
-Account lifecycle writes record `deactivatedAtUtc` or `reactivatedAtUtc` and `statusChangedByIdentifier` in MongoDB. These audit fields are server-side data and are not included in `UserResponse`.
+Backoffice-created accounts record `createdByIdentifier`. Account lifecycle writes record `deactivatedAtUtc` or `reactivatedAtUtc` and `statusChangedByIdentifier` in MongoDB. These audit fields are server-side data and are not included in `UserResponse`.
 
 ## Stable Identity Error Codes
 

@@ -4,14 +4,16 @@ import apiClient from '../../services/api';
 const SlotForm = ({ slot, stationCode, onClose, onSuccess }) => {
   const isEditing = !!slot;
   
-  // Format dates for datetime-local input (YYYY-MM-DDThh:mm)
+  // Format an API UTC timestamp for a timezone-neutral datetime-local input.
   const formatDateForInput = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    // Convert UTC to local datetime string for input
     const pad = (num) => String(num).padStart(2, '0');
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
   };
+
+  // Interpret the timezone-neutral form value as UTC, matching the API contract.
+  const toUtcIsoString = (value) => new Date(`${value}:00Z`).toISOString();
 
   const [formData, setFormData] = useState({
     slotCode: '',
@@ -66,11 +68,11 @@ const SlotForm = ({ slot, stationCode, onClose, onSuccess }) => {
     setIsSubmitting(true);
 
     try {
-      // Convert local datetime input back to UTC ISO string
+      // Submit exactly the UTC date and time shown in the form.
       const payload = {
         ...formData,
-        startTimeUtc: new Date(formData.startTimeUtc).toISOString(),
-        endTimeUtc: new Date(formData.endTimeUtc).toISOString()
+        startTimeUtc: toUtcIsoString(formData.startTimeUtc),
+        endTimeUtc: toUtcIsoString(formData.endTimeUtc)
       };
 
       if (isEditing) {
@@ -98,7 +100,7 @@ const SlotForm = ({ slot, stationCode, onClose, onSuccess }) => {
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className="legacy-dialog inline-block w-full max-w-lg align-bottom sm:my-8 sm:align-middle">
+        <div className="legacy-dialog relative z-10 inline-block w-full max-w-lg align-bottom sm:my-8 sm:align-middle">
           <form onSubmit={handleSubmit}>
             <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               <h3 className="text-xl leading-6 font-semibold text-slate-900 mb-4">
@@ -127,13 +129,13 @@ const SlotForm = ({ slot, stationCode, onClose, onSuccess }) => {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Start Time (Local)</label>
+                  <label className="block text-sm font-medium text-slate-700">Start Time (UTC)</label>
                   <input type="datetime-local" name="startTimeUtc" value={formData.startTimeUtc} onChange={handleChange} required
                          className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">End Time (Local)</label>
+                  <label className="block text-sm font-medium text-slate-700">End Time (UTC)</label>
                   <input type="datetime-local" name="endTimeUtc" value={formData.endTimeUtc} onChange={handleChange} required
                          className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                 </div>

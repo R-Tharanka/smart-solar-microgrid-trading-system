@@ -17,6 +17,17 @@ import { useToast } from '../../context/ToastContext';
 
 const slotStatuses = ['Available', 'Reserved', 'Unavailable', 'Expired'];
 
+// Keeps displayed slot schedules in UTC so they match the create and edit form.
+const formatUtcDateTime = (value) => new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZone: 'UTC',
+  timeZoneName: 'short',
+}).format(new Date(value));
+
 const problemMessage = (error, fallback) => {
   const problem = error.response?.data;
   if (problem?.errorCode === 'SLOT_ACTIVE_RESERVATION') {
@@ -39,6 +50,7 @@ const Slots = () => {
   const { notify } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const isBackoffice = user?.role === 'Backoffice';
+  const canEditSlots = isBackoffice || user?.role === 'GridOperator';
 
   const [stations, setStations] = useState([]);
   const [selectedStationCode, setSelectedStationCode] = useState(searchParams.get('station') || '');
@@ -248,11 +260,11 @@ const Slots = () => {
               ) : visibleSlots.map((slot) => (
                 <tr key={slot.slotCode} className="transition-colors hover:bg-slate-50">
                   <td className="whitespace-nowrap px-5 py-4 font-mono text-sm text-slate-600">{slot.slotCode}</td>
-                  <td className="whitespace-nowrap px-5 py-4"><div className="text-sm text-slate-900">{new Date(slot.startTimeUtc).toLocaleString()}</div><div className="text-xs text-slate-500">to {new Date(slot.endTimeUtc).toLocaleString()}</div></td>
+                  <td className="whitespace-nowrap px-5 py-4"><div className="text-sm text-slate-900">{formatUtcDateTime(slot.startTimeUtc)}</div><div className="text-xs text-slate-500">to {formatUtcDateTime(slot.endTimeUtc)}</div></td>
                   <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-slate-900">{slot.availableEnergyKwh} kWh</td>
                   <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-700">${Number(slot.pricePerKwh).toFixed(2)}</td>
                   <td className="whitespace-nowrap px-5 py-4"><SlotStatusBadge status={slot.status} /></td>
-                  <td className="whitespace-nowrap px-5 py-4 text-right text-sm font-medium"><div className="flex justify-end gap-3"><button onClick={() => openDetails(slot)} className="text-blue-600 hover:text-blue-900">View</button>{isBackoffice && <button onClick={() => openEdit(slot)} disabled={['Reserved', 'Expired'].includes(slot.status)} className="text-indigo-600 hover:text-indigo-900 disabled:cursor-not-allowed disabled:text-slate-300">Edit</button>}{isBackoffice && <button onClick={() => openStatusDialog(slot)} disabled={!['Available', 'Unavailable'].includes(slot.status)} className="text-amber-600 hover:text-amber-900 disabled:cursor-not-allowed disabled:text-slate-300">Availability</button>}</div></td>
+                  <td className="whitespace-nowrap px-5 py-4 text-right text-sm font-medium"><div className="flex justify-end gap-3"><button onClick={() => openDetails(slot)} className="text-blue-600 hover:text-blue-900">View</button>{canEditSlots && <button onClick={() => openEdit(slot)} disabled={['Reserved', 'Expired'].includes(slot.status)} className="text-indigo-600 hover:text-indigo-900 disabled:cursor-not-allowed disabled:text-slate-300">Edit</button>}{isBackoffice && <button onClick={() => openStatusDialog(slot)} disabled={!['Available', 'Unavailable'].includes(slot.status)} className="text-amber-600 hover:text-amber-900 disabled:cursor-not-allowed disabled:text-slate-300">Availability</button>}</div></td>
                 </tr>
               ))}
             </tbody>
@@ -262,7 +274,7 @@ const Slots = () => {
 
       <div className="space-y-3 md:hidden">
         {loadingSlots ? <div className="app-panel"><LoadingState label="Loading energy slots..." /></div> : visibleSlots.length === 0 ? <div className="app-panel"><EmptyState title="No energy slots found" description={selectedStationCode ? 'No slots match the current filters.' : 'Select a station to view its slots.'} /></div> : visibleSlots.map((slot) => (
-          <article key={slot.slotCode} className="app-panel p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-mono text-xs font-bold text-emerald-700">{slot.slotCode}</p><p className="mt-2 text-sm font-semibold text-slate-900">{new Date(slot.startTimeUtc).toLocaleString()}</p><p className="text-xs text-slate-500">to {new Date(slot.endTimeUtc).toLocaleString()}</p></div><SlotStatusBadge status={slot.status} /></div><div className="mt-4 flex gap-6 border-y border-slate-100 py-3 text-sm"><span><span className="block text-xs text-slate-500">Energy</span>{slot.availableEnergyKwh} kWh</span><span><span className="block text-xs text-slate-500">Price</span>${Number(slot.pricePerKwh).toFixed(2)} / kWh</span></div><div className="mt-3 flex flex-wrap gap-3 text-sm font-bold"><button onClick={() => openDetails(slot)} className="text-emerald-700">View</button>{isBackoffice ? <><button onClick={() => openEdit(slot)} disabled={['Reserved', 'Expired'].includes(slot.status)} className="text-cyan-700 disabled:text-slate-300">Edit</button><button onClick={() => openStatusDialog(slot)} disabled={!['Available', 'Unavailable'].includes(slot.status)} className="text-amber-700 disabled:text-slate-300">Availability</button></> : null}</div></article>
+          <article key={slot.slotCode} className="app-panel p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-mono text-xs font-bold text-emerald-700">{slot.slotCode}</p><p className="mt-2 text-sm font-semibold text-slate-900">{formatUtcDateTime(slot.startTimeUtc)}</p><p className="text-xs text-slate-500">to {formatUtcDateTime(slot.endTimeUtc)}</p></div><SlotStatusBadge status={slot.status} /></div><div className="mt-4 flex gap-6 border-y border-slate-100 py-3 text-sm"><span><span className="block text-xs text-slate-500">Energy</span>{slot.availableEnergyKwh} kWh</span><span><span className="block text-xs text-slate-500">Price</span>${Number(slot.pricePerKwh).toFixed(2)} / kWh</span></div><div className="mt-3 flex flex-wrap gap-3 text-sm font-bold"><button onClick={() => openDetails(slot)} className="text-emerald-700">View</button>{canEditSlots && <button onClick={() => openEdit(slot)} disabled={['Reserved', 'Expired'].includes(slot.status)} className="text-cyan-700 disabled:text-slate-300">Edit</button>}{isBackoffice && <button onClick={() => openStatusDialog(slot)} disabled={!['Available', 'Unavailable'].includes(slot.status)} className="text-amber-700 disabled:text-slate-300">Availability</button>}</div></article>
         ))}
       </div>
 

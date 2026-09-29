@@ -3,7 +3,7 @@ An end-to-end Smart Solar Microgrid Trading System. The planned system combines 
 
 ## Current project status
 
-The central backend is substantially implemented and its Release test suite currently passes 93/93 tests. Member 1's React identity/account-management scope is implemented, while the overall React client still lacks Member 4 transaction operations. The native Android client has not been started, and IIS deployment plus final evidence remain pending.
+The central backend is substantially implemented and its test suite currently passes 105/105 tests. Member 1's React identity/account-management scope, including Backoffice Prosumer creation and editing, is implemented, while the overall React client still lacks Member 4 transaction operations. The native Android client has not been started, and IIS deployment plus final evidence remain pending.
 
 - [Full system progress and completion report](docs/project-status/full-system-progress-report.md)
 - [Requirements traceability matrix](docs/requirements/requirements-traceability-matrix.md)
