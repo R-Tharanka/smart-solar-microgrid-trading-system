@@ -22,14 +22,14 @@ Scope: Identity, authentication, authorization and account management
 - Idempotent migration of user documents created by the earlier Pascal-case prototype.
 - Repository, identity service, JWT generator and controller layers.
 - `Authenticated`, `ProsumerOnly`, `GridOperatorOnly`, `BackofficeOnly`, and shared staff policies.
-- Public registration and login; profile read/update; password change; staff creation; user list; explicit deactivate/reactivate commands.
+- Public registration and login; profile read/update; password change; staff creation; Backoffice Prosumer creation/update; user list; explicit deactivate/reactivate commands.
 - Required Prosumer phone number and address fields in registration, profile updates and responses.
 - Active-Prosumer service lookup for reservation ownership validation without exposing credential data.
 - Account lifecycle timestamps and actor identifier audit fields.
 - Normalization, DTO validation, guarded state transitions, duplicate-write handling, and RFC 7807 errors.
 - Property-based request DTOs compatible with ASP.NET Core MVC model binding and validation.
 - Automated tests for identity rules, validation, JWT claims and role/account-status authorization.
-- Importable Postman collection with 53 ordered requests, generated test identities, JWT capture, and automated assertions.
+- Importable Postman collection with 57 ordered requests, generated test identities, JWT capture, and automated assertions.
 
 ## Secure Configuration
 
@@ -73,12 +73,13 @@ Health endpoints are `/health/live` and `/health/ready`. The readiness endpoint 
 | JWT business identifier and role claims | Token test | Passed |
 | Backoffice, Grid Operator and Prosumer policies | Authorization tests | Passed |
 | Profile ownership | Controller always derives identity from JWT claim | Implemented |
+| Backoffice Prosumer create/update | Service, DTO and authorization tests | Implemented |
 | Deactivation/reactivation transitions | Service tests | Passed |
 | Reservation-aware deactivation | Guard/service test | Passed |
 | MongoDB indexes and persistence | Startup initializer | Requires live Atlas verification |
 | HTTP status/response evidence | Postman collection prepared | Requires Collection Runner capture |
 
-Current repository-wide backend result (2026-09-29): 93 tests passed, 0 failed, 0 skipped. Identity remains covered by its service, DTO, JWT and authorization tests; live Atlas HTTP/Postman evidence is still required.
+Current repository-wide backend result (2026-09-29): 105 tests passed, 0 failed, 0 skipped. Identity remains covered by its service, DTO, JWT and authorization tests; live Atlas HTTP/Postman evidence is still required.
 
 ## Member 3 Integration Contract
 

@@ -106,6 +106,28 @@ public sealed class RequestValidationTests
         Assert.Equal(expectedValid, IsValid(request));
     }
 
+    [Theory]
+    [InlineData("person@example.com", "0771234567", "Colombo", true)]
+    [InlineData("not-an-email", "0771234567", "Colombo", false)]
+    [InlineData("person@example.com", "123", "Colombo", false)]
+    [InlineData("person@example.com", "0771234567", "", false)]
+    public void UpdateProsumer_ValidatesAdministrativeProfileFields(
+        string email,
+        string phoneNumber,
+        string address,
+        bool expectedValid)
+    {
+        // Verify the Backoffice update contract validates all editable contact fields.
+        var request = new UpdateProsumerRequest(
+            email,
+            "Test",
+            "User",
+            phoneNumber,
+            address);
+
+        Assert.Equal(expectedValid, IsValid(request));
+    }
+
     private static bool IsValid(object request)
     {
         // Evaluate every data annotation attached to the supplied request object.

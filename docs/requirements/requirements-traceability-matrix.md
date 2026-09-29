@@ -22,7 +22,7 @@ Current implementation and evidence status is audited in `docs/project-status/fu
 | REQ-07 | Use SQLite for Android local persistence. | Member 1, Member 3 support | Auth/reference APIs | SQLite tables | Not applicable | Session/reference cache | SQLite data evidence |
 | REQ-08 | Authenticate Backoffice, Grid Operator and Prosumer users. | Member 1 | `identity-api.md` | `users` | Login, role routing | Login, role routing | Login success/failure tests |
 | REQ-09 | Register Prosumer profile using NIC as primary identity. | Member 1 | `POST /api/users/prosumer/register` | `users` | Prosumer management | Registration | Duplicate NIC test |
-| REQ-10 | Manage users and account status. | Member 1 | `identity-api.md` | `users` | User/prosumer management | Profile/status request if implemented | Status update tests |
+| REQ-10 | Let Backoffice create, update, deactivate and reactivate Prosumer accounts; only Backoffice may reactivate. | Member 1 | `identity-api.md` | `users` | Prosumer management forms and status controls | Own-profile/deactivation only | Administrative CRUD and authorization tests |
 | REQ-11 | Enforce role-based authorization. | Member 1 | All protected endpoints | `users` | Auth guard | Auth guard | 401/403 tests |
 | REQ-12 | Create and manage solar grid nodes/stations. | Member 2 | `station-slot-api.md` | `solarStationInfo` | Station dashboard/forms | Nearby station list/map | Station CRUD evidence |
 | REQ-13 | Store station GPS/location details. | Member 2 | `station-slot-api.md` | `solarStationInfo` | Station form/table | Map markers/details | Map and DB evidence |
@@ -74,4 +74,4 @@ Audit date: 2026-09-29
 | IIS deployment | Not started | Publish, configure, test and document |
 | Final testing/report evidence | Partial | Full Postman/E2E/screenshots/contributions/report |
 
-Backend verification at this audit: 93 passed, 0 failed, 0 skipped. This result covers the automated .NET suite; it does not replace HTTP, Atlas, client or IIS verification.
+Backend verification at this audit: 105 passed, 0 failed, 0 skipped. This result covers the automated .NET suite; it does not replace HTTP, Atlas, client or IIS verification.

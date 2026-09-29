@@ -144,6 +144,41 @@ public sealed class UpdateProfileRequest
     public string? Address { get; init; }
 }
 
+public sealed class UpdateProsumerRequest
+{
+    public UpdateProsumerRequest()
+    {
+        // Support ASP.NET Core model binding with a parameterless constructor.
+    }
+
+    public UpdateProsumerRequest(
+        string email,
+        string firstName,
+        string lastName,
+        string phoneNumber,
+        string address)
+    {
+        // Initialize every Backoffice-editable Prosumer profile field.
+        (Email, FirstName, LastName, PhoneNumber, Address) =
+            (email, firstName, lastName, phoneNumber, address);
+    }
+
+    [Required, EmailAddress, StringLength(320)]
+    public string Email { get; init; } = string.Empty;
+
+    [Required, StringLength(100, MinimumLength = 1)]
+    public string FirstName { get; init; } = string.Empty;
+
+    [Required, StringLength(100, MinimumLength = 1)]
+    public string LastName { get; init; } = string.Empty;
+
+    [Required, RegularExpression(IdentityValidationRules.PhonePattern, ErrorMessage = IdentityValidationRules.PhoneError)]
+    public string PhoneNumber { get; init; } = string.Empty;
+
+    [Required, StringLength(300, MinimumLength = 3)]
+    public string Address { get; init; } = string.Empty;
+}
+
 public sealed class ChangePasswordRequest
 {
     public ChangePasswordRequest()

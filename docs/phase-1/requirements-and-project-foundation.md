@@ -116,10 +116,11 @@ Recommended account statuses:
 Rules:
 
 - New Backoffice and Grid Operator accounts are created by an authorized Backoffice user.
-- New Prosumer accounts are created through Android registration using NIC as the primary identity.
+- New Prosumer accounts may be created through Android self-registration or Backoffice administration using NIC as the primary identity.
 - A deactivated account cannot login.
-- A Prosumer can update only their own profile.
-- Backoffice can reactivate eligible Prosumer accounts.
+- A Prosumer can update only their own profile; Backoffice can update a selected Prosumer through the administrative endpoint.
+- Backoffice can create, update, deactivate, and reactivate eligible Prosumer accounts.
+- Only Backoffice can reactivate a deactivated account.
 - Account status changes must be recorded with timestamp and actor information where practical.
 
 ## 8. System Architecture
@@ -217,8 +218,8 @@ Detailed endpoint contracts are maintained in:
 | Module | Example Endpoints | Owner |
 | --- | --- | --- |
 | Auth | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` | Member 1 |
-| Users | `POST /api/users`, `GET /api/users`, `PATCH /api/users/{id}/status` | Member 1 |
-| Prosumers | `POST /api/prosumers/register`, `GET /api/prosumers/me`, `PUT /api/prosumers/me` | Member 1 |
+| Users | `GET /api/users`, `POST /api/users/staff`, `POST /api/users/{identifier}/deactivate`, `POST /api/users/{identifier}/reactivate` | Member 1 |
+| Prosumers | `POST /api/users/prosumer/register`, `POST /api/users/prosumers`, `PUT /api/users/prosumers/{nic}`, `GET /api/users/me`, `PUT /api/users/me` | Member 1 |
 | Stations | `POST /api/stations`, `GET /api/stations`, `PUT /api/stations/{id}` | Member 2 |
 | Slots | `POST /api/stations/{stationId}/slots`, `GET /api/stations/{stationId}/slots` | Member 2 |
 | Reservations | `POST /api/reservations`, `GET /api/reservations/me`, `PUT /api/reservations/{id}` | Member 3 |

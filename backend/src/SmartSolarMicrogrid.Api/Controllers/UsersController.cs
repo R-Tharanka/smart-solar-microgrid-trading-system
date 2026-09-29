@@ -31,6 +31,34 @@ public sealed class UsersController(IIdentityService identityService) : Controll
             new ApiEnvelope<UserResponse>(user, "Prosumer registered successfully."));
     }
 
+    [HttpPost("prosumers")]
+    [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
+    [ProducesResponseType<ApiEnvelope<UserResponse>>(StatusCodes.Status201Created)]
+    public async Task<ActionResult<ApiEnvelope<UserResponse>>> CreateProsumer(
+        RegisterProsumerRequest request,
+        CancellationToken cancellationToken)
+    {
+        // Create a Prosumer administratively and retain the Backoffice actor for auditing.
+        var user = await identityService.CreateProsumerAsync(CurrentIdentifier(), request, cancellationToken);
+        return StatusCode(
+            StatusCodes.Status201Created,
+            new ApiEnvelope<UserResponse>(user, "Prosumer account created successfully."));
+    }
+
+    [HttpPut("prosumers/{nic}")]
+    [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
+    [ProducesResponseType<ApiEnvelope<UserResponse>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiEnvelope<UserResponse>>> UpdateProsumer(
+        string nic,
+        UpdateProsumerRequest request,
+        CancellationToken cancellationToken)
+    {
+        // Update the selected Prosumer without allowing NIC, role, status, or password changes.
+        var user = await identityService.UpdateProsumerAsync(
+            CurrentIdentifier(), nic, request, cancellationToken);
+        return Ok(new ApiEnvelope<UserResponse>(user, "Prosumer account updated successfully."));
+    }
+
     [HttpPost("staff")]
     [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
     [ProducesResponseType<ApiEnvelope<UserResponse>>(StatusCodes.Status201Created)]

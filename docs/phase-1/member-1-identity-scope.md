@@ -23,7 +23,7 @@ Member 1 owns the user identity and account lifecycle across:
 | M1-05 | Enforce role-based access for protected API endpoints. |
 | M1-06 | Prevent deactivated users from logging in. |
 | M1-07 | Allow Prosumers to view/update only their own profile. |
-| M1-08 | Allow Backoffice to view, deactivate and reactivate eligible accounts. |
+| M1-08 | Allow Backoffice to create, view, update, deactivate and reactivate eligible Prosumer accounts. |
 | M1-09 | Return consistent validation and authorization errors. |
 | M1-10 | Persist required Android login/reference details in SQLite. |
 
@@ -49,7 +49,7 @@ Recommended fields:
 | `updatedAtUtc` | datetime | Yes | Server-generated. |
 | `deactivatedAtUtc` | datetime | Optional | Set on deactivation. |
 | `reactivatedAtUtc` | datetime | Optional | Set on reactivation. |
-| `createdByIdentifier` | string | Optional | Backoffice email that created a staff account. |
+| `createdByIdentifier` | string | Optional | Backoffice email that administratively created an account. |
 | `statusChangedByIdentifier` | string | Optional | Business identifier of the lifecycle actor. |
 | `lastLoginAtUtc` | datetime | Optional | Updated on successful login. |
 
@@ -74,6 +74,8 @@ Rules:
 - A user can never choose their own elevated role during public registration.
 - Prosumer public registration always creates role `Prosumer`.
 - Backoffice is the only role allowed to create Backoffice/Grid Operator accounts.
+- Backoffice administrative Prosumer creation always creates role `Prosumer` and records the actor.
+- Only Backoffice may update another Prosumer or reactivate a deactivated account.
 - Server-side authorization must not rely on hidden UI controls.
 
 ## 5. Backend Deliverables
@@ -81,7 +83,7 @@ Rules:
 | Deliverable | Details |
 | --- | --- |
 | Models | `User`, `UserRole`, `UserStatus`. |
-| DTOs | Register, login, login response, user response, profile update, password change and staff creation. |
+| DTOs | Register, login, login response, user response, own-profile update, administrative Prosumer update, password change and staff creation. |
 | Services | `IdentityService`, `JwtTokenGenerator`, account deactivation guard. |
 | Controllers | `UsersController`. |
 | Middleware | Consistent exception/error response middleware. |
@@ -95,7 +97,7 @@ Rules:
 | Login page | Login form with validation, loading and API error state. |
 | Role-based routing | Redirect Backoffice and Grid Operator to correct dashboards. |
 | User management | Backoffice create/list/update/deactivate/reactivate users. |
-| Prosumer management | Backoffice view and manage prosumer account status. |
+| Prosumer management | Backoffice create, view, update, deactivate and reactivate Prosumer accounts. |
 | Auth guard | Prevent unauthenticated web access to protected pages. |
 
 ## 7. Android Deliverables
@@ -154,6 +156,10 @@ Rules:
 | Prosumer updates another profile | API returns `403 Forbidden`. |
 | Grid Operator opens Backoffice user list | API returns `403 Forbidden`. |
 | Backoffice deactivates Prosumer | Status changes to `Deactivated`. |
+| Backoffice creates Prosumer | Active Prosumer is created and the Backoffice actor is recorded. |
+| Backoffice updates Prosumer | Contact fields change while NIC, role, status and password remain unchanged. |
+| Grid Operator creates or updates Prosumer | API returns `403 Forbidden`. |
+| Prosumer attempts self-reactivation | API returns `403 Forbidden`. |
 | Deactivated user attempts protected request | API rejects the request. |
 
 ## 10. Evidence to Capture

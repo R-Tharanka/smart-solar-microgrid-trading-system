@@ -37,7 +37,8 @@ The first registration request generates unique Prosumer, Grid Operator, and sec
 | Profile | Read and update own profile, reject incomplete Prosumer contact details |
 | Password | Wrong current password, unchanged password, successful change, old/new login |
 | Authorization | Missing/malformed JWT, Prosumer and Grid Operator role denials |
-| Staff | Create Grid Operator and Backoffice, duplicate email, invalid role, list users |
+| Staff and Prosumer administration | Create staff; Backoffice create/update Prosumer; duplicate email; invalid role; list users |
+| Administrative authorization | Prosumer and Grid Operator cannot create/update Prosumers; only Backoffice can reactivate |
 | Lifecycle | Admin and self-deactivation, immediate old-JWT denial, reactivation, invalid transitions |
 | Security | No password hash or MongoDB ID in user responses |
 
