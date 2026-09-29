@@ -40,6 +40,9 @@ All protected calls require `Authorization: Bearer <jwt-token>`.
 - Slots can only be created for active stations.
 - Slot times must use UTC, be in the future, have end after start, and fit within the station schedule.
 - Slot energy must be positive and cannot exceed station capacity; price must be positive.
+- `availableEnergyKwh` represents the slot's remaining energy. Pending requests do not consume it; approval atomically subtracts the approved amount.
+- A partially allocated slot remains `Available`. When its remaining energy reaches zero it becomes `Reserved` and cannot accept another request.
+- Cancelling an `Approved` reservation restores its allocated energy; rejecting a `Pending` request does not change slot energy.
 - Available/reserved slots at the same station cannot overlap.
 - Active reservations (`Pending`, `Approved`, `QrIssued`, `Verified`) prevent station deactivation.
 - Active reservations also prevent slot updates or making a slot unavailable.

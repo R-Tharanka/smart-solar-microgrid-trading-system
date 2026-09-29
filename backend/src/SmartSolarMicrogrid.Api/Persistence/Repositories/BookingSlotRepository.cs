@@ -126,4 +126,62 @@ public sealed class BookingSlotRepository(MongoDbContext context) : IBookingSlot
             cancellationToken: cancellationToken);
         return result.MatchedCount == 1;
     }
+
+    // Atomically subtracts an approved reservation from the remaining slot energy.
+    public async Task<bool> AllocateEnergyAsync(
+        ObjectId id,
+        decimal energyKwh,
+        CancellationToken cancellationToken = default)
+    {
+        if (energyKwh <= 0) return false;
+
+        var filter = Builders<EnergyBookingSlot>.Filter.Where(slot =>
+            slot.Id == id &&
+            (slot.Status == SlotStatus.Available || slot.Status == SlotStatus.Reserved) &&
+            slot.AvailableEnergyKwh >= energyKwh);
+        var remainingExpression = new BsonDocument("$subtract", new BsonArray
+        {
+            "$availableEnergyKwh",
+            energyKwh
+        });
+        var stages = new BsonDocument[]
+        {
+            new BsonDocument("$set", new BsonDocument
+            {
+                { "availableEnergyKwh", remainingExpression },
+                {
+                    "status",
+                    new BsonDocument("$cond", new BsonArray
+                    {
+                        new BsonDocument("$eq", new BsonArray { remainingExpression, 0 }),
+                        SlotStatus.Reserved.ToString(),
+                        SlotStatus.Available.ToString()
+                    })
+                },
+                { "updatedAtUtc", DateTime.UtcNow }
+            })
+        };
+        var update = new PipelineUpdateDefinition<EnergyBookingSlot>(stages);
+
+        var result = await _slots.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
+        return result.ModifiedCount == 1;
+    }
+
+    // Atomically returns energy from a cancelled or reduced approved reservation.
+    public async Task<bool> RestoreEnergyAsync(
+        ObjectId id,
+        decimal energyKwh,
+        CancellationToken cancellationToken = default)
+    {
+        if (energyKwh <= 0) return false;
+
+        var filter = Builders<EnergyBookingSlot>.Filter.Where(slot =>
+            slot.Id == id && slot.Status != SlotStatus.Expired);
+        var update = Builders<EnergyBookingSlot>.Update
+            .Inc(slot => slot.AvailableEnergyKwh, energyKwh)
+            .Set(slot => slot.Status, SlotStatus.Available)
+            .Set(slot => slot.UpdatedAtUtc, DateTime.UtcNow);
+        var result = await _slots.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
+        return result.ModifiedCount == 1;
+    }
 }

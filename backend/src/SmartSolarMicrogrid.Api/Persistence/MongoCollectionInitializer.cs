@@ -138,14 +138,11 @@ public sealed class MongoCollectionInitializer(
         }, cancellationToken);
 
         var reservations = context.Database.GetCollection<BsonDocument>(CollectionNames.EnergyReservations);
+        await DropIndexIfExistsAsync(reservations, "ux_reservations_active_slot", cancellationToken);
         await EnsureIndexesAsync(reservations, new[]
         {
             Index("ux_reservations_code", new BsonDocument("reservationCode", 1), unique: true),
-            Index("ux_reservations_active_slot", new BsonDocument("slotId", 1), unique: true,
-                partialFilter: new BsonDocument("status", new BsonDocument("$in", new BsonArray
-                {
-                    "Pending", "Approved", "QrIssued", "Verified"
-                }))),
+            Index("ix_reservations_slot", new BsonDocument("slotId", 1)),
             Index("ix_reservations_prosumer_start", new BsonDocument
             {
                 { "prosumerNic", 1 }, { "scheduledStartTimeUtc", -1 }
@@ -156,6 +153,20 @@ public sealed class MongoCollectionInitializer(
             }),
             Index("ix_reservations_qr_hash", new BsonDocument("qrTokenHash", 1), unique: true, sparse: true)
         }, cancellationToken);
+    }
+
+    // Removes the former one-active-reservation-per-slot constraint used by exclusive slots.
+    private static async Task DropIndexIfExistsAsync(
+        IMongoCollection<BsonDocument> collection,
+        string indexName,
+        CancellationToken cancellationToken)
+    {
+        var indexes = await (await collection.Indexes.ListAsync(cancellationToken))
+            .ToListAsync(cancellationToken);
+        if (indexes.Any(index => index["name"] == indexName))
+        {
+            await collection.Indexes.DropOneAsync(indexName, cancellationToken);
+        }
     }
 
     private static async Task EnsureIndexesAsync(

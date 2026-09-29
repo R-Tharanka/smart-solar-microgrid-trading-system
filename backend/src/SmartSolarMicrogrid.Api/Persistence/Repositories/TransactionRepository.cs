@@ -8,8 +8,6 @@ public sealed class TransactionRepository(MongoDbContext context) : ITransaction
 {
     private readonly IMongoCollection<EnergyReservation> _reservations =
         context.Database.GetCollection<EnergyReservation>(CollectionNames.EnergyReservations);
-    private readonly IMongoCollection<EnergyBookingSlot> _slots =
-        context.Database.GetCollection<EnergyBookingSlot>(CollectionNames.EnergyBookingSlots);
 
     // Invalid ObjectId input is treated as a missing transaction instead of reaching MongoDB.
     public async Task<EnergyReservation?> FindByIdAsync(string reservationId, CancellationToken cancellationToken = default)
@@ -54,7 +52,7 @@ public sealed class TransactionRepository(MongoDbContext context) : ITransaction
         return (await _reservations.UpdateOneAsync(filter, update, cancellationToken: cancellationToken)).ModifiedCount == 1;
     }
 
-    // Commits the completed reservation and consumed slot together so they cannot disagree.
+    // Completes one verified reservation without closing a shared-capacity slot.
     public async Task<bool> FinalizeAsync(string reservationCode, ObjectId slotId, string operatorIdentifier,
         string confirmationNote, decimal actualEnergyTransferredKwh, DateTime finalizedAtUtc,
         CancellationToken cancellationToken = default)
@@ -62,9 +60,10 @@ public sealed class TransactionRepository(MongoDbContext context) : ITransaction
         using var session = await context.Client.StartSessionAsync(cancellationToken: cancellationToken);
         session.StartTransaction();
 
-        // Conditional reservation update makes repeated or concurrent finalization fail safely.
+        // Conditional update makes repeated or concurrent finalization fail safely.
         var reservationFilter = Builders<EnergyReservation>.Filter.Where(r =>
-            r.ReservationCode == reservationCode && r.Status == ReservationStatus.Verified);
+            r.ReservationCode == reservationCode && r.SlotId == slotId &&
+            r.Status == ReservationStatus.Verified);
         var reservationUpdate = Builders<EnergyReservation>.Update
             .Set(r => r.Status, ReservationStatus.Completed)
             .Set(r => r.FinalizedByUserId, operatorIdentifier)
@@ -75,20 +74,6 @@ public sealed class TransactionRepository(MongoDbContext context) : ITransaction
         var reservationResult = await _reservations.UpdateOneAsync(
             session, reservationFilter, reservationUpdate, cancellationToken: cancellationToken);
         if (reservationResult.ModifiedCount != 1)
-        {
-            await session.AbortTransactionAsync(cancellationToken);
-            return false;
-        }
-
-        // A completed transfer consumes its Reserved slot; any different state aborts the transaction.
-        var slotFilter = Builders<EnergyBookingSlot>.Filter.Where(slot =>
-            slot.Id == slotId && slot.Status == SlotStatus.Reserved);
-        var slotUpdate = Builders<EnergyBookingSlot>.Update
-            .Set(slot => slot.Status, SlotStatus.Expired)
-            .Set(slot => slot.UpdatedAtUtc, finalizedAtUtc);
-        var slotResult = await _slots.UpdateOneAsync(
-            session, slotFilter, slotUpdate, cancellationToken: cancellationToken);
-        if (slotResult.ModifiedCount != 1)
         {
             await session.AbortTransactionAsync(cancellationToken);
             return false;

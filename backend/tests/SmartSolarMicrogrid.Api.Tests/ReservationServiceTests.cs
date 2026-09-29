@@ -87,7 +87,8 @@ public sealed class ReservationServiceTests
         Assert.Equal("Pending", result.Status);
         Assert.Equal(20m, result.RequestedEnergyKwh);
         Assert.StartsWith("RSV-", result.ReservationCode);
-        Assert.Equal(SlotStatus.Reserved, slotRepo.Slot.Status);
+        Assert.Equal(SlotStatus.Available, slotRepo.Slot.Status);
+        Assert.Equal(50m, slotRepo.Slot.AvailableEnergyKwh);
     }
 
     [Fact]
@@ -311,10 +312,10 @@ public sealed class ReservationServiceTests
     // -------------------------------------------------------------------------
 
     [Fact]
-    public async Task Cancel_PendingReservation_SetsStatusAndRestoresSlot()
+    public async Task Cancel_PendingReservation_SetsStatusWithoutChangingSlotEnergy()
     {
         var r = PendingReservation();
-        var slot = AvailableSlot(status: SlotStatus.Reserved);
+        var slot = AvailableSlot(energy: 25m);
         slot.Id = r.SlotId;
         var repo = new FakeReservationRepository(r);
         var slotRepo = new FakeSlotRepository(slot);
@@ -324,6 +325,24 @@ public sealed class ReservationServiceTests
 
         Assert.Equal(ReservationStatus.Cancelled, r.Status);
         Assert.Equal(SlotStatus.Available, slotRepo.Slot.Status);
+        Assert.Equal(25m, slotRepo.Slot.AvailableEnergyKwh);
+    }
+
+    [Fact]
+    public async Task Cancel_ApprovedReservation_RestoresAllocatedEnergy()
+    {
+        var r = PendingReservation(status: ReservationStatus.Approved);
+        var slot = AvailableSlot(energy: 15m);
+        slot.Id = r.SlotId;
+        var slotRepo = new FakeSlotRepository(slot);
+
+        await Service(new FakeReservationRepository(r), slots: slotRepo).CancelAsync(
+            r.Id.ToString(), r.ProsumerNic, new CancelReservationRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(ReservationStatus.Cancelled, r.Status);
+        Assert.Equal(25m, slot.AvailableEnergyKwh);
+        Assert.Equal(SlotStatus.Available, slot.Status);
     }
 
     // -------------------------------------------------------------------------
@@ -373,12 +392,62 @@ public sealed class ReservationServiceTests
     public async Task Approve_PendingReservation_TransitionsToApproved()
     {
         var r = PendingReservation();
+        var slot = AvailableSlot(energy: 25m);
+        slot.Id = r.SlotId;
         var repo = new FakeReservationRepository(r);
+        var slotRepo = new FakeSlotRepository(slot);
 
-        var result = await Service(repo).ApproveAsync(r.Id.ToString(), TestContext.Current.CancellationToken);
+        var result = await Service(repo, slots: slotRepo).ApproveAsync(
+            r.Id.ToString(), TestContext.Current.CancellationToken);
 
         Assert.Equal("Approved", result.Status);
         Assert.Equal(ReservationStatus.Approved, r.Status);
+        Assert.Equal(15m, slot.AvailableEnergyKwh);
+        Assert.Equal(SlotStatus.Available, slot.Status);
+    }
+
+    [Fact]
+    public async Task Approve_UsingAllRemainingEnergy_MarksSlotReserved()
+    {
+        var r = PendingReservation();
+        var slot = AvailableSlot(energy: 10m);
+        slot.Id = r.SlotId;
+
+        await Service(new FakeReservationRepository(r), slots: new FakeSlotRepository(slot))
+            .ApproveAsync(r.Id.ToString(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(0m, slot.AvailableEnergyKwh);
+        Assert.Equal(SlotStatus.Reserved, slot.Status);
+    }
+
+    [Fact]
+    public async Task Approve_LegacyReservedSlotWithEnergy_NormalizesSharedCapacity()
+    {
+        var r = PendingReservation();
+        var slot = AvailableSlot(energy: 25m, status: SlotStatus.Reserved);
+        slot.Id = r.SlotId;
+
+        await Service(new FakeReservationRepository(r), slots: new FakeSlotRepository(slot))
+            .ApproveAsync(r.Id.ToString(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(15m, slot.AvailableEnergyKwh);
+        Assert.Equal(SlotStatus.Available, slot.Status);
+    }
+
+    [Fact]
+    public async Task Approve_InsufficientRemainingEnergy_LeavesReservationPending()
+    {
+        var r = PendingReservation();
+        var slot = AvailableSlot(energy: 5m);
+        slot.Id = r.SlotId;
+
+        var error = await Assert.ThrowsAsync<ReservationException>(() =>
+            Service(new FakeReservationRepository(r), slots: new FakeSlotRepository(slot))
+                .ApproveAsync(r.Id.ToString(), TestContext.Current.CancellationToken));
+
+        Assert.Equal("RESERVATION_SLOT_CAPACITY", error.ErrorCode);
+        Assert.Equal(ReservationStatus.Pending, r.Status);
+        Assert.Equal(5m, slot.AvailableEnergyKwh);
     }
 
     // -------------------------------------------------------------------------
@@ -402,10 +471,10 @@ public sealed class ReservationServiceTests
     // -------------------------------------------------------------------------
 
     [Fact]
-    public async Task Reject_PendingReservation_TransitionsToRejectedAndRestoresSlot()
+    public async Task Reject_PendingReservation_TransitionsWithoutChangingSlotEnergy()
     {
         var r = PendingReservation();
-        var slot = AvailableSlot(status: SlotStatus.Reserved);
+        var slot = AvailableSlot(energy: 25m);
         slot.Id = r.SlotId;
         var repo = new FakeReservationRepository(r);
         var slotRepo = new FakeSlotRepository(slot);
@@ -416,6 +485,7 @@ public sealed class ReservationServiceTests
 
         Assert.Equal(ReservationStatus.Rejected, r.Status);
         Assert.Equal(SlotStatus.Available, slotRepo.Slot.Status);
+        Assert.Equal(25m, slotRepo.Slot.AvailableEnergyKwh);
     }
 
     // -------------------------------------------------------------------------
@@ -546,7 +616,7 @@ public sealed class ReservationServiceTests
     {
         const string reason = "Station under maintenance";
         var r = PendingReservation();
-        var slot = AvailableSlot(status: SlotStatus.Reserved);
+        var slot = AvailableSlot(energy: 25m);
         slot.Id = r.SlotId;
         var repo = new FakeReservationRepository(r);
         var slotRepo = new FakeSlotRepository(slot);
@@ -564,8 +634,9 @@ public sealed class ReservationServiceTests
         // Rejection reason is also persisted on the in-memory domain object (as the fake does).
         Assert.Equal(reason, r.ConfirmationNote);
 
-        // Slot was restored.
+        // Pending rejection does not allocate or change slot energy.
         Assert.Equal(SlotStatus.Available, slotRepo.Slot.Status);
+        Assert.Equal(25m, slotRepo.Slot.AvailableEnergyKwh);
     }
 
     // -------------------------------------------------------------------------
@@ -577,7 +648,7 @@ public sealed class ReservationServiceTests
     {
         const string reason = "Schedule changed";
         var r = PendingReservation();
-        var slot = AvailableSlot(status: SlotStatus.Reserved);
+        var slot = AvailableSlot(energy: 25m);
         slot.Id = r.SlotId;
         var repo = new FakeReservationRepository(r);
         var slotRepo = new FakeSlotRepository(slot);
@@ -594,7 +665,7 @@ public sealed class ReservationServiceTests
     public async Task Reject_LeadingTrailingWhitespaceTrimmedBeforePersisting()
     {
         var r = PendingReservation();
-        var slot = AvailableSlot(status: SlotStatus.Reserved);
+        var slot = AvailableSlot(energy: 25m);
         slot.Id = r.SlotId;
         var repo = new FakeReservationRepository(r);
 
@@ -771,6 +842,38 @@ public sealed class ReservationServiceTests
                 return Task.FromResult(true);
             }
             return Task.FromResult(false);
+        }
+
+        public Task<bool> AllocateEnergyAsync(
+            MongoDB.Bson.ObjectId id,
+            decimal energyKwh,
+            CancellationToken cancellationToken = default)
+        {
+            if (slot == null || slot.Id != id ||
+                slot.Status is not (SlotStatus.Available or SlotStatus.Reserved) ||
+                energyKwh <= 0 || slot.AvailableEnergyKwh < energyKwh)
+            {
+                return Task.FromResult(false);
+            }
+
+            slot.AvailableEnergyKwh -= energyKwh;
+            slot.Status = slot.AvailableEnergyKwh == 0 ? SlotStatus.Reserved : SlotStatus.Available;
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> RestoreEnergyAsync(
+            MongoDB.Bson.ObjectId id,
+            decimal energyKwh,
+            CancellationToken cancellationToken = default)
+        {
+            if (slot == null || slot.Id != id || energyKwh <= 0 || slot.Status == SlotStatus.Expired)
+            {
+                return Task.FromResult(false);
+            }
+
+            slot.AvailableEnergyKwh += energyKwh;
+            slot.Status = SlotStatus.Available;
+            return Task.FromResult(true);
         }
     }
 }
