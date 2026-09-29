@@ -14,6 +14,8 @@ public interface IIdentityService
     Task<LoginResponse> AuthenticateAsync(LoginRequest request, CancellationToken cancellationToken = default);
     // Register a self-service Prosumer account.
     Task<UserResponse> RegisterProsumerAsync(RegisterProsumerRequest request, CancellationToken cancellationToken = default);
+    // Create a Prosumer through Backoffice administration.
+    Task<UserResponse> CreateProsumerAsync(string actorIdentifier, RegisterProsumerRequest request, CancellationToken cancellationToken = default);
     // Create a Backoffice or Grid Operator account.
     Task<UserResponse> CreateStaffAsync(string actorIdentifier, CreateStaffRequest request, CancellationToken cancellationToken = default);
     // Retrieve the current account profile.
@@ -22,6 +24,8 @@ public interface IIdentityService
     Task<UserResponse> GetActiveProsumerAsync(string nic, CancellationToken cancellationToken = default);
     // Update fields editable by the current account.
     Task<UserResponse> UpdateProfileAsync(string identifier, UpdateProfileRequest request, CancellationToken cancellationToken = default);
+    // Update a Prosumer profile through Backoffice administration.
+    Task<UserResponse> UpdateProsumerAsync(string actorIdentifier, string nic, UpdateProsumerRequest request, CancellationToken cancellationToken = default);
     // Verify and replace the current account password.
     Task ChangePasswordAsync(string identifier, ChangePasswordRequest request, CancellationToken cancellationToken = default);
     // Deactivate the current Prosumer account.

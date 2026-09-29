@@ -68,7 +68,7 @@ The same visual system is applied to login, Backoffice and Grid Operator dashboa
 - Backoffice staff list, search, role/status filters and empty/error/loading states.
 - Backoffice and Grid Operator staff creation with contract-aligned validation.
 - Staff deactivation/reactivation with confirmation and immediate local updates.
-- Prosumer list/details/search/status filters and status management.
+- Prosumer list/details/search/status filters, Backoffice creation/editing, and status management.
 - Friendly `USER_ACTIVE_RESERVATIONS` and other identity error messages.
 - Current-user profile display/update for all roles.
 - Prosumer phone/address editing and self-deactivation.
@@ -99,6 +99,8 @@ Existing Member 2 and Member 3 station, slot and reservation routes remain uncha
 | `POST /api/users/change-password` | Password change |
 | `GET /api/users` | Staff and Prosumer lists |
 | `POST /api/users/staff` | Create Backoffice/Grid Operator |
+| `POST /api/users/prosumers` | Backoffice creates a Prosumer |
+| `PUT /api/users/prosumers/{nic}` | Backoffice updates a Prosumer profile |
 | `POST /api/users/{identifier}/deactivate` | Staff/Prosumer deactivation |
 | `POST /api/users/{identifier}/reactivate` | Staff/Prosumer reactivation |
 | `POST /api/users/me/deactivate` | Prosumer self-deactivation |
@@ -128,8 +130,8 @@ npm run build
 
 Results:
 
-- 8 focused session/error utility tests passed.
-- Production Vite build passed (663 modules transformed).
+- 9 focused session/error utility tests passed.
+- Production Vite build passed (667 modules transformed).
 - ESLint passed with 0 errors. Seven warnings remain in pre-existing Member 2/3 files.
 - Headless Microsoft Edge rendered login, staff, create-staff dialog and profile views.
 - Desktop viewport: 1440 x 1000, no horizontal overflow.
@@ -158,7 +160,7 @@ Use redacted test accounts and capture:
 - [ ] Duplicate staff email conflict.
 - [ ] Staff deactivate/reactivate confirmation and result.
 - [ ] Final-active-Backoffice and self-deactivation safeguards.
-- [ ] Prosumer list, details, deactivate and reactivate.
+- [ ] Prosumer list, details, create, update, deactivate and Backoffice-only reactivate.
 - [ ] `USER_ACTIVE_RESERVATIONS` deactivation rejection.
 - [ ] Current profile before and after an update.
 - [ ] Password mismatch, incorrect-current-password and successful change states.

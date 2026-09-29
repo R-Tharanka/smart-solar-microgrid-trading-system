@@ -65,6 +65,32 @@ public sealed class IdentityServiceTests
     }
 
     [Fact]
+    public async Task CreateProsumer_RecordsBackofficeCreator()
+    {
+        // Verify administrative creation produces an active Prosumer and records the Backoffice actor.
+        var repository = new FakeUserRepository();
+        var service = CreateService(repository);
+
+        var response = await service.CreateProsumerAsync(
+            "ADMIN@EXAMPLE.COM",
+            new RegisterProsumerRequest(
+                "199912345678",
+                "NEW.PROSUMER@example.com",
+                "Strong@123",
+                "New",
+                "Prosumer",
+                "0777654321",
+                "Kandy"),
+            TestCancellation);
+
+        var saved = Assert.Single(repository.Users);
+        Assert.Equal(UserRole.Prosumer, saved.Role);
+        Assert.Equal(UserStatus.Active, saved.Status);
+        Assert.Equal("admin@example.com", saved.CreatedByIdentifier);
+        Assert.Equal("new.prosumer@example.com", response.Email);
+    }
+
+    [Fact]
     public async Task Authenticate_WithActiveAccount_ReturnsTokenAndRecordsLogin()
     {
         // Verify successful login issues a token and records login audit metadata.
@@ -273,6 +299,63 @@ public sealed class IdentityServiceTests
 
         Assert.Equal("+94770000000", result.PhoneNumber);
         Assert.Equal("Kandy", result.Address);
+    }
+
+    [Fact]
+    public async Task UpdateProsumer_UpdatesProfileAndPreservesIdentityLifecycleFields()
+    {
+        // Verify Backoffice can update contact data without changing NIC, role, status, or password.
+        var repository = new FakeUserRepository();
+        var user = Prosumer();
+        user.Status = UserStatus.Deactivated;
+        var originalPasswordHash = user.PasswordHash;
+        repository.Users.Add(user);
+        var service = CreateService(repository);
+
+        var result = await service.UpdateProsumerAsync(
+            "admin@example.com",
+            " 200012345678 ",
+            new UpdateProsumerRequest(
+                "UPDATED@EXAMPLE.COM",
+                "Updated",
+                "Name",
+                "+94770000000",
+                "Kandy"),
+            TestCancellation);
+
+        Assert.Equal("200012345678", result.Nic);
+        Assert.Equal("updated@example.com", result.Email);
+        Assert.Equal("Updated", result.FirstName);
+        Assert.Equal("+94770000000", result.PhoneNumber);
+        Assert.Equal(UserRole.Prosumer, user.Role);
+        Assert.Equal(UserStatus.Deactivated, user.Status);
+        Assert.Equal(originalPasswordHash, user.PasswordHash);
+    }
+
+    [Fact]
+    public async Task UpdateProsumer_RejectsEmailOwnedByAnotherAccount()
+    {
+        // Verify administrative updates preserve the global unique-email rule.
+        var repository = new FakeUserRepository();
+        var user = Prosumer();
+        repository.Users.Add(user);
+        repository.Users.Add(Staff("staff@example.com", UserRole.GridOperator));
+        var service = CreateService(repository);
+
+        var exception = await Assert.ThrowsAsync<IdentityException>(() =>
+            service.UpdateProsumerAsync(
+                "admin@example.com",
+                user.Nic!,
+                new UpdateProsumerRequest(
+                    "staff@example.com",
+                    "Updated",
+                    "Name",
+                    "0771234567",
+                    "Colombo"),
+                TestCancellation));
+
+        Assert.Equal(StatusCodes.Status409Conflict, exception.StatusCode);
+        Assert.Equal("USER_EMAIL_EXISTS", exception.ErrorCode);
     }
 
     [Fact]

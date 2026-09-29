@@ -47,9 +47,27 @@ public sealed class IdentityService(
 
     public async Task<UserResponse> RegisterProsumerAsync(
         RegisterProsumerRequest request,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await CreateProsumerAccountAsync(
+            request,
+            createdByIdentifier: null,
+            cancellationToken: cancellationToken);
+
+    public async Task<UserResponse> CreateProsumerAsync(
+        string actorIdentifier,
+        RegisterProsumerRequest request,
+        CancellationToken cancellationToken = default) =>
+        await CreateProsumerAccountAsync(
+            request,
+            NormalizeIdentifier(actorIdentifier),
+            cancellationToken);
+
+    private async Task<UserResponse> CreateProsumerAccountAsync(
+        RegisterProsumerRequest request,
+        string? createdByIdentifier,
+        CancellationToken cancellationToken)
     {
-        // Normalize registration data and reject duplicate business identifiers.
+        // Normalize Prosumer data and reject duplicate business identifiers.
         var nic = NormalizeNic(request.Nic);
         var email = NormalizeEmail(request.Email);
         var firstName = RequiredText(request.FirstName, "First name");
@@ -77,7 +95,8 @@ public sealed class IdentityService(
             PhoneNumber = phoneNumber,
             Address = address,
             Role = UserRole.Prosumer,
-            Status = UserStatus.Active
+            Status = UserStatus.Active,
+            CreatedByIdentifier = createdByIdentifier
         };
 
         await CreateUserAsync(user, cancellationToken);
@@ -162,6 +181,48 @@ public sealed class IdentityService(
         await userRepository.UpdateAsync(user, cancellationToken);
 
         logger.LogInformation("Profile updated for {Role} account", user.Role);
+        return MapToResponse(user);
+    }
+
+    public async Task<UserResponse> UpdateProsumerAsync(
+        string actorIdentifier,
+        string nic,
+        UpdateProsumerRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        // Allow Backoffice to maintain Prosumer contact data while preserving identity and lifecycle fields.
+        var normalizedNic = NormalizeNic(nic);
+        var user = await userRepository.FindByNicAsync(normalizedNic, cancellationToken);
+        if (user is null || user.Role != UserRole.Prosumer)
+        {
+            throw IdentityException.NotFound();
+        }
+
+        var email = NormalizeEmail(request.Email);
+        var emailOwner = await userRepository.FindByEmailAsync(email, cancellationToken);
+        if (emailOwner is not null && emailOwner.Nic != user.Nic)
+        {
+            throw IdentityException.Conflict("USER_EMAIL_EXISTS", "Email is already registered.");
+        }
+
+        user.Email = email;
+        user.FirstName = RequiredText(request.FirstName, "First name");
+        user.LastName = RequiredText(request.LastName, "Last name");
+        user.PhoneNumber = RequiredPhone(request.PhoneNumber);
+        user.Address = RequiredText(request.Address, "Address");
+
+        try
+        {
+            await userRepository.UpdateAsync(user, cancellationToken);
+        }
+        catch (MongoWriteException exception) when (exception.WriteError.Category == ServerErrorCategory.DuplicateKey)
+        {
+            throw IdentityException.Conflict("USER_EMAIL_EXISTS", "Email is already registered.");
+        }
+
+        logger.LogInformation(
+            "Prosumer profile updated by Backoffice actor {ActorIdentifier}",
+            NormalizeIdentifier(actorIdentifier));
         return MapToResponse(user);
     }
 

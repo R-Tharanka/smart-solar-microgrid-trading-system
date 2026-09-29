@@ -4,6 +4,7 @@ const FRIENDLY_MESSAGES = {
   AUTH_CURRENT_PASSWORD_INVALID: 'The current password is incorrect.',
   AUTH_PASSWORD_UNCHANGED: 'Choose a new password that differs from the current password.',
   USER_EMAIL_EXISTS: 'An account already uses this email address.',
+  USER_NIC_EXISTS: 'An account already uses this NIC.',
   USER_IDENTIFIER_EXISTS: 'An account already uses this identifier.',
   USER_INVALID_STATUS: 'That account status change is not allowed.',
   USER_ACTIVE_RESERVATIONS: 'This Prosumer has an active reservation. Complete or cancel it before deactivating the account.',

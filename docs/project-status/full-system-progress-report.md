@@ -29,7 +29,7 @@ Status terms used in this report:
 
 The full system is **not complete**.
 
-The strongest area is the ASP.NET Core backend. All four domains are represented in the API, and the current Release test run passes **93 of 93 tests**. Phase 1 documentation is comprehensive, and Phase 2 architecture, database and API contracts are substantially documented.
+The strongest area is the ASP.NET Core backend. All four domains are represented in the API, and the current test run passes **105 of 105 tests**. Phase 1 documentation is comprehensive, and Phase 2 architecture, database and API contracts are substantially documented.
 
 The largest outstanding area is the native Android application: `mobile/` contains no files. This leaves every member's Android contribution, SQLite, maps and QR scanning unimplemented. The React web application is partially implemented overall: Member 1 identity/account management, stations, slots, reservations and dashboards exist, but Member 4 transaction details and QR verification/finalization views are missing. IIS deployment, full-system Postman coverage, real MongoDB HTTP integration evidence, final UI screenshots and the final report are also incomplete.
 
@@ -47,13 +47,13 @@ The repository should therefore be described as:
 | Area | Evidence found | Current result |
 | --- | --- | --- |
 | Backend source | Controllers, services, repositories, models, middleware and configuration for all four domains | Present |
-| Backend automated tests | Identity, authorization, request validation, stations/slots, reservations and transactions | 93 passed, 0 failed on 2026-09-29 |
+| Backend automated tests | Identity, authorization, request validation, stations/slots, reservations and transactions | 105 passed, 0 failed on 2026-09-29 |
 | Backend HTTP surface | 35 controller actions plus two health endpoints | Present |
 | MongoDB design | Four required collections, indexes and initializer | Present |
 | React web source | Login, protected routes, Member 1 account management, two staff dashboards and domain management pages | Present; Member 4 transaction UI remains incomplete |
-| Web reproducible build | `package-lock.json` exists | Passed on 2026-09-29; 663 modules transformed |
+| Web reproducible build | `package-lock.json` exists | Passed on 2026-09-29; 667 modules transformed |
 | Android source | `mobile/` | 0 files; not started |
-| Postman | Identity collection with 53 ordered requests | Identity only; other domains missing |
+| Postman | Identity collection with 57 ordered requests | Identity only; other domains missing |
 | Local deployment | Dockerfile and `compose.yaml` for the API | Present |
 | IIS deployment | IIS configuration, publish profile, deployment guide and screenshots | Not found |
 | Final report | `report/` | 0 files; not started |
@@ -188,7 +188,7 @@ Pending:
 - Staff login and token persistence.
 - Protected Backoffice, Grid Operator and Prosumer routes with session-expiry handling.
 - Role-specific dashboard shells.
-- Backoffice Prosumer list/details and deactivate/reactivate controls.
+- Backoffice Prosumer list/details, create/update forms, and deactivate/reactivate controls.
 - Backoffice staff list/create/deactivate/reactivate controls.
 - Current-user profile, password change and Prosumer self-deactivation.
 - Station create/edit/status/list/detail interface.
