@@ -111,7 +111,7 @@ const StationForm = ({ station, onClose, onSuccess }) => {
         <fieldset disabled={isSubmitting} className="grid gap-5 sm:grid-cols-2">
           <legend className="sr-only">Station information</legend>
           {!isEditing && <FormField id="station-stationCode" label="Station code" type="text" name="stationCode" value={formData.stationCode} onChange={handleChange} required />}
-          <FormField id="station-name" label="Station name" type="text" name="name" value={formData.name} onChange={handleChange} required />
+          <FormField id="station-name" label="Station name" type="text" name="name" value={formData.name} onChange={handleChange} required className={isEditing ? 'sm:col-span-2' : ''} />
           <div className="form-section-label sm:col-span-2"><span>01</span>Energy infrastructure</div>
           <FormField id="station-capacityKwh" label="Station capacity (kWh)" type="number" step="0.01" name="capacityKwh" value={formData.capacityKwh} onChange={handleChange} required />
           <FormField id="station-batteryStorageKwh" label="Battery storage (kWh)" type="number" step="0.01" name="batteryStorageKwh" value={formData.batteryStorageKwh} onChange={handleChange} required />

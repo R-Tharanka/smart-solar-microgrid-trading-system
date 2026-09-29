@@ -232,6 +232,10 @@
 .operation-progress > div.reached { border-color: #8cba65; color: #456133; }
 .operation-progress strong { display: block; font-size: 9px; color: #97a888; margin-bottom: 5px; font-weight: 500; }
 .operation-progress > div.current { background: #edf4e5; border-radius: 0 0 8px 8px; }
+.operation-progress > div.terminal { border-color: #cf7770; color: #a23e3e; background: #f9ece8; }
+.workflow-overview { display: grid; grid-template-columns: minmax(190px,.55fr) minmax(440px,1.45fr); align-items: center; gap: 30px; padding: 22px 26px; margin-bottom: 25px; border: 1px solid #d9e2d2; border-radius: 14px; background: #fafcf7; }
+.workflow-overview h2 { margin-top: 7px; font-size: 18px; font-weight: 500; color: #2b442e; letter-spacing: -.025em; }
+.workflow-overview .operation-progress { margin: 0; }
 .workspace-main dl dd { font-variant-numeric: tabular-nums; }
 .workspace-main .app-table td button:not(.energy-button) { min-height: 44px; padding: 10px 12px; border-radius: 9px; background: #eef3e8; font-size: 12px; font-weight: 600; }
 .workspace-main .app-table td button:disabled { opacity: .4; }
@@ -258,6 +262,14 @@
 .energy-loader:before { content: ''; position: absolute; inset: -5px; border: 1px solid transparent; border-top-color: #83ad67; border-bottom-color: #83ad67; border-radius: 21px; animation: loader-orbit 2s linear infinite; }
 @keyframes loader-orbit { to { transform: rotate(360deg); } }
 .energy-toast { border-left-width: 3px; backdrop-filter: blur(12px); }
+.workspace-link-card { position: relative; min-height: 150px; display: flex; flex-direction: column; justify-content: flex-end; gap: 14px; padding: 22px; border: 1px solid #d8e2d0; border-radius: 13px; background: linear-gradient(145deg,#fbfcf8,#eef4e8); overflow: hidden; transition: transform .25s,border-color .25s,box-shadow .25s; }
+.workspace-link-card:after { content: ''; position: absolute; width: 120px; height: 120px; right: -45px; top: -52px; border: 1px solid #aac59a; border-radius: 50%; opacity: .35; }
+.workspace-link-card:hover { transform: translateY(-3px); border-color: #9ab988; box-shadow: 0 15px 30px -24px #284521; }
+.workspace-link-index { position: absolute; right: 18px; top: 16px; font: 10px ui-monospace,monospace; color: #8da183; }
+.workspace-link-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 9px; color: #a8e77f; background: #1b3323; }
+.workspace-link-card strong { display: block; color: #29412b; font-size: 14px; }
+.workspace-link-card small { display: block; margin-top: 5px; color: #7a8972; font-size: 11px; line-height: 1.5; }
+@media (max-width: 900px) { .workflow-overview { grid-template-columns: 1fr; } }
 .hero-copy { animation: page-arrive .8s ease both; }
 .hero-network { animation: page-arrive 1s .15s ease both; }
 .app-control { min-width: 0; }

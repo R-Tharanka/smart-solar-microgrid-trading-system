@@ -52,7 +52,7 @@ export default function BackofficeDashboard() {
       <Panel className="p-5 sm:p-6">
         <SectionHeader title="Network workspaces" description="Move directly to a focused management area." />
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {actions.map(([path, Icon, title, description]) => <Link key={path} to={path} className="group flex min-h-28 items-start gap-4 rounded-md border border-slate-200 p-4 transition hover:border-emerald-300 hover:bg-emerald-50/50"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-slate-900 text-emerald-300"><Icon className="h-5 w-5" /></span><span><span className="font-bold text-slate-900 group-hover:text-emerald-800">{title}</span><span className="mt-1 block text-sm leading-5 text-slate-500">{description}</span></span></Link>)}
+          {actions.map(([path, Icon, title, description], index) => <Link key={path} to={path} className="workspace-link-card group"><span className="workspace-link-index">0{index + 1}</span><span className="workspace-link-icon"><Icon className="h-5 w-5" /></span><span><strong>{title}</strong><small>{description}</small></span></Link>)}
         </div>
       </Panel>
     </MainLayout>

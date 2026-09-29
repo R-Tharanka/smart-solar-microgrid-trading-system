@@ -212,21 +212,8 @@ const Slots = () => {
     setError('');
   };
 
-  const navItems = isBackoffice ? [
-    { name: 'Dashboard', path: '/backoffice' },
-    { name: 'Prosumer Management', path: '/backoffice/prosumers' },
-    { name: 'Microgrid Nodes', path: '/backoffice/stations' },
-    { name: 'Energy Slots', path: '/backoffice/slots' },
-    { name: 'Reservations', path: '/backoffice/reservations' },
-  ] : [
-    { name: 'Dashboard', path: '/grid-operator' },
-    { name: 'Stations / Nodes', path: '/grid-operator/stations' },
-    { name: 'Slots', path: '/grid-operator/slots' },
-    { name: 'Bookings / Reservations', path: '/grid-operator/reservations' },
-  ];
-
   return (
-    <MainLayout title="Energy slots" roleNav={navItems}>
+    <MainLayout title="Energy slots">
       <PageHeader eyebrow="Availability" title="Energy slots" description="Inspect and manage time-bound energy capacity, schedules and pricing for each station." actions={isBackoffice ? <Button icon={PlusIcon} onClick={openCreate} disabled={!selectedStationCode || selectedStation?.status !== 'Active'}>Add slot</Button> : null} />
 
       <div className="app-panel-muted mb-5 space-y-4 p-4">

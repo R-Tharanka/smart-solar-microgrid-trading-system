@@ -11,7 +11,7 @@ export default function AccessDenied() {
 
   return (
     <div className="network-grid flex min-h-screen items-center justify-center bg-graphite-950 px-4">
-      <div className="w-full max-w-lg rounded-lg border border-white/10 bg-graphite-900 p-8 text-center shadow-energy">
+      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-graphite-900 p-8 text-center shadow-energy">
         <BrandMark className="mb-7 justify-center" inverse />
         <ShieldExclamationIcon className="mx-auto h-12 w-12 text-amber-400" aria-hidden="true" />
         <h1 className="mt-5 text-2xl font-semibold text-white">Access restricted</h1>

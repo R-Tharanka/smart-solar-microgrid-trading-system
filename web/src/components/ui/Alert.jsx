@@ -10,7 +10,7 @@ const styles = {
 export default function Alert({ children, title, type = 'error', className }) {
   const [style, Icon] = styles[type];
   return (
-    <div className={clsx('flex gap-3 rounded-md border p-4', style, className)} role={type === 'error' ? 'alert' : 'status'}>
+    <div className={clsx('flex gap-3 rounded-xl border p-4', style, className)} role={type === 'error' ? 'alert' : 'status'}>
       <Icon className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
       <div className="min-w-0">
         {title ? <p className="text-sm font-semibold">{title}</p> : null}

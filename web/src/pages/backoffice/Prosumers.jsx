@@ -134,7 +134,7 @@ export default function Prosumers() {
             <div className="divide-y divide-slate-200 md:hidden">
               {filteredProsumers.map((prosumer) => (
                 <article key={prosumer.nic} className="p-4">
-                  <div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-slate-900">{prosumer.firstName} {prosumer.lastName}</p><p className="font-mono text-xs text-slate-500">{prosumer.nic}</p></div><StatusBadge value={prosumer.status} /></div>
+                  <div className="flex items-start justify-between gap-3"><ParticipantIdentity firstName={prosumer.firstName} lastName={prosumer.lastName} detail={prosumer.nic} /><StatusBadge value={prosumer.status} /></div>
                   <p className="mt-3 break-all text-sm text-slate-600">{prosumer.email}</p>
                   <div className="mt-4 flex flex-wrap gap-2"><Button variant="secondary" icon={EyeIcon} onClick={() => setSelected(prosumer)}>View</Button><Button variant="secondary" icon={PencilSquareIcon} onClick={() => setFormState({ mode: 'edit', prosumer })}>Edit</Button><Button variant={prosumer.status === 'Active' ? 'danger' : 'secondary'} onClick={() => setPendingStatus(prosumer)} disabled={!['Active', 'Deactivated'].includes(prosumer.status)}>{prosumer.status === 'Active' ? 'Deactivate' : 'Reactivate'}</Button></div>
                 </article>

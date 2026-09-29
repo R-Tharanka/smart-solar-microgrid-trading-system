@@ -164,8 +164,7 @@ export default function Staff() {
                 const isCurrent = account.email === user.email;
                 return (
                   <article key={account.email} className="p-4">
-                    <p className="font-semibold text-slate-900">{account.firstName} {account.lastName}</p>
-                    <p className="break-all text-sm text-slate-500">{account.email}</p>
+                    <ParticipantIdentity firstName={account.firstName} lastName={account.lastName} detail={account.email} />
                     <div className="my-3 flex flex-wrap gap-2"><StatusBadge value={account.role} /><StatusBadge value={account.status} /></div>
                     <StaffActions account={account} isCurrentUser={isCurrent} onStatusChange={setPendingStatus} busy={busyEmail === account.email} />
                   </article>

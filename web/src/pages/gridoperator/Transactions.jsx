@@ -125,7 +125,10 @@ export default function Transactions() {
         actions={<Button variant="secondary" icon={ArrowPathIcon} onClick={loadTransactions} loading={loading}>Refresh</Button>}
       />
 
-      <OperationProgress />
+      <section className="workflow-overview" aria-labelledby="exchange-workflow-title">
+        <div><p className="eyebrow">Exchange workflow</p><h2 id="exchange-workflow-title">From reservation to recorded transfer</h2></div>
+        <OperationProgress />
+      </section>
       {error ? <Alert className="mb-5" title="Transaction request failed">{error}</Alert> : null}
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">

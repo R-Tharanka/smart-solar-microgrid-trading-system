@@ -147,21 +147,8 @@ const Stations = () => {
     navigate(`${route}?station=${encodeURIComponent(stationCode)}`);
   };
 
-  const navItems = isBackoffice ? [
-    { name: 'Dashboard', path: '/backoffice' },
-    { name: 'Prosumer Management', path: '/backoffice/prosumers' },
-    { name: 'Microgrid Nodes', path: '/backoffice/stations' },
-    { name: 'Energy Slots', path: '/backoffice/slots' },
-    { name: 'Reservations', path: '/backoffice/reservations' },
-  ] : [
-    { name: 'Dashboard', path: '/grid-operator' },
-    { name: 'Stations / Nodes', path: '/grid-operator/stations' },
-    { name: 'Slots', path: '/grid-operator/slots' },
-    { name: 'Bookings / Reservations', path: '/grid-operator/reservations' },
-  ];
-
   return (
-    <MainLayout title="Microgrid nodes" roleNav={navItems}>
+    <MainLayout title="Microgrid nodes">
       <PageHeader
         eyebrow="Infrastructure"
         title="Solar stations"

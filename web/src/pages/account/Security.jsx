@@ -86,10 +86,10 @@ export default function Security() {
           </div>
         </form>
 
-        <aside className="rounded-lg border border-cyan-200 bg-cyan-50 p-5 xl:self-start">
+        <aside className="network-grid rounded-2xl border border-emerald-900 bg-graphite-950 p-5 text-white shadow-energy xl:self-start">
           <ShieldCheckIcon className="h-7 w-7 text-cyan-700" aria-hidden="true" />
-          <h2 className="mt-3 font-semibold text-cyan-950">Security notes</h2>
-          <ul className="mt-3 space-y-2 text-sm leading-6 text-cyan-900">
+          <h2 className="mt-3 font-semibold text-white">Security notes</h2>
+          <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-300">
             <li>Use a unique password for this system.</li>
             <li>Confirm your current password before choosing a new one.</li>
             <li>No password is written to browser storage.</li>
