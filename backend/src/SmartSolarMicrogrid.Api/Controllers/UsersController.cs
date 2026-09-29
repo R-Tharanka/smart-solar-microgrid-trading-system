@@ -1,3 +1,8 @@
+// -----------------------------------------------------------------------------
+// File: UsersController.cs
+// Member 1: Identity, Authentication, Authorization and Account Management
+// Purpose: Exposes identity, profile, password, and account-status HTTP endpoints.
+// -----------------------------------------------------------------------------
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +24,7 @@ public sealed class UsersController(IIdentityService identityService) : Controll
         RegisterProsumerRequest request,
         CancellationToken cancellationToken)
     {
+        // Register a public Prosumer account through the identity service.
         var user = await identityService.RegisterProsumerAsync(request, cancellationToken);
         return StatusCode(
             StatusCodes.Status201Created,
@@ -32,6 +38,7 @@ public sealed class UsersController(IIdentityService identityService) : Controll
         CreateStaffRequest request,
         CancellationToken cancellationToken)
     {
+        // Create a staff account using the authenticated Backoffice user as the actor.
         var user = await identityService.CreateStaffAsync(CurrentIdentifier(), request, cancellationToken);
         return StatusCode(
             StatusCodes.Status201Created,
@@ -45,6 +52,7 @@ public sealed class UsersController(IIdentityService identityService) : Controll
         LoginRequest request,
         CancellationToken cancellationToken)
     {
+        // Authenticate the submitted business identifier and return an access token.
         var response = await identityService.AuthenticateAsync(request, cancellationToken);
         return Ok(new ApiEnvelope<LoginResponse>(response, "Login successful."));
     }
@@ -54,6 +62,7 @@ public sealed class UsersController(IIdentityService identityService) : Controll
     [ProducesResponseType<ApiEnvelope<UserResponse>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiEnvelope<UserResponse>>> GetCurrentUser(CancellationToken cancellationToken)
     {
+        // Load the profile associated with the current token's business identifier.
         var user = await identityService.GetCurrentUserAsync(CurrentIdentifier(), cancellationToken);
         return Ok(new ApiEnvelope<UserResponse>(user));
     }
@@ -65,6 +74,7 @@ public sealed class UsersController(IIdentityService identityService) : Controll
         UpdateProfileRequest request,
         CancellationToken cancellationToken)
     {
+        // Apply allowed profile changes to the currently authenticated account.
         var user = await identityService.UpdateProfileAsync(CurrentIdentifier(), request, cancellationToken);
         return Ok(new ApiEnvelope<UserResponse>(user, "Profile updated successfully."));
     }
@@ -76,6 +86,7 @@ public sealed class UsersController(IIdentityService identityService) : Controll
         ChangePasswordRequest request,
         CancellationToken cancellationToken)
     {
+        // Verify the current password before replacing the stored password hash.
         await identityService.ChangePasswordAsync(CurrentIdentifier(), request, cancellationToken);
         return NoContent();
     }
@@ -85,6 +96,7 @@ public sealed class UsersController(IIdentityService identityService) : Controll
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeactivateOwnAccount(CancellationToken cancellationToken)
     {
+        // Deactivate the current Prosumer after domain guards approve the transition.
         await identityService.DeactivateOwnAccountAsync(CurrentIdentifier(), cancellationToken);
         return NoContent();
     }
@@ -94,6 +106,7 @@ public sealed class UsersController(IIdentityService identityService) : Controll
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> ReactivateUser(string identifier, CancellationToken cancellationToken)
     {
+        // Reactivate the selected account and record the Backoffice actor.
         await identityService.ReactivateUserAsync(CurrentIdentifier(), identifier, cancellationToken);
         return NoContent();
     }
@@ -103,6 +116,7 @@ public sealed class UsersController(IIdentityService identityService) : Controll
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeactivateUser(string identifier, CancellationToken cancellationToken)
     {
+        // Deactivate the selected account while enforcing administrative safeguards.
         await identityService.DeactivateUserAsync(CurrentIdentifier(), identifier, cancellationToken);
         return NoContent();
     }
@@ -113,11 +127,15 @@ public sealed class UsersController(IIdentityService identityService) : Controll
     public async Task<ActionResult<ApiEnvelope<IReadOnlyCollection<UserResponse>>>> GetUsers(
         CancellationToken cancellationToken)
     {
+        // Return the complete account list for Backoffice administration.
         var users = await identityService.GetUsersAsync(cancellationToken);
         return Ok(new ApiEnvelope<IReadOnlyCollection<UserResponse>>(users));
     }
 
-    private string CurrentIdentifier() =>
-        User.FindFirstValue("user_identifier")
-        ?? throw IdentityException.Unauthorized("The access token does not contain a user identifier.");
+    private string CurrentIdentifier()
+    {
+        // Read the stable business identifier issued in the authenticated JWT.
+        return User.FindFirstValue("user_identifier")
+            ?? throw IdentityException.Unauthorized("The access token does not contain a user identifier.");
+    }
 }

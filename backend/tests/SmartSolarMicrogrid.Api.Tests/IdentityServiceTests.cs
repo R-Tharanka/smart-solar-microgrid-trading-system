@@ -1,3 +1,8 @@
+// -----------------------------------------------------------------------------
+// File: IdentityServiceTests.cs
+// Member 1: Identity, Authentication, Authorization and Account Management
+// Purpose: Verifies identity business rules, account lifecycle, and security behavior.
+// -----------------------------------------------------------------------------
 using Microsoft.Extensions.Logging.Abstractions;
 using SmartSolarMicrogrid.Api.Contracts.Identity;
 using SmartSolarMicrogrid.Api.Infrastructure;
@@ -12,6 +17,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task RegisterProsumer_NormalizesAndHashesAccountData()
     {
+        // Verify normalized profile data and one-way password hashing at registration.
         var repository = new FakeUserRepository();
         var service = CreateService(repository);
 
@@ -43,6 +49,7 @@ public sealed class IdentityServiceTests
     [InlineData(false)]
     public async Task RegisterProsumer_RejectsDuplicateIdentifiers(bool duplicateNic)
     {
+        // Verify that an existing NIC or email produces the matching conflict code.
         var repository = new FakeUserRepository();
         repository.Users.Add(Prosumer());
         var service = CreateService(repository);
@@ -60,6 +67,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task Authenticate_WithActiveAccount_ReturnsTokenAndRecordsLogin()
     {
+        // Verify successful login issues a token and records login audit metadata.
         var repository = new FakeUserRepository();
         repository.Users.Add(Prosumer());
         var service = CreateService(repository);
@@ -75,6 +83,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task Authenticate_WithWrongPassword_ReturnsGenericUnauthorizedError()
     {
+        // Verify an incorrect password does not reveal account-specific information.
         var repository = new FakeUserRepository();
         repository.Users.Add(Prosumer());
         var service = CreateService(repository);
@@ -89,6 +98,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task Authenticate_WithUnknownAccount_ReturnsGenericUnauthorizedError()
     {
+        // Verify an unknown account uses the same generic authentication response.
         var service = CreateService(new FakeUserRepository());
 
         var exception = await Assert.ThrowsAsync<IdentityException>(() =>
@@ -105,6 +115,7 @@ public sealed class IdentityServiceTests
     [InlineData(UserStatus.Deactivated)]
     public async Task Authenticate_WithInactiveAccount_IsForbidden(UserStatus status)
     {
+        // Verify pending and deactivated accounts cannot obtain access tokens.
         var repository = new FakeUserRepository();
         var user = Prosumer();
         user.Status = status;
@@ -121,6 +132,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task CreateStaff_RejectsProsumerRole()
     {
+        // Verify the staff workflow cannot be used to create a Prosumer account.
         var service = CreateService(new FakeUserRepository());
 
         var exception = await Assert.ThrowsAsync<IdentityException>(() => service.CreateStaffAsync(
@@ -136,6 +148,7 @@ public sealed class IdentityServiceTests
     [InlineData("GridOperator", UserRole.GridOperator)]
     public async Task CreateStaff_CreatesPermittedActiveRole(string requestedRole, UserRole expectedRole)
     {
+        // Verify supported staff roles are active and retain their creator audit value.
         var repository = new FakeUserRepository();
         var service = CreateService(repository);
 
@@ -154,6 +167,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task DeactivateOwnAccount_ChangesOnlyActiveProsumer()
     {
+        // Verify Prosumer self-deactivation records status and audit metadata.
         var repository = new FakeUserRepository();
         var user = Prosumer();
         repository.Users.Add(user);
@@ -169,6 +183,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task DeactivateOwnAccount_WithNonTerminalReservation_IsRejected()
     {
+        // Verify reservation activity prevents the account status transition.
         var repository = new FakeUserRepository();
         var user = Prosumer();
         repository.Users.Add(user);
@@ -184,6 +199,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task ReactivateUser_RequiresDeactivatedState()
     {
+        // Verify reactivation rejects accounts that are not deactivated.
         var repository = new FakeUserRepository();
         repository.Users.Add(Prosumer());
         var service = CreateService(repository);
@@ -197,6 +213,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task ReactivateUser_RecordsActorAndTimestamp()
     {
+        // Verify reactivation records the normalized administrator and timestamp.
         var repository = new FakeUserRepository();
         var user = Prosumer();
         user.Status = UserStatus.Deactivated;
@@ -213,6 +230,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task GetActiveProsumer_ReturnsOnlyActiveProsumer()
     {
+        // Verify dependent modules can resolve an active Prosumer by normalized NIC.
         var repository = new FakeUserRepository();
         repository.Users.Add(Prosumer());
         var service = CreateService(repository);
@@ -226,6 +244,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task GetActiveProsumer_RejectsDeactivatedProsumer()
     {
+        // Verify dependent modules cannot use a deactivated Prosumer account.
         var repository = new FakeUserRepository();
         var user = Prosumer();
         user.Status = UserStatus.Deactivated;
@@ -241,6 +260,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task UpdateProfile_UpdatesProsumerContactFields()
     {
+        // Verify a Prosumer can update supported contact fields.
         var repository = new FakeUserRepository();
         var user = Prosumer();
         repository.Users.Add(user);
@@ -258,6 +278,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task ChangePassword_ReplacesHashAndAllowsNewPassword()
     {
+        // Verify password changes replace the hash with one matching the new secret.
         var repository = new FakeUserRepository();
         var user = Prosumer();
         repository.Users.Add(user);
@@ -275,6 +296,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task ChangePassword_RejectsIncorrectCurrentPassword()
     {
+        // Verify password replacement requires the correct current password.
         var repository = new FakeUserRepository();
         var user = Prosumer();
         repository.Users.Add(user);
@@ -292,6 +314,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task ChangePassword_RejectsCurrentPasswordAsNewPassword()
     {
+        // Verify the current password cannot be reused as the new password.
         var repository = new FakeUserRepository();
         var user = Prosumer();
         repository.Users.Add(user);
@@ -309,6 +332,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task DeactivateUser_RejectsSelfDeactivationByBackoffice()
     {
+        // Verify a Backoffice user cannot disable their own administrative session.
         var repository = new FakeUserRepository();
         repository.Users.Add(Staff("admin@example.com", UserRole.Backoffice));
         var service = CreateService(repository);
@@ -322,6 +346,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task DeactivateUser_PreservesFinalActiveBackofficeAccount()
     {
+        // Verify the system always retains at least one active Backoffice account.
         var repository = new FakeUserRepository();
         repository.Users.Add(Staff("admin1@example.com", UserRole.Backoffice));
         repository.Users.Add(Staff("operator@example.com", UserRole.GridOperator));
@@ -333,6 +358,7 @@ public sealed class IdentityServiceTests
         Assert.Equal("USER_LAST_ADMIN", exception.ErrorCode);
     }
 
+    // Build the identity service with deterministic test doubles.
     private static IdentityService CreateService(
         FakeUserRepository repository,
         IAccountDeactivationGuard? deactivationGuard = null) =>
@@ -342,8 +368,10 @@ public sealed class IdentityServiceTests
             deactivationGuard ?? new AllowDeactivationGuard(),
             NullLogger<IdentityService>.Instance);
 
+    // Use the xUnit test cancellation token for asynchronous test operations.
     private static CancellationToken TestCancellation => TestContext.Current.CancellationToken;
 
+    // Create the standard active Prosumer fixture.
     private static User Prosumer() => new()
     {
         Nic = "200012345678",
@@ -357,6 +385,7 @@ public sealed class IdentityServiceTests
         Status = UserStatus.Active
     };
 
+    // Create a standard active staff fixture for the requested role.
     private static User Staff(string email, UserRole role) => new()
     {
         Email = email,
@@ -369,12 +398,14 @@ public sealed class IdentityServiceTests
 
     private sealed class FakeTokenGenerator : IJwtTokenGenerator
     {
+        // Return a deterministic token value without signing cryptographic material.
         public AccessTokenResult GenerateToken(User user) =>
             new("test-token", DateTime.UtcNow.AddHours(1));
     }
 
     private sealed class AllowDeactivationGuard : IAccountDeactivationGuard
     {
+        // Allow status changes for tests unrelated to reservation blocking.
         public Task EnsureCanDeactivateAsync(
             string prosumerNic,
             CancellationToken cancellationToken = default) => Task.CompletedTask;
@@ -382,6 +413,7 @@ public sealed class IdentityServiceTests
 
     private sealed class BlockingDeactivationGuard : IAccountDeactivationGuard
     {
+        // Simulate a non-terminal reservation conflict.
         public Task EnsureCanDeactivateAsync(
             string prosumerNic,
             CancellationToken cancellationToken = default) =>
@@ -394,30 +426,37 @@ public sealed class IdentityServiceTests
     {
         public List<User> Users { get; } = [];
 
+        // Resolve a fixture account by NIC.
         public Task<User?> FindByNicAsync(string nic, CancellationToken cancellationToken = default) =>
             Task.FromResult(Users.SingleOrDefault(user => user.Nic == nic));
 
+        // Resolve a fixture account by email.
         public Task<User?> FindByEmailAsync(string email, CancellationToken cancellationToken = default) =>
             Task.FromResult(Users.SingleOrDefault(user => user.Email == email));
 
+        // Resolve a fixture account by either supported business identifier.
         public Task<User?> FindByIdentifierAsync(string identifier, CancellationToken cancellationToken = default) =>
             Task.FromResult(Users.SingleOrDefault(user => user.Email == identifier || user.Nic == identifier));
 
+        // Return a copy of the in-memory account list.
         public Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(Users.ToList());
 
+        // Count active Backoffice fixtures for final-admin protection tests.
         public Task<long> CountActiveBackofficeAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult((long)Users.Count(user =>
                 user.Role == UserRole.Backoffice && user.Status == UserStatus.Active));
 
         public Task CreateAsync(User user, CancellationToken cancellationToken = default)
         {
+            // Simulate repository timestamps before retaining the account fixture.
             user.CreatedAtUtc = DateTime.UtcNow;
             user.UpdatedAtUtc = user.CreatedAtUtc;
             Users.Add(user);
             return Task.CompletedTask;
         }
 
+        // Keep object-reference updates without additional persistence work.
         public Task UpdateAsync(User user, CancellationToken cancellationToken = default) => Task.CompletedTask;
 
         public Task<bool> UpdateStatusAsync(
@@ -428,6 +467,7 @@ public sealed class IdentityServiceTests
             DateTime changedAtUtc,
             CancellationToken cancellationToken = default)
         {
+            // Simulate an atomic expected-status transition and its audit fields.
             var user = Users.SingleOrDefault(item => item.Email == identifier || item.Nic == identifier);
             if (user is null || user.Status != expectedStatus)
             {
@@ -453,6 +493,7 @@ public sealed class IdentityServiceTests
             DateTime loginAtUtc,
             CancellationToken cancellationToken = default)
         {
+            // Record successful-login metadata on the matching fixture account.
             var user = Users.Single(item => item.Email == identifier || item.Nic == identifier);
             user.LastLoginAtUtc = loginAtUtc;
             return Task.CompletedTask;

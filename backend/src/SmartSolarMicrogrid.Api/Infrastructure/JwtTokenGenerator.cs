@@ -1,3 +1,8 @@
+// -----------------------------------------------------------------------------
+// File: JwtTokenGenerator.cs
+// Member 1: Identity, Authentication, Authorization and Account Management
+// Purpose: Issues signed access tokens containing business identity and role claims.
+// -----------------------------------------------------------------------------
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -10,6 +15,7 @@ namespace SmartSolarMicrogrid.Api.Infrastructure;
 
 public interface IJwtTokenGenerator
 {
+    // Generate a signed access token for an authenticated user.
     AccessTokenResult GenerateToken(User user);
 }
 
@@ -21,6 +27,7 @@ public class JwtTokenGenerator(IOptions<JwtOptions> jwtOptions) : IJwtTokenGener
 
     public AccessTokenResult GenerateToken(User user)
     {
+        // Build claims from the public business identifier and configured token settings.
         var identifier = user.Nic ?? user.Email;
         var issuedAt = DateTime.UtcNow;
         var expiresAt = issuedAt.AddMinutes(_jwtOptions.AccessTokenMinutes);
