@@ -202,9 +202,10 @@ const Reservations = () => {
                   <tr key={res.reservationId} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-mono font-medium text-blue-600">{res.reservationCode}</div>
-                      <div className="text-sm text-slate-500">
-                        {usersMap[res.prosumerNic] ? `${usersMap[res.prosumerNic].firstName} ${usersMap[res.prosumerNic].lastName} (${res.prosumerNic})` : res.prosumerNic}
+                      <div className="text-sm font-semibold text-slate-900 mt-1">
+                        {usersMap[res.prosumerNic] ? `${usersMap[res.prosumerNic].firstName} ${usersMap[res.prosumerNic].lastName}` : 'Prosumer'}
                       </div>
+                      <div className="text-xs text-slate-500">{res.prosumerNic}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-slate-900">{stations[res.stationId]?.name || 'Unknown Station'}</div>
@@ -250,11 +251,13 @@ const Reservations = () => {
           </table>
         </div>
       </div>
-      <div className="space-y-3 md:hidden">{loading ? <div className="app-panel"><LoadingState label="Loading reservations..." /></div> : filteredReservations.length === 0 ? <div className="app-panel"><EmptyState title="No matching reservations" description="Adjust the search or status filter and try again." /></div> : filteredReservations.map(res => <article key={res.reservationId} className="app-panel p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-mono text-xs font-bold text-emerald-700">{res.reservationCode}</p><p className="mt-1 text-sm font-semibold text-slate-900">{res.requestedEnergyKwh} kWh</p><p className="text-xs text-slate-500">{new Date(res.scheduledStartTimeUtc).toLocaleDateString()} · {stations[res.stationId]?.name || res.stationId}</p></div><ReservationStatusBadge status={res.status} /></div><p className="mt-3 border-t border-slate-100 pt-3 text-sm text-slate-600">Prosumer: {usersMap[res.prosumerNic] ? `${usersMap[res.prosumerNic].firstName} ${usersMap[res.prosumerNic].lastName} (${res.prosumerNic})` : res.prosumerNic}</p><div className="mt-3 flex gap-3 text-sm font-bold"><button onClick={() => handleView(res)} className="text-emerald-700">View</button>{isBackoffice && res.status === 'Pending' ? <><button onClick={() => setReservationToApprove(res.reservationId)} className="text-cyan-700">Approve</button><button onClick={() => handleRejectClick(res.reservationId)} className="text-red-700">Reject</button></> : null}</div></article>)}</div>
+      <div className="space-y-3 md:hidden">{loading ? <div className="app-panel"><LoadingState label="Loading reservations..." /></div> : filteredReservations.length === 0 ? <div className="app-panel"><EmptyState title="No matching reservations" description="Adjust the search or status filter and try again." /></div> : filteredReservations.map(res => <article key={res.reservationId} className="app-panel p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-mono text-xs font-bold text-emerald-700">{res.reservationCode}</p><p className="mt-1 text-sm font-semibold text-slate-900">{res.requestedEnergyKwh} kWh</p><p className="text-xs text-slate-500">{new Date(res.scheduledStartTimeUtc).toLocaleDateString()} · {stations[res.stationId]?.name || res.stationId}</p></div><ReservationStatusBadge status={res.status} /></div><div className="mt-3 border-t border-slate-100 pt-3"><p className="text-sm font-semibold text-slate-900">{usersMap[res.prosumerNic] ? `${usersMap[res.prosumerNic].firstName} ${usersMap[res.prosumerNic].lastName}` : 'Prosumer'}</p><p className="text-xs text-slate-500">{res.prosumerNic}</p></div><div className="mt-3 flex gap-3 text-sm font-bold"><button onClick={() => handleView(res)} className="text-emerald-700">View</button>{isBackoffice && res.status === 'Pending' ? <><button onClick={() => setReservationToApprove(res.reservationId)} className="text-cyan-700">Approve</button><button onClick={() => handleRejectClick(res.reservationId)} className="text-red-700">Reject</button></> : null}</div></article>)}</div>
 
       {showDetails && (
         <ReservationDetails 
-          reservation={fullReservationDetails} 
+          reservation={fullReservationDetails}
+          stations={stations}
+          usersMap={usersMap} 
           onClose={() => {
             setShowDetails(false);
             setFullReservationDetails(null);
