@@ -1,14 +1,22 @@
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import MainLayout from '../../layouts/MainLayout';
 import apiClient from '../../services/api';
 import StationStatusBadge from '../../components/stations/StationStatusBadge';
 import StationForm from '../../components/stations/StationForm';
 import StationDetails from '../../components/stations/StationDetails';
 import { AuthContext } from '../../context/AuthContext';
+import Alert from '../../components/ui/Alert';
+import Button from '../../components/ui/Button';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import PageHeader from '../../components/ui/PageHeader';
+import { EmptyState, LoadingState } from '../../components/ui/PageState';
+import { useToast } from '../../context/ToastContext';
 
 const Stations = () => {
   const { user } = useContext(AuthContext);
   const isBackoffice = user?.role === 'Backoffice';
+  const { notify } = useToast();
   
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +27,8 @@ const Stations = () => {
   
   const [showDetails, setShowDetails] = useState(false);
   const [selectedStation, setSelectedStation] = useState(null);
+  const [statusTarget, setStatusTarget] = useState(null);
+  const [statusChanging, setStatusChanging] = useState(false);
 
   const fetchStations = async () => {
     try {
@@ -57,21 +67,21 @@ const Stations = () => {
     fetchStations();
   };
 
-  const handleStatusChange = async (stationCode, currentStatus) => {
-    const newStatus = currentStatus === 'Active' ? 'Deactivated' : 'Active';
-    const confirmMessage = `Are you sure you want to ${newStatus.toLowerCase()} station ${stationCode}?`;
-    
-    if (!window.confirm(confirmMessage)) return;
-
+  const handleStatusChange = async () => {
+    if (!statusTarget) return;
+    const newStatus = statusTarget.status === 'Active' ? 'Deactivated' : 'Active';
     try {
-      await apiClient.patch(`/stations/${stationCode}/status`, {
+      setStatusChanging(true);
+      await apiClient.patch(`/stations/${statusTarget.stationCode}/status`, {
         status: newStatus,
         reason: 'Status changed via Web Portal'
       });
-      fetchStations();
+      await fetchStations();
+      notify(`Station ${statusTarget.stationCode} is now ${newStatus.toLowerCase()}.`);
+      setStatusTarget(null);
     } catch (err) {
-      alert('Failed to change status: ' + (err.response?.data?.detail || err.response?.data?.message || 'Unknown error'));
-    }
+      notify(err.response?.data?.detail || 'The station status could not be changed.', 'error');
+    } finally { setStatusChanging(false); }
   };
 
   const navItems = isBackoffice ? [
@@ -88,33 +98,17 @@ const Stations = () => {
   ];
 
   return (
-    <MainLayout title="Microgrid Nodes (Stations)" roleNav={navItems}>
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold text-slate-800">Solar Stations</h2>
-          <p className="text-sm text-slate-500">Manage all physical microgrid node locations and capacities.</p>
-        </div>
-        
-        {isBackoffice && (
-          <button
-            onClick={handleAdd}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-          >
-            + Add Station
-          </button>
-        )}
-      </div>
+    <MainLayout title="Microgrid nodes" roleNav={navItems}>
+      <PageHeader eyebrow="Infrastructure" title="Solar stations" description="Review physical microgrid locations, generation capacity and operating status." actions={isBackoffice ? <Button icon={PlusIcon} onClick={handleAdd}>Add station</Button> : null} />
 
       {error && (
-        <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
+        <Alert className="mb-5" title="Unable to load stations">{error}</Alert>
       )}
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg border border-slate-200">
+      <div className="app-table-wrap hidden md:block">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+          <table className="app-table">
+            <thead>
               <tr>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Code</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Name & Location</th>
@@ -123,7 +117,7 @@ const Stations = () => {
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-200">
+            <tbody>
               {loading ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
@@ -171,7 +165,7 @@ const Stations = () => {
                           </button>
                           
                           <button 
-                            onClick={() => handleStatusChange(station.stationCode, station.status)}
+                            onClick={() => setStatusTarget(station)}
                             className={`${station.status === 'Active' ? 'text-amber-600 hover:text-amber-900' : 'text-emerald-600 hover:text-emerald-900'}`}
                           >
                             {station.status === 'Active' ? 'Deactivate' : 'Activate'}
@@ -185,6 +179,12 @@ const Stations = () => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {loading ? <div className="app-panel"><LoadingState label="Loading stations..." /></div> : stations.length === 0 ? <div className="app-panel"><EmptyState title="No stations found" description="Create a station to begin publishing microgrid capacity." /></div> : stations.map((station) => (
+          <article key={station.stationCode} className="app-panel p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-mono text-xs font-bold text-emerald-700">{station.stationCode}</p><h3 className="mt-1 truncate font-bold text-slate-950">{station.name}</h3><p className="mt-1 line-clamp-2 text-sm text-slate-500">{station.address}</p></div><StationStatusBadge status={station.status} /></div><div className="mt-4 grid grid-cols-2 gap-3 border-y border-slate-100 py-3 text-sm"><span><span className="block text-xs text-slate-500">Capacity</span>{station.capacityKwh} kWh</span><span><span className="block text-xs text-slate-500">Battery</span>{station.batteryStorageKwh} kWh</span></div><div className="mt-3 flex flex-wrap gap-3 text-sm font-bold"><button onClick={() => handleView(station)} className="text-emerald-700">View</button>{isBackoffice ? <><button onClick={() => handleEdit(station)} className="text-cyan-700">Edit</button><button onClick={() => setStatusTarget(station)} className={station.status === 'Active' ? 'text-amber-700' : 'text-emerald-700'}>{station.status === 'Active' ? 'Deactivate' : 'Activate'}</button></> : null}</div></article>
+        ))}
       </div>
 
       {showForm && (
@@ -201,6 +201,7 @@ const Stations = () => {
           onClose={() => setShowDetails(false)} 
         />
       )}
+      <ConfirmDialog open={Boolean(statusTarget)} title={`${statusTarget?.status === 'Active' ? 'Deactivate' : 'Activate'} station`} description={`Change the operating status of ${statusTarget?.stationCode || 'this station'}?`} confirmLabel={statusTarget?.status === 'Active' ? 'Deactivate' : 'Activate'} danger={statusTarget?.status === 'Active'} loading={statusChanging} onClose={() => setStatusTarget(null)} onConfirm={handleStatusChange} />
     </MainLayout>
   );
 };

@@ -1,3 +1,8 @@
+// -----------------------------------------------------------------------------
+// File: JwtOptions.cs
+// Member 1: Identity, Authentication, Authorization and Account Management
+// Purpose: Defines validated JWT issuer, audience, signing, and lifetime settings.
+// -----------------------------------------------------------------------------
 using System.ComponentModel.DataAnnotations;
 
 namespace SmartSolarMicrogrid.Api.Configuration;

@@ -1,3 +1,8 @@
+// -----------------------------------------------------------------------------
+// File: IdentityService.cs
+// Member 1: Identity, Authentication, Authorization and Account Management
+// Purpose: Enforces identity validation, authentication, profile, and account rules.
+// -----------------------------------------------------------------------------
 using MongoDB.Driver;
 using System.Text.RegularExpressions;
 using SmartSolarMicrogrid.Api.Contracts.Identity;
@@ -17,6 +22,7 @@ public sealed class IdentityService(
         LoginRequest request,
         CancellationToken cancellationToken = default)
     {
+        // Normalize the login identifier, verify credentials, and enforce active status.
         var identifier = NormalizeIdentifier(request.Identifier);
         var user = await userRepository.FindByIdentifierAsync(identifier, cancellationToken);
 
@@ -43,6 +49,7 @@ public sealed class IdentityService(
         RegisterProsumerRequest request,
         CancellationToken cancellationToken = default)
     {
+        // Normalize registration data and reject duplicate business identifiers.
         var nic = NormalizeNic(request.Nic);
         var email = NormalizeEmail(request.Email);
         var firstName = RequiredText(request.FirstName, "First name");
@@ -83,6 +90,7 @@ public sealed class IdentityService(
         CreateStaffRequest request,
         CancellationToken cancellationToken = default)
     {
+        // Validate the requested staff role and preserve the creating administrator audit value.
         var email = NormalizeEmail(request.Email);
         if (await userRepository.FindByEmailAsync(email, cancellationToken) is not null)
         {
@@ -114,6 +122,7 @@ public sealed class IdentityService(
         string identifier,
         CancellationToken cancellationToken = default)
     {
+        // Resolve the current account and map only public profile fields.
         var user = await FindRequiredUserAsync(identifier, cancellationToken);
         return MapToResponse(user);
     }
@@ -122,6 +131,7 @@ public sealed class IdentityService(
         string nic,
         CancellationToken cancellationToken = default)
     {
+        // Resolve the Prosumer by NIC and require an active account for dependent modules.
         var user = await userRepository.FindByNicAsync(NormalizeNic(nic), cancellationToken);
         if (user is null || user.Role != UserRole.Prosumer)
         {
@@ -137,6 +147,7 @@ public sealed class IdentityService(
         UpdateProfileRequest request,
         CancellationToken cancellationToken = default)
     {
+        // Update common name fields and Prosumer-specific contact fields only.
         var user = await FindRequiredUserAsync(identifier, cancellationToken);
         EnsureActive(user);
 
@@ -159,6 +170,7 @@ public sealed class IdentityService(
         ChangePasswordRequest request,
         CancellationToken cancellationToken = default)
     {
+        // Verify the old secret and prevent reusing the existing password.
         var user = await FindRequiredUserAsync(identifier, cancellationToken);
         EnsureActive(user);
 
@@ -185,6 +197,7 @@ public sealed class IdentityService(
         string identifier,
         CancellationToken cancellationToken = default)
     {
+        // Permit self-deactivation only for active Prosumers without blocking reservations.
         var user = await FindRequiredUserAsync(identifier, cancellationToken);
         if (user.Role != UserRole.Prosumer)
         {
@@ -207,6 +220,7 @@ public sealed class IdentityService(
         string identifier,
         CancellationToken cancellationToken = default)
     {
+        // Transition only a currently deactivated account back to active status.
         var user = await FindRequiredUserAsync(identifier, cancellationToken);
         if (user.Status != UserStatus.Deactivated)
         {
@@ -221,6 +235,7 @@ public sealed class IdentityService(
         string identifier,
         CancellationToken cancellationToken = default)
     {
+        // Enforce self-deactivation, final-admin, and reservation safeguards.
         var actor = NormalizeIdentifier(actorIdentifier);
         var target = await FindRequiredUserAsync(identifier, cancellationToken);
 
@@ -250,18 +265,21 @@ public sealed class IdentityService(
 
     public async Task<List<UserResponse>> GetUsersAsync(CancellationToken cancellationToken = default)
     {
+        // Map persisted accounts to responses that omit password hashes and MongoDB identifiers.
         var users = await userRepository.GetAllAsync(cancellationToken);
         return users.Select(MapToResponse).ToList();
     }
 
     private async Task<User> FindRequiredUserAsync(string identifier, CancellationToken cancellationToken)
     {
+        // Resolve a normalized business identifier or raise the stable not-found error.
         return await userRepository.FindByIdentifierAsync(NormalizeIdentifier(identifier), cancellationToken)
             ?? throw IdentityException.NotFound();
     }
 
     private async Task CreateUserAsync(User user, CancellationToken cancellationToken)
     {
+        // Translate a database unique-index race into the public identity conflict contract.
         try
         {
             await userRepository.CreateAsync(user, cancellationToken);
@@ -280,6 +298,7 @@ public sealed class IdentityService(
         string changedByIdentifier,
         CancellationToken cancellationToken)
     {
+        // Perform an expected-state transition and retain the normalized actor for auditing.
         var normalizedActor = NormalizeIdentifier(changedByIdentifier);
         if (!await userRepository.UpdateStatusAsync(
                 user.Nic ?? user.Email,
@@ -297,23 +316,36 @@ public sealed class IdentityService(
 
     private static void EnsureActive(User user)
     {
+        // Reject protected identity operations for pending or deactivated accounts.
         if (user.Status != UserStatus.Active)
         {
             throw IdentityException.Forbidden("AUTH_ACCOUNT_INACTIVE", "Account is not active.");
         }
     }
 
-    private static string NormalizeIdentifier(string identifier) =>
-        identifier.Contains('@', StringComparison.Ordinal)
+    private static string NormalizeIdentifier(string identifier)
+    {
+        // Select normalization rules according to the email-or-NIC identifier shape.
+        return identifier.Contains('@', StringComparison.Ordinal)
             ? NormalizeEmail(identifier)
             : NormalizeNic(identifier);
+    }
 
-    private static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
+    private static string NormalizeEmail(string email)
+    {
+        // Store and compare email identifiers using a stable lowercase form.
+        return email.Trim().ToLowerInvariant();
+    }
 
-    private static string NormalizeNic(string nic) => nic.Trim().ToUpperInvariant();
+    private static string NormalizeNic(string nic)
+    {
+        // Store and compare legacy NIC suffixes using a stable uppercase form.
+        return nic.Trim().ToUpperInvariant();
+    }
 
     private static string RequiredText(string value, string fieldName)
     {
+        // Trim required text and reject values made only of whitespace.
         var normalized = value.Trim();
         return normalized.Length == 0
             ? throw IdentityException.Validation($"{fieldName} cannot contain only whitespace.")
@@ -322,6 +354,7 @@ public sealed class IdentityService(
 
     private static string RequiredPhone(string value)
     {
+        // Normalize and validate the phone number against the shared request rule.
         var normalized = value.Trim();
         if (!Regex.IsMatch(normalized, IdentityValidationRules.PhonePattern))
         {
@@ -331,8 +364,10 @@ public sealed class IdentityService(
         return normalized;
     }
 
-    private static UserResponse MapToResponse(User user) =>
-        new(
+    private static UserResponse MapToResponse(User user)
+    {
+        // Expose account data required by clients while omitting persistence and secret fields.
+        return new(
             user.Nic,
             user.Email,
             user.FirstName,
@@ -341,4 +376,5 @@ public sealed class IdentityService(
             user.Address,
             user.Role.ToString(),
             user.Status.ToString());
+    }
 }

@@ -1,3 +1,8 @@
+// -----------------------------------------------------------------------------
+// File: User.cs
+// Member 1: Identity, Authentication, Authorization and Account Management
+// Purpose: Represents persisted user identity, profile, role, and account status data.
+// -----------------------------------------------------------------------------
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 

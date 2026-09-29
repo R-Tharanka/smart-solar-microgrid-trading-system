@@ -1,3 +1,8 @@
+// -----------------------------------------------------------------------------
+// File: JwtTokenGeneratorTests.cs
+// Member 1: Identity, Authentication, Authorization and Account Management
+// Purpose: Verifies access-token identifiers, claims, and expiration metadata.
+// -----------------------------------------------------------------------------
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.Extensions.Options;
@@ -12,6 +17,7 @@ public sealed class JwtTokenGeneratorTests
     [Fact]
     public void GenerateToken_UsesBusinessIdentifierAndRequiredClaims()
     {
+        // Verify that a Prosumer token carries its NIC and required identity claims.
         var options = Options.Create(new JwtOptions
         {
             Issuer = "test-issuer",

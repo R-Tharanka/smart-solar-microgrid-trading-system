@@ -1,22 +1,31 @@
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import MainLayout from '../../layouts/MainLayout';
 import apiClient from '../../services/api';
 import ReservationStatusBadge from '../../components/reservations/ReservationStatusBadge';
 import ReservationDetails from '../../components/reservations/ReservationDetails';
 import RejectDialog from '../../components/reservations/RejectDialog';
 import { AuthContext } from '../../context/AuthContext';
+import Alert from '../../components/ui/Alert';
+import Button from '../../components/ui/Button';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import FormField from '../../components/ui/FormField';
+import PageHeader from '../../components/ui/PageHeader';
+import { EmptyState, LoadingState } from '../../components/ui/PageState';
+import { useToast } from '../../context/ToastContext';
 
 const Reservations = () => {
   const { user } = useContext(AuthContext);
   const isBackoffice = user?.role === 'Backoffice';
+  const { notify } = useToast();
   
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
   const [showDetails, setShowDetails] = useState(false);
-  const [selectedReservation, setSelectedReservation] = useState(null);
   const [fullReservationDetails, setFullReservationDetails] = useState(null);
+  const [reservationToApprove, setReservationToApprove] = useState(null);
 
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [reservationToReject, setReservationToReject] = useState(null);
@@ -51,19 +60,21 @@ const Reservations = () => {
       setFullReservationDetails(response.data.data);
       setShowDetails(true);
     } catch (err) {
-      alert('Failed to load reservation details: ' + (err.response?.data?.detail || ''));
+      notify(err.response?.data?.detail || 'Reservation details could not be loaded.', 'error');
     }
   };
 
-  const handleApprove = async (reservationId) => {
-    if (!window.confirm('Are you sure you want to approve this reservation?')) return;
-    
+  const handleApprove = async () => {
+    if (!reservationToApprove) return;
     try {
-      await apiClient.post(`/reservations/${reservationId}/approve`);
-      fetchReservations();
+      setIsSubmitting(true);
+      await apiClient.post(`/reservations/${reservationToApprove}/approve`);
+      await fetchReservations();
+      notify('Reservation approved successfully.');
+      setReservationToApprove(null);
     } catch (err) {
-      alert('Failed to approve: ' + (err.response?.data?.detail || err.response?.data?.message || 'Unknown error'));
-    }
+      notify(err.response?.data?.detail || 'The reservation could not be approved.', 'error');
+    } finally { setIsSubmitting(false); }
   };
 
   const handleRejectClick = (reservationId) => {
@@ -77,9 +88,10 @@ const Reservations = () => {
       await apiClient.post(`/reservations/${reservationToReject}/reject`, { reason });
       setShowRejectDialog(false);
       setReservationToReject(null);
-      fetchReservations();
+      await fetchReservations();
+      notify('Reservation rejected successfully.');
     } catch (err) {
-      alert('Failed to reject: ' + (err.response?.data?.detail || err.response?.data?.message || 'Unknown error'));
+      notify(err.response?.data?.detail || 'The reservation could not be rejected.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -112,35 +124,18 @@ const Reservations = () => {
 
   return (
     <MainLayout title="Reservations" roleNav={navItems}>
-      <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-slate-800">Reservation Management</h2>
-          <p className="text-sm text-slate-500">Monitor and manage prosumer energy reservations.</p>
-        </div>
-        
-        <button
-          onClick={fetchReservations}
-          className="inline-flex items-center px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-        >
-          Refresh
-        </button>
-      </div>
+      <PageHeader eyebrow="Booking operations" title="Reservation management" description="Search, review and progress Prosumer energy reservations." actions={<Button variant="secondary" icon={ArrowPathIcon} onClick={fetchReservations} loading={loading}>Refresh</Button>} />
 
-      <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4 items-center">
-        <div className="w-full md:w-1/3">
-          <input
+      <div className="app-panel-muted mb-5 grid gap-4 p-4 md:grid-cols-[minmax(0,1fr)_15rem]">
+          <FormField id="reservation-search" label="Search reservations"
             type="text"
             placeholder="Search code, NIC, or station..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
-        </div>
-        <div className="w-full md:w-1/4">
-          <select
+          <FormField as="select" id="reservation-status" label="Status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="block w-full pl-3 pr-10 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="All">All Statuses</option>
             <option value="Pending">Pending</option>
@@ -151,20 +146,17 @@ const Reservations = () => {
             <option value="Verified">Verified</option>
             <option value="Completed">Completed</option>
             <option value="Expired">Expired</option>
-          </select>
-        </div>
+          </FormField>
       </div>
 
       {error && (
-        <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
+        <Alert className="mb-5" title="Unable to load reservations">{error}</Alert>
       )}
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg border border-slate-200">
+      <div className="app-table-wrap hidden md:block">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+          <table className="app-table">
+            <thead>
               <tr>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Code / Prosumer</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Station</th>
@@ -173,7 +165,7 @@ const Reservations = () => {
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-200">
+            <tbody>
               {loading ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
@@ -214,7 +206,7 @@ const Reservations = () => {
                       {isBackoffice && res.status === 'Pending' && (
                         <>
                           <button 
-                            onClick={() => handleApprove(res.reservationId)}
+                            onClick={() => setReservationToApprove(res.reservationId)}
                             className="text-emerald-600 hover:text-emerald-900"
                           >
                             Approve
@@ -236,6 +228,7 @@ const Reservations = () => {
           </table>
         </div>
       </div>
+      <div className="space-y-3 md:hidden">{loading ? <div className="app-panel"><LoadingState label="Loading reservations..." /></div> : filteredReservations.length === 0 ? <div className="app-panel"><EmptyState title="No matching reservations" description="Adjust the search or status filter and try again." /></div> : filteredReservations.map(res => <article key={res.reservationId} className="app-panel p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-mono text-xs font-bold text-emerald-700">{res.reservationCode}</p><p className="mt-1 text-sm font-semibold text-slate-900">{res.requestedEnergyKwh} kWh</p><p className="text-xs text-slate-500">{new Date(res.scheduledStartTimeUtc).toLocaleDateString()} · {res.stationId}</p></div><ReservationStatusBadge status={res.status} /></div><p className="mt-3 border-t border-slate-100 pt-3 text-sm text-slate-600">Prosumer {res.prosumerNic}</p><div className="mt-3 flex gap-3 text-sm font-bold"><button onClick={() => handleView(res)} className="text-emerald-700">View</button>{isBackoffice && res.status === 'Pending' ? <><button onClick={() => setReservationToApprove(res.reservationId)} className="text-cyan-700">Approve</button><button onClick={() => handleRejectClick(res.reservationId)} className="text-red-700">Reject</button></> : null}</div></article>)}</div>
 
       {showDetails && (
         <ReservationDetails 
@@ -258,6 +251,7 @@ const Reservations = () => {
           onConfirm={handleRejectConfirm}
         />
       )}
+      <ConfirmDialog open={Boolean(reservationToApprove)} title="Approve reservation" description="Approve this reservation and allow it to proceed to the next workflow stage?" confirmLabel="Approve reservation" danger={false} loading={isSubmitting} onClose={() => setReservationToApprove(null)} onConfirm={handleApprove} />
     </MainLayout>
   );
 };

@@ -1,3 +1,8 @@
+// -----------------------------------------------------------------------------
+// File: ReservationAccountDeactivationGuard.cs
+// Member 1: Identity, Authentication, Authorization and Account Management
+// Purpose: Blocks Prosumer deactivation while non-terminal reservations exist.
+// -----------------------------------------------------------------------------
 using MongoDB.Bson;
 using MongoDB.Driver;
 using SmartSolarMicrogrid.Api.Services;
@@ -18,6 +23,7 @@ public sealed class ReservationAccountDeactivationGuard(MongoDbContext context) 
         string prosumerNic,
         CancellationToken cancellationToken = default)
     {
+        // Check reservation status through the agreed cross-domain read-only integration.
         var reservations = context.Database.GetCollection<BsonDocument>(CollectionNames.EnergyReservations);
         var filter = new BsonDocument
         {

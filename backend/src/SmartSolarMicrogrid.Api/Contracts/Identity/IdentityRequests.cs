@@ -1,3 +1,8 @@
+// -----------------------------------------------------------------------------
+// File: IdentityRequests.cs
+// Member 1: Identity, Authentication, Authorization and Account Management
+// Purpose: Defines validated request contracts for identity and account operations.
+// -----------------------------------------------------------------------------
 using System.ComponentModel.DataAnnotations;
 
 namespace SmartSolarMicrogrid.Api.Contracts.Identity;
@@ -14,10 +19,14 @@ public sealed class LoginRequest
 {
     public LoginRequest()
     {
+        // Support ASP.NET Core model binding with a parameterless constructor.
     }
 
-    public LoginRequest(string identifier, string password) =>
+    public LoginRequest(string identifier, string password)
+    {
+        // Initialize the login request for direct callers and tests.
         (Identifier, Password) = (identifier, password);
+    }
 
     [Required, StringLength(320, MinimumLength = 3)]
     public string Identifier { get; init; } = string.Empty;
@@ -30,6 +39,7 @@ public sealed class RegisterProsumerRequest
 {
     public RegisterProsumerRequest()
     {
+        // Support ASP.NET Core model binding with a parameterless constructor.
     }
 
     public RegisterProsumerRequest(
@@ -39,9 +49,12 @@ public sealed class RegisterProsumerRequest
         string firstName,
         string lastName,
         string phoneNumber,
-        string address) =>
+        string address)
+    {
+        // Initialize all required Prosumer registration fields for direct callers and tests.
         (Nic, Email, Password, FirstName, LastName, PhoneNumber, Address) =
-        (nic, email, password, firstName, lastName, phoneNumber, address);
+            (nic, email, password, firstName, lastName, phoneNumber, address);
+    }
 
     [Required, RegularExpression(@"^(?:\d{9}[VvXx]|\d{12})$", ErrorMessage = "NIC must be 12 digits or 9 digits followed by V or X.")]
     public string Nic { get; init; } = string.Empty;
@@ -69,6 +82,7 @@ public sealed class CreateStaffRequest
 {
     public CreateStaffRequest()
     {
+        // Support ASP.NET Core model binding with a parameterless constructor.
     }
 
     public CreateStaffRequest(
@@ -76,9 +90,12 @@ public sealed class CreateStaffRequest
         string password,
         string firstName,
         string lastName,
-        string role) =>
+        string role)
+    {
+        // Initialize all required staff account fields for direct callers and tests.
         (Email, Password, FirstName, LastName, Role) =
-        (email, password, firstName, lastName, role);
+            (email, password, firstName, lastName, role);
+    }
 
     [Required, EmailAddress, StringLength(320)]
     public string Email { get; init; } = string.Empty;
@@ -100,15 +117,19 @@ public sealed class UpdateProfileRequest
 {
     public UpdateProfileRequest()
     {
+        // Support ASP.NET Core model binding with a parameterless constructor.
     }
 
     public UpdateProfileRequest(
         string firstName,
         string lastName,
         string? phoneNumber = null,
-        string? address = null) =>
+        string? address = null)
+    {
+        // Initialize editable profile fields for direct callers and tests.
         (FirstName, LastName, PhoneNumber, Address) =
-        (firstName, lastName, phoneNumber, address);
+            (firstName, lastName, phoneNumber, address);
+    }
 
     [Required, StringLength(100, MinimumLength = 1)]
     public string FirstName { get; init; } = string.Empty;
@@ -127,10 +148,14 @@ public sealed class ChangePasswordRequest
 {
     public ChangePasswordRequest()
     {
+        // Support ASP.NET Core model binding with a parameterless constructor.
     }
 
-    public ChangePasswordRequest(string currentPassword, string newPassword) =>
+    public ChangePasswordRequest(string currentPassword, string newPassword)
+    {
+        // Initialize password-change fields for direct callers and tests.
         (CurrentPassword, NewPassword) = (currentPassword, newPassword);
+    }
 
     [Required, StringLength(128)]
     public string CurrentPassword { get; init; } = string.Empty;

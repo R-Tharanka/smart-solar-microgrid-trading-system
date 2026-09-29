@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { clearAuthSession } from '../utils/auth';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5080/api';
 
@@ -9,7 +10,6 @@ const apiClient = axios.create({
   },
 });
 
-// Add a request interceptor to add the auth token to headers
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -23,15 +23,14 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Add a response interceptor to handle 401s globally
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Clear local storage and redirect to login if unauthorized
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+    if (error.response?.status === 401 && !error.config?.skipAuthHandling) {
+      clearAuthSession();
+      window.dispatchEvent(new CustomEvent('auth:session-ended', {
+        detail: { reason: 'Your session expired. Sign in again to continue.' },
+      }));
     }
     return Promise.reject(error);
   }
