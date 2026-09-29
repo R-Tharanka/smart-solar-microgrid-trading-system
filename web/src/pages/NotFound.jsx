@@ -10,7 +10,7 @@ export default function NotFound() {
   const navigate = useNavigate();
   return (
     <div className="network-grid flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <div className="app-panel w-full max-w-lg p-8 text-center">
+      <div className="app-panel w-full max-w-lg rounded-2xl p-8 text-center">
         <BrandMark className="mb-7 justify-center" />
         <MapIcon className="mx-auto h-12 w-12 text-slate-400" aria-hidden="true" />
         <p className="mt-4 text-sm font-semibold text-emerald-700">404</p>

@@ -24,6 +24,8 @@ export default function Button({
       className={clsx(
         'inline-flex min-h-11 items-center justify-center gap-2 rounded-md border px-4 py-2 text-sm font-bold shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55 disabled:active:translate-y-0',
         variants[variant],
+        'energy-button',
+        `energy-button-${variant}`,
         className,
       )}
       {...props}

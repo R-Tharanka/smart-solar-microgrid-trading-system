@@ -1,3 +1,4 @@
+import ParticipantIdentity from '../../components/ParticipantIdentity';
 import { ArrowPathIcon, EyeIcon, PencilSquareIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ProsumerDetails from '../../components/prosumers/ProsumerDetails';
@@ -90,9 +91,9 @@ export default function Prosumers() {
   return (
     <MainLayout title="Prosumer accounts">
       <PageHeader
-        eyebrow="Identity administration"
+        eyebrow="Network participants"
         title="Prosumer accounts"
-        description="Create and update NIC-backed Prosumer profiles, then manage account access without exposing internal database identifiers."
+        description="Manage the participants powering your energy network, from first registration to ongoing account access."
         actions={<><Button variant="secondary" icon={ArrowPathIcon} onClick={loadProsumers} disabled={loading}>Refresh</Button><Button icon={PlusIcon} onClick={() => setFormState({ mode: 'create' })}>Create Prosumer</Button></>}
       />
 
@@ -119,7 +120,7 @@ export default function Prosumers() {
                 <tbody>
                   {filteredProsumers.map((prosumer) => (
                     <tr key={prosumer.nic} className="hover:bg-slate-50">
-                      <td className="px-5 py-4 font-semibold text-slate-900">{prosumer.firstName} {prosumer.lastName}</td>
+                      <td className="px-5 py-4 font-semibold text-slate-900"><ParticipantIdentity firstName={prosumer.firstName} lastName={prosumer.lastName} /></td>
                       <td className="px-5 py-4 font-mono text-xs text-slate-600">{prosumer.nic}</td>
                       <td className="px-5 py-4"><p className="text-sm text-slate-900">{prosumer.email}</p><p className="text-xs text-slate-500">{prosumer.phoneNumber || 'No phone'}</p></td>
                       <td className="px-5 py-4"><StatusBadge value={prosumer.status} /></td>
@@ -133,7 +134,7 @@ export default function Prosumers() {
             <div className="divide-y divide-slate-200 md:hidden">
               {filteredProsumers.map((prosumer) => (
                 <article key={prosumer.nic} className="p-4">
-                  <div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-slate-900">{prosumer.firstName} {prosumer.lastName}</p><p className="font-mono text-xs text-slate-500">{prosumer.nic}</p></div><StatusBadge value={prosumer.status} /></div>
+                  <div className="flex items-start justify-between gap-3"><ParticipantIdentity firstName={prosumer.firstName} lastName={prosumer.lastName} detail={prosumer.nic} /><StatusBadge value={prosumer.status} /></div>
                   <p className="mt-3 break-all text-sm text-slate-600">{prosumer.email}</p>
                   <div className="mt-4 flex flex-wrap gap-2"><Button variant="secondary" icon={EyeIcon} onClick={() => setSelected(prosumer)}>View</Button><Button variant="secondary" icon={PencilSquareIcon} onClick={() => setFormState({ mode: 'edit', prosumer })}>Edit</Button><Button variant={prosumer.status === 'Active' ? 'danger' : 'secondary'} onClick={() => setPendingStatus(prosumer)} disabled={!['Active', 'Deactivated'].includes(prosumer.status)}>{prosumer.status === 'Active' ? 'Deactivate' : 'Reactivate'}</Button></div>
                 </article>
@@ -151,7 +152,7 @@ export default function Prosumers() {
         open={Boolean(pendingStatus)}
         title={`${pendingStatus?.status === 'Active' ? 'Deactivate' : 'Reactivate'} Prosumer account?`}
         description={pendingStatus?.status === 'Active'
-          ? `${pendingStatus?.firstName} ${pendingStatus?.lastName} will immediately lose protected API access. The API will block this action if active reservations exist.`
+          ? `${pendingStatus?.firstName} ${pendingStatus?.lastName} will lose platform access. Active reservations must be resolved before deactivation.`
           : `${pendingStatus?.firstName} ${pendingStatus?.lastName} will regain access and can sign in again.`}
         confirmLabel={pendingStatus?.status === 'Active' ? 'Deactivate Prosumer' : 'Reactivate Prosumer'}
         danger={pendingStatus?.status === 'Active'}

@@ -1,3 +1,5 @@
+import EnergySummary from '../EnergySummary';
+import OperationProgress from '../OperationProgress';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import ReservationStatusBadge from '../reservations/ReservationStatusBadge';
@@ -34,7 +36,7 @@ export default function TransactionDetails({ transaction, loading, onClose }) {
         <div className="py-12 text-center text-sm font-medium text-slate-500">Loading transaction details...</div>
       ) : (
         <>
-          <div className="mb-5"><ReservationStatusBadge status={transaction.status} /></div>
+          <div className="mb-5"><ReservationStatusBadge status={transaction.status} /></div><OperationProgress status={transaction.status} /><EnergySummary value={transaction.actualEnergyTransferredKwh ?? transaction.requestedEnergyKwh} label={transaction.actualEnergyTransferredKwh == null ? "Reserved energy" : "Actual energy transferred"} />
           <dl className="grid gap-5 border-y border-slate-200 py-5 sm:grid-cols-2">
             {fields.map(([label, value]) => (
               <div key={label}>

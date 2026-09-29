@@ -147,21 +147,8 @@ const Stations = () => {
     navigate(`${route}?station=${encodeURIComponent(stationCode)}`);
   };
 
-  const navItems = isBackoffice ? [
-    { name: 'Dashboard', path: '/backoffice' },
-    { name: 'Prosumer Management', path: '/backoffice/prosumers' },
-    { name: 'Microgrid Nodes', path: '/backoffice/stations' },
-    { name: 'Energy Slots', path: '/backoffice/slots' },
-    { name: 'Reservations', path: '/backoffice/reservations' },
-  ] : [
-    { name: 'Dashboard', path: '/grid-operator' },
-    { name: 'Stations / Nodes', path: '/grid-operator/stations' },
-    { name: 'Slots', path: '/grid-operator/slots' },
-    { name: 'Bookings / Reservations', path: '/grid-operator/reservations' },
-  ];
-
   return (
-    <MainLayout title="Microgrid nodes" roleNav={navItems}>
+    <MainLayout title="Microgrid nodes">
       <PageHeader
         eyebrow="Infrastructure"
         title="Solar stations"
@@ -180,39 +167,23 @@ const Stations = () => {
 
       {error && <Alert className="mb-5" title="Unable to complete station request">{error}</Alert>}
 
-      <div className="app-table-wrap hidden md:block">
-        <div className="overflow-x-auto">
-          <table className="app-table">
-            <thead><tr>{['Code', 'Station', 'Capacity', 'Operating hours', 'Status', 'Actions'].map((heading) => <th key={heading} className={`${heading === 'Actions' ? 'text-right' : 'text-left'} px-5 py-3 text-xs font-medium uppercase tracking-wider text-slate-500`}>{heading}</th>)}</tr></thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan="6" className="px-6 py-12 text-center text-slate-500">Loading stations...</td></tr>
-              ) : filteredStations.length === 0 ? (
-                <tr><td colSpan="6" className="px-6 py-12 text-center text-slate-500">No stations match the current filters.</td></tr>
-              ) : filteredStations.map((station) => (
-                <tr key={station.stationCode} className="transition-colors hover:bg-slate-50">
-                  <td className="whitespace-nowrap px-5 py-4 font-mono text-sm text-slate-600">{station.stationCode}</td>
-                  <td className="px-5 py-4"><div className="text-sm font-medium text-slate-900">{station.name}</div><div className="max-w-xs truncate text-xs text-slate-500" title={station.address}>{station.address}</div></td>
-                  <td className="whitespace-nowrap px-5 py-4"><div className="text-sm text-slate-900">{station.capacityKwh} kWh</div><div className="text-xs text-slate-500">Battery: {station.batteryStorageKwh} kWh</div></td>
-                  <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">{station.openingTime} - {station.closingTime}</td>
-                  <td className="whitespace-nowrap px-5 py-4"><StationStatusBadge status={station.status} /></td>
-                  <td className="whitespace-nowrap px-5 py-4 text-right text-sm font-medium"><div className="flex justify-end gap-3"><button onClick={() => openDetails(station)} className="text-blue-600 hover:text-blue-900">View</button><button onClick={() => manageSlots(station.stationCode)} className="text-violet-600 hover:text-violet-900">Slots</button>{isBackoffice && <button onClick={() => openEdit(station)} disabled={loadingEditor} className="text-indigo-600 hover:text-indigo-900 disabled:cursor-wait disabled:text-slate-300">Edit</button>}{isBackoffice && <button onClick={() => openStatusDialog(station)} className="text-amber-600 hover:text-amber-900">Status</button>}</div></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {loading ? <LoadingState label="Connecting to your stations…" /> : filteredStations.length === 0 ? <EmptyState title="No stations found" description="Try another name, location or operating status." /> : (
+        <div className="infrastructure-grid">
+          {filteredStations.map((station) => (
+            <article key={station.stationCode} className="infrastructure-card">
+              <div className="infrastructure-visual" aria-hidden="true"><span /><span /><span /><i /></div>
+              <div className="asset-body">
+                <div className="flex flex-wrap items-center justify-between gap-2"><span className="asset-code">{station.stationCode}</span><StationStatusBadge status={station.status} /></div>
+                <h2 className="mt-4 text-xl font-semibold text-slate-950">{station.name}</h2>
+                <p className="asset-location">{station.address || 'Location not specified'}</p>
+                <div className="asset-capacity"><div><span>Station capacity</span><strong>{station.capacityKwh ?? '—'} <small>kWh</small></strong></div><div><span>Battery storage</span><strong>{station.batteryStorageKwh ?? '—'} <small>kWh</small></strong></div></div>
+                <div className="asset-meta"><span>Operating window</span><strong>{station.openingTime} — {station.closingTime}</strong></div>
+                <div className="asset-actions"><Button variant="secondary" onClick={() => openDetails(station)}>Details</Button><Button variant="secondary" onClick={() => manageSlots(station.stationCode)}>Energy slots</Button>{isBackoffice && <><Button variant="ghost" disabled={loadingEditor} onClick={() => openEdit(station)}>Edit</Button><Button variant="ghost" onClick={() => openStatusDialog(station)}>Status</Button></>}</div>
+              </div>
+            </article>
+          ))}
         </div>
-      </div>
-
-      <div className="space-y-3 md:hidden">
-        {loading ? <div className="app-panel"><LoadingState label="Loading stations..." /></div> : filteredStations.length === 0 ? <div className="app-panel"><EmptyState title="No stations found" description="No stations match the current filters." /></div> : filteredStations.map((station) => (
-          <article key={station.stationCode} className="app-panel p-4">
-            <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-mono text-xs font-bold text-emerald-700">{station.stationCode}</p><h3 className="mt-1 truncate font-bold text-slate-950">{station.name}</h3><p className="mt-1 line-clamp-2 text-sm text-slate-500">{station.address}</p></div><StationStatusBadge status={station.status} /></div>
-            <div className="mt-4 grid grid-cols-2 gap-3 border-y border-slate-100 py-3 text-sm"><span><span className="block text-xs text-slate-500">Capacity</span>{station.capacityKwh} kWh</span><span><span className="block text-xs text-slate-500">Battery</span>{station.batteryStorageKwh} kWh</span><span className="col-span-2"><span className="block text-xs text-slate-500">Operating hours</span>{station.openingTime} - {station.closingTime}</span></div>
-            <div className="mt-3 flex flex-wrap gap-3 text-sm font-bold"><button onClick={() => openDetails(station)} className="text-emerald-700">View</button><button onClick={() => manageSlots(station.stationCode)} className="text-violet-700">Slots</button>{isBackoffice ? <><button onClick={() => openEdit(station)} disabled={loadingEditor} className="text-cyan-700 disabled:cursor-wait disabled:text-slate-300">Edit</button><button onClick={() => openStatusDialog(station)} className="text-amber-700">Status</button></> : null}</div>
-          </article>
-        ))}
-      </div>
+      )}
 
       {showForm && <StationForm station={editingStation} onClose={() => setShowForm(false)} onSuccess={handleFormSuccess} />}
       {showDetails && <StationDetails station={selectedStation} onClose={() => { setShowDetails(false); setSelectedStation(null); }} />}

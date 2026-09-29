@@ -22,7 +22,7 @@ export function MetricCard({ label, value, icon: Icon, tone = 'emerald' }) {
     slate: 'bg-slate-100 text-slate-600 border-slate-200',
   };
   return (
-    <article className="app-panel flex min-h-32 items-start justify-between p-5">
+    <article className="metric-card app-panel flex min-h-32 items-start justify-between p-5">
       <div><p className="text-sm font-semibold text-slate-500">{label}</p><p className="mt-3 text-3xl font-bold tabular-nums text-slate-950">{value}</p></div>
       {Icon ? <span className={`flex h-10 w-10 items-center justify-center rounded-md border ${tones[tone] || tones.emerald}`}><Icon className="h-5 w-5" /></span> : null}
     </article>

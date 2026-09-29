@@ -11,11 +11,11 @@ export default function AccessDenied() {
 
   return (
     <div className="network-grid flex min-h-screen items-center justify-center bg-graphite-950 px-4">
-      <div className="w-full max-w-lg rounded-lg border border-white/10 bg-graphite-900 p-8 text-center shadow-energy">
+      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-graphite-900 p-8 text-center shadow-energy">
         <BrandMark className="mb-7 justify-center" inverse />
         <ShieldExclamationIcon className="mx-auto h-12 w-12 text-amber-400" aria-hidden="true" />
         <h1 className="mt-5 text-2xl font-semibold text-white">Access restricted</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-300">Your account is authenticated, but this area is not available for your role. API authorization remains the final security boundary.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-300">This workspace is not available for your account. Return to your workspace to access your energy tools.</p>
         <Button className="mt-6" onClick={() => navigate(homePath, { replace: true })}>Return to your workspace</Button>
       </div>
     </div>

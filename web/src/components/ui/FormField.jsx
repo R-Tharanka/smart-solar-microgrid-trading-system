@@ -15,7 +15,7 @@ export default function FormField({
 
   return (
     <div className={className}>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-slate-700">
+      <label htmlFor={id} className="mb-2 block text-xs font-semibold text-slate-700">
         {label}
       </label>
       {as === 'select' ? (

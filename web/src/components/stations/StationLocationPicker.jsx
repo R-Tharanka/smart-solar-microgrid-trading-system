@@ -4,7 +4,8 @@
 // Loads Leaflet without adding a build dependency, displays OpenStreetMap tiles,
 // and returns selected coordinates and a reverse-geocoded address to the form.
 // -----------------------------------------------------------------------------
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import Button from '../ui/Button';
 
 const LEAFLET_VERSION = '1.9.4';
 const LEAFLET_SCRIPT_ID = 'station-location-leaflet-script';
@@ -44,15 +45,21 @@ const StationLocationPicker = ({ latitude, longitude, onLocationChange }) => {
   const mapRef = useRef(null);
   const markerRef = useRef(null);
   const requestRef = useRef(null);
+  const initialCoordinatesRef = useRef({ latitude, longitude });
+  const onLocationChangeRef = useRef(onLocationChange);
   const [mapError, setMapError] = useState('');
   const [locating, setLocating] = useState(false);
   const [resolvingAddress, setResolvingAddress] = useState(false);
 
   // Attempts to convert the selected GPS point into a readable address.
-  const selectLocation = async (selectedLatitude, selectedLongitude) => {
+  useEffect(() => {
+    onLocationChangeRef.current = onLocationChange;
+  }, [onLocationChange]);
+
+  const selectLocation = useCallback(async (selectedLatitude, selectedLongitude) => {
     const nextLatitude = Number(selectedLatitude.toFixed(6));
     const nextLongitude = Number(selectedLongitude.toFixed(6));
-    onLocationChange({ latitude: nextLatitude, longitude: nextLongitude });
+    onLocationChangeRef.current({ latitude: nextLatitude, longitude: nextLongitude });
 
     requestRef.current?.abort();
     const controller = new AbortController();
@@ -68,7 +75,7 @@ const StationLocationPicker = ({ latitude, longitude, onLocationChange }) => {
       if (!response.ok) throw new Error('Address lookup failed.');
       const result = await response.json();
       if (result.display_name) {
-        onLocationChange({
+        onLocationChangeRef.current({
           latitude: nextLatitude,
           longitude: nextLongitude,
           address: result.display_name,
@@ -79,7 +86,7 @@ const StationLocationPicker = ({ latitude, longitude, onLocationChange }) => {
     } finally {
       if (requestRef.current === controller) setResolvingAddress(false);
     }
-  };
+  }, []);
 
   // Initializes the map and records a new station position when it is clicked.
   useEffect(() => {
@@ -88,9 +95,11 @@ const StationLocationPicker = ({ latitude, longitude, onLocationChange }) => {
     loadLeaflet()
       .then((L) => {
         if (!active || !containerRef.current || mapRef.current) return;
-        const hasSavedPosition = Number.isFinite(latitude) && Number.isFinite(longitude)
-          && !(latitude === 0 && longitude === 0);
-        const initialPosition = hasSavedPosition ? [latitude, longitude] : DEFAULT_POSITION;
+        const initialLatitude = initialCoordinatesRef.current.latitude;
+        const initialLongitude = initialCoordinatesRef.current.longitude;
+        const hasSavedPosition = Number.isFinite(initialLatitude) && Number.isFinite(initialLongitude)
+          && !(initialLatitude === 0 && initialLongitude === 0);
+        const initialPosition = hasSavedPosition ? [initialLatitude, initialLongitude] : DEFAULT_POSITION;
         const map = L.map(containerRef.current).setView(initialPosition, hasSavedPosition ? 14 : 8);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
@@ -120,7 +129,7 @@ const StationLocationPicker = ({ latitude, longitude, onLocationChange }) => {
       mapRef.current = null;
       markerRef.current = null;
     };
-  }, []);
+  }, [selectLocation]);
 
   // Keeps the marker synchronized when coordinates are manually edited.
   useEffect(() => {
@@ -159,11 +168,11 @@ const StationLocationPicker = ({ latitude, longitude, onLocationChange }) => {
           <p className="text-sm font-medium text-slate-700">Station location</p>
           <p className="text-xs text-slate-500">Click the map to select the GPS point and address.</p>
         </div>
-        <button type="button" onClick={useCurrentLocation} disabled={locating} className="rounded-md border border-emerald-600 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">
+        <Button variant="secondary" onClick={useCurrentLocation} disabled={locating}>
           {locating ? 'Locating...' : 'Use current location'}
-        </button>
+        </Button>
       </div>
-      <div ref={containerRef} className="h-72 w-full overflow-hidden rounded-lg border border-slate-300 bg-slate-100" />
+      <div ref={containerRef} className="h-72 w-full overflow-hidden rounded-xl border border-slate-300 bg-slate-100" />
       {resolvingAddress && <p className="mt-2 text-xs text-slate-500">Finding the selected address...</p>}
       {mapError && <p className="mt-2 text-xs text-amber-700">{mapError}</p>}
     </div>
