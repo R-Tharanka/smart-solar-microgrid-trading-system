@@ -1,109 +1,141 @@
-import React, { useState, useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
+import {
+  BoltIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  LockClosedIcon,
+  SignalIcon,
+  SunIcon,
+} from '@heroicons/react/24/outline';
+import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Alert from '../components/ui/Alert';
+import Button from '../components/ui/Button';
+import FormField from '../components/ui/FormField';
+import { AuthContext } from '../context/AuthContext';
+import { getApiError } from '../utils/apiError';
+import { homePathForRole } from '../utils/auth';
 
-const Login = () => {
-  const [email, setEmail] = useState('');
+export default function Login() {
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
-  const { login } = useContext(AuthContext);
+  const { login, sessionNotice, clearSessionNotice } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+  useEffect(() => () => clearSessionNotice(), [clearSessionNotice]);
 
+  const validate = () => {
+    const next = {};
+    if (identifier.trim().length < 3) next.identifier = 'Enter your email address or Prosumer NIC.';
+    if (!password) next.password = 'Enter your password.';
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setSubmitError('');
+    if (!validate()) return;
+
+    setIsLoading(true);
     try {
-      // Connects to AuthContext which uses apiClient
-      const user = await login(email, password);
-      
-      if (user.role === 'Backoffice') {
-        navigate('/backoffice');
-      } else if (user.role === 'GridOperator') {
-        navigate('/grid-operator');
-      } else {
-        // Handle unexpected roles or Prosumer
-        setError('Unauthorized role for web portal access.');
-      }
-    } catch (err) {
-      setError(err.response?.data?.detail || err.response?.data?.message || 'Login failed. Please check your credentials.');
+      const authenticatedUser = await login(identifier, password);
+      navigate(homePathForRole(authenticatedUser.role), { replace: true });
+    } catch (error) {
+      setSubmitError(getApiError(error, 'Sign in failed.').message);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-slate-100">
-        <div>
-          <h2 className="mt-2 text-center text-3xl font-extrabold text-slate-900 tracking-tight">
-            Smart Solar Microgrid
-          </h2>
-          <p className="mt-2 text-center text-sm text-slate-600">
-            Sign in to access your portal
-          </p>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-10 sm:px-6">
+      <div className="absolute inset-x-0 top-0 h-1 bg-emerald-400" aria-hidden="true" />
+      <div className="absolute left-0 top-24 hidden h-px w-1/3 bg-cyan-400/30 lg:block" aria-hidden="true" />
+      <div className="absolute bottom-24 right-0 hidden h-px w-1/3 bg-emerald-400/30 lg:block" aria-hidden="true" />
+
+      <main className="relative w-full max-w-md">
+        <div className="mb-7 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg border border-emerald-300/40 bg-emerald-400/10 text-emerald-300 shadow-[0_0_30px_rgba(52,211,153,0.16)]">
+            <BoltIcon className="h-8 w-8" aria-hidden="true" />
+          </div>
+          <h1 className="mt-5 text-2xl font-bold text-white sm:text-3xl">Smart Solar Microgrid</h1>
+          <p className="mt-2 text-sm text-slate-400">Secure access to energy trading operations</p>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          )}
-          
-          <div className="rounded-md shadow-sm space-y-4">
+
+        <section className="rounded-lg border border-white/10 bg-white p-6 shadow-2xl sm:p-8" aria-labelledby="login-heading">
+          <div className="mb-6 flex items-center justify-between gap-4">
             <div>
-              <label htmlFor="email-address" className="block text-sm font-medium text-slate-700 mb-1">
-                Email address
-              </label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-400 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition-colors"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+              <h2 id="login-heading" className="text-xl font-semibold text-slate-950">Sign in</h2>
+              <p className="mt-1 text-sm text-slate-500">Use staff email or Prosumer NIC/email.</p>
             </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-400 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition-colors"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+              <LockClosedIcon className="h-4 w-4" aria-hidden="true" /> Secure
+            </span>
           </div>
 
-          <div>
-            <button
-              type="submit"
+          {sessionNotice ? <Alert type="info" className="mb-5">{sessionNotice}</Alert> : null}
+          {submitError ? <Alert className="mb-5" title="Sign in unsuccessful">{submitError}</Alert> : null}
+
+          <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+            <FormField
+              id="identifier"
+              label="Email or NIC"
+              type="text"
+              autoComplete="username"
+              placeholder="admin@smartsolar.com or 200012345678"
+              value={identifier}
+              onChange={(event) => {
+                setIdentifier(event.target.value);
+                setErrors((current) => ({ ...current, identifier: '' }));
+              }}
+              error={errors.identifier}
               disabled={isLoading}
-              className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white ${
-                isLoading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-              } transition-all shadow-md hover:shadow-lg`}
-            >
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </div>
-        </form>
-      </div>
+            />
+
+            <div>
+              <div className="relative">
+                <FormField
+                  id="password"
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    setErrors((current) => ({ ...current, password: '' }));
+                  }}
+                  error={errors.password}
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  className="absolute right-2 top-[31px] rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+
+            <Button type="submit" loading={isLoading} className="w-full">
+              {isLoading ? 'Authenticating...' : 'Sign in to workspace'}
+            </Button>
+          </form>
+        </section>
+
+        <div className="mt-6 grid grid-cols-3 gap-2 text-center text-xs text-slate-500" aria-hidden="true">
+          <span className="flex items-center justify-center gap-1"><SunIcon className="h-4 w-4 text-amber-400" /> Solar</span>
+          <span className="flex items-center justify-center gap-1"><SignalIcon className="h-4 w-4 text-cyan-400" /> Grid</span>
+          <span className="flex items-center justify-center gap-1"><BoltIcon className="h-4 w-4 text-emerald-400" /> Trading</span>
+        </div>
+      </main>
     </div>
   );
-};
-
-export default Login;
+}

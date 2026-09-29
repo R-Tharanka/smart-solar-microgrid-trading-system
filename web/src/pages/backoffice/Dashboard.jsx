@@ -126,7 +126,11 @@ const BackofficeDashboard = () => {
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
         <h3 className="text-lg font-medium text-slate-800 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+          <Link to="/backoffice/staff" className="block p-4 text-center border rounded-lg hover:bg-slate-50 transition-colors">
+            <span className="block font-medium text-cyan-700 mb-1">Staff Accounts</span>
+            <span className="text-xs text-slate-500">Create and manage access</span>
+          </Link>
           <Link to="/backoffice/reservations" className="block p-4 text-center border rounded-lg hover:bg-slate-50 transition-colors">
             <span className="block font-medium text-blue-600 mb-1">Manage Reservations</span>
             <span className="text-xs text-slate-500">View and approve requests</span>
