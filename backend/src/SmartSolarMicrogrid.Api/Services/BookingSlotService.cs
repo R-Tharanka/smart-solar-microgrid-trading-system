@@ -244,6 +244,7 @@ public sealed class BookingSlotService(
 
     // Maps the persistence model to the public response without exposing MongoDB ObjectId.
     private static BookingSlotResponse Map(EnergyBookingSlot slot, string stationCode) => new(
+        slot.Id.ToString(),
         slot.SlotCode,
         stationCode,
         slot.StartTimeUtc,

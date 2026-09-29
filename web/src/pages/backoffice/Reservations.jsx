@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import MainLayout from '../../layouts/MainLayout';
 import apiClient from '../../services/api';
@@ -18,11 +18,13 @@ const Reservations = () => {
   const { user } = useContext(AuthContext);
   const isBackoffice = user?.role === 'Backoffice';
   const { notify } = useToast();
-  
+
   const [reservations, setReservations] = useState([]);
+  const [stations, setStations] = useState({});
+  const [usersMap, setUsersMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   const [showDetails, setShowDetails] = useState(false);
   const [fullReservationDetails, setFullReservationDetails] = useState(null);
   const [reservationToApprove, setReservationToApprove] = useState(null);
@@ -31,7 +33,6 @@ const Reservations = () => {
   const [reservationToReject, setReservationToReject] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Filtering states
   const [statusFilter, setStatusFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -39,11 +40,42 @@ const Reservations = () => {
     try {
       setLoading(true);
       setError('');
-      // You can pass status or stationId as query params, but here we'll load all and filter client-side for simplicity as suggested
-      const response = await apiClient.get('/reservations');
-      setReservations(response.data.data);
-    } catch (err) {
-      setError('Failed to load reservations. ' + (err.response?.data?.detail || ''));
+
+      const [reservationsResponse, stationsResponse] = await Promise.all([
+        apiClient.get('/reservations'),
+        apiClient.get('/stations'),
+      ]);
+
+      setReservations(reservationsResponse.data.data);
+
+      const stationMap = {};
+      stationsResponse.data.data.forEach((station) => {
+        stationMap[station.id] = station;
+      });
+      setStations(stationMap);
+
+      if (isBackoffice) {
+        try {
+          const usersResponse = await apiClient.get('/users');
+          const nextUsersMap = {};
+
+          usersResponse.data.data.forEach((account) => {
+            if (account.nic) {
+              nextUsersMap[account.nic] = account;
+            }
+          });
+
+          setUsersMap(nextUsersMap);
+        } catch (requestError) {
+          console.error('Failed to load users for reservation display.', requestError);
+        }
+      }
+    } catch (requestError) {
+      setError(
+        `Failed to load reservations. ${
+          requestError.response?.data?.detail || ''
+        }`,
+      );
     } finally {
       setLoading(false);
     }
@@ -55,26 +87,41 @@ const Reservations = () => {
 
   const handleView = async (reservationSummary) => {
     try {
-      // Fetch full details
-      const response = await apiClient.get(`/reservations/${reservationSummary.reservationId}`);
+      const response = await apiClient.get(
+        `/reservations/${reservationSummary.reservationId}`,
+      );
+
       setFullReservationDetails(response.data.data);
       setShowDetails(true);
-    } catch (err) {
-      notify(err.response?.data?.detail || 'Reservation details could not be loaded.', 'error');
+    } catch (requestError) {
+      notify(
+        requestError.response?.data?.detail
+          || 'Reservation details could not be loaded.',
+        'error',
+      );
     }
   };
 
   const handleApprove = async () => {
     if (!reservationToApprove) return;
+
     try {
       setIsSubmitting(true);
-      await apiClient.post(`/reservations/${reservationToApprove}/approve`);
+      await apiClient.post(
+        `/reservations/${reservationToApprove}/approve`,
+      );
       await fetchReservations();
       notify('Reservation approved successfully.');
       setReservationToApprove(null);
-    } catch (err) {
-      notify(err.response?.data?.detail || 'The reservation could not be approved.', 'error');
-    } finally { setIsSubmitting(false); }
+    } catch (requestError) {
+      notify(
+        requestError.response?.data?.detail
+          || 'The reservation could not be approved.',
+        'error',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleRejectClick = (reservationId) => {
@@ -84,137 +131,352 @@ const Reservations = () => {
 
   const handleRejectConfirm = async (reason) => {
     setIsSubmitting(true);
+
     try {
-      await apiClient.post(`/reservations/${reservationToReject}/reject`, { reason });
+      await apiClient.post(
+        `/reservations/${reservationToReject}/reject`,
+        { reason },
+      );
+
       setShowRejectDialog(false);
       setReservationToReject(null);
       await fetchReservations();
       notify('Reservation rejected successfully.');
-    } catch (err) {
-      notify(err.response?.data?.detail || 'The reservation could not be rejected.', 'error');
+    } catch (requestError) {
+      notify(
+        requestError.response?.data?.detail
+          || 'The reservation could not be rejected.',
+        'error',
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Derived state for filtering
-  const filteredReservations = reservations.filter(res => {
-    const matchesStatus = statusFilter === 'All' || res.status === statusFilter;
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = 
-      res.reservationCode.toLowerCase().includes(searchLower) ||
-      res.prosumerNic.toLowerCase().includes(searchLower) ||
-      res.stationId.toLowerCase().includes(searchLower);
-    
+  const filteredReservations = reservations.filter((reservation) => {
+    const matchesStatus = statusFilter === 'All'
+      || reservation.status === statusFilter;
+
+    const searchValue = searchQuery.toLowerCase();
+
+    const matchesSearch = reservation.reservationCode
+      .toLowerCase()
+      .includes(searchValue)
+      || reservation.prosumerNic.toLowerCase().includes(searchValue)
+      || reservation.stationId.toLowerCase().includes(searchValue);
+
     return matchesStatus && matchesSearch;
   });
 
   return (
     <MainLayout title="Reservations">
-      <PageHeader eyebrow="Booking operations" title="Reservation management" description="Search, review and progress Prosumer energy reservations." actions={<Button variant="secondary" icon={ArrowPathIcon} onClick={fetchReservations} loading={loading}>Refresh</Button>} />
-
-      {!loading && !error && <div className="reservation-pulse" aria-label="Reservation summary">{[['Pending', 'Awaiting approval'], ['Approved', 'Approved bookings'], ['Completed', 'Completed exchanges'], ['Rejected', 'Rejected'], ['Cancelled', 'Cancelled']].map(([status, label]) => <button type="button" key={status} onClick={() => setStatusFilter(status)} aria-pressed={statusFilter === status} className={statusFilter === status ? 'selected' : ''}><span>{label}</span><strong>{reservations.filter((item) => item.status === status).length}</strong></button>)}</div>}
-      <div className="app-panel-muted mb-5 grid gap-4 p-4 md:grid-cols-[minmax(0,1fr)_15rem]">
-          <FormField id="reservation-search" label="Search reservations"
-            type="text"
-            placeholder="Search code, NIC, or station..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <FormField as="select" id="reservation-status" label="Status"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+      <PageHeader
+        eyebrow="Booking operations"
+        title="Reservation management"
+        description="Search, review and progress Prosumer energy reservations."
+        actions={(
+          <Button
+            variant="secondary"
+            icon={ArrowPathIcon}
+            onClick={fetchReservations}
+            loading={loading}
           >
-            <option value="All">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-            <option value="Cancelled">Cancelled</option>
-            <option value="QrIssued">QR issued</option>
-            <option value="Verified">Verified</option>
-            <option value="Completed">Completed</option>
-            <option value="Expired">Expired</option>
-          </FormField>
+            Refresh
+          </Button>
+        )}
+      />
+
+      {!loading && !error ? (
+        <div className="reservation-pulse" aria-label="Reservation summary">
+          {[
+            ['Pending', 'Awaiting approval'],
+            ['Approved', 'Approved bookings'],
+            ['Completed', 'Completed exchanges'],
+            ['Rejected', 'Rejected'],
+            ['Cancelled', 'Cancelled'],
+          ].map(([status, label]) => (
+            <button
+              type="button"
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              aria-pressed={statusFilter === status}
+              className={statusFilter === status ? 'selected' : ''}
+            >
+              <span>{label}</span>
+              <strong>
+                {
+                  reservations.filter(
+                    (reservation) => reservation.status === status,
+                  ).length
+                }
+              </strong>
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="app-panel-muted mb-5 grid gap-4 p-4 md:grid-cols-[minmax(0,1fr)_15rem]">
+        <FormField
+          id="reservation-search"
+          label="Search reservations"
+          type="text"
+          placeholder="Search code, NIC, or station..."
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+        />
+
+        <FormField
+          as="select"
+          id="reservation-status"
+          label="Status"
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+        >
+          <option value="All">All statuses</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+          <option value="Cancelled">Cancelled</option>
+          <option value="QrIssued">QR issued</option>
+          <option value="Verified">Verified</option>
+          <option value="Completed">Completed</option>
+          <option value="Expired">Expired</option>
+        </FormField>
       </div>
 
-      {error && (
-        <Alert className="mb-5" title="Unable to load reservations">{error}</Alert>
-      )}
+      {error ? (
+        <Alert className="mb-5" title="Unable to load reservations">
+          {error}
+        </Alert>
+      ) : null}
 
       <div className="app-table-wrap hidden md:block">
         <div className="overflow-x-auto">
           <table className="app-table">
             <thead>
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Code / Prosumer</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Station</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Energy & Date (UTC)</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                <th scope="col">Code / Prosumer</th>
+                <th scope="col">Station</th>
+                <th scope="col">Energy &amp; date (UTC)</th>
+                <th scope="col">Status</th>
+                <th scope="col" className="text-right">
+                  Actions
+                </th>
               </tr>
             </thead>
+
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
+                  <td
+                    colSpan="5"
+                    className="px-6 py-12 text-center text-slate-500"
+                  >
                     Loading reservations...
                   </td>
                 </tr>
               ) : filteredReservations.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
+                  <td
+                    colSpan="5"
+                    className="px-6 py-12 text-center text-slate-500"
+                  >
                     No reservations found matching the filters.
                   </td>
                 </tr>
               ) : (
-                filteredReservations.map((res) => (
-                  <tr key={res.reservationId} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-mono font-medium text-blue-600">{res.reservationCode}</div>
-                      <div className="text-sm text-slate-500">{res.prosumerNic}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-mono text-slate-900">{res.stationId}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-slate-900">{res.requestedEnergyKwh} kWh</div>
-                      <div className="text-xs text-slate-500">{new Date(res.scheduledStartTimeUtc).toLocaleDateString()}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <ReservationStatusBadge status={res.status} />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end gap-2">
-                      <Button variant="ghost" onClick={() => handleView(res)}>Details</Button>
-                      
-                      {isBackoffice && res.status === 'Pending' && (
-                        <>
-                          <Button onClick={() => setReservationToApprove(res.reservationId)}>Approve</Button>
-                          
-                          <Button variant="danger" onClick={() => handleRejectClick(res.reservationId)}>Reject</Button>
-                        </>
-                      )}</div>
-                    </td>
-                  </tr>
-                ))
+                filteredReservations.map((reservation) => {
+                  const prosumer = usersMap[reservation.prosumerNic];
+                  const station = stations[reservation.stationId];
+
+                  return (
+                    <tr
+                      key={reservation.reservationId}
+                      className="transition-colors hover:bg-slate-50"
+                    >
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="font-mono text-sm font-medium text-emerald-700">
+                          {reservation.reservationCode}
+                        </div>
+                        <div className="mt-1 text-sm font-semibold text-slate-900">
+                          {prosumer
+                            ? `${prosumer.firstName} ${prosumer.lastName}`
+                            : 'Prosumer'}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {reservation.prosumerNic}
+                        </div>
+                      </td>
+
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="text-sm font-medium text-slate-900">
+                          {station?.name || 'Unknown station'}
+                        </div>
+                        <div className="font-mono text-xs text-slate-500">
+                          {station?.stationCode || reservation.stationId}
+                        </div>
+                      </td>
+
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="text-sm font-medium text-slate-900">
+                          {reservation.requestedEnergyKwh} kWh
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {new Date(
+                            reservation.scheduledStartTimeUtc,
+                          ).toLocaleDateString()}
+                        </div>
+                      </td>
+
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <ReservationStatusBadge
+                          status={reservation.status}
+                        />
+                      </td>
+
+                      <td className="whitespace-nowrap px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleView(reservation)}
+                          >
+                            Details
+                          </Button>
+
+                          {isBackoffice
+                            && reservation.status === 'Pending' ? (
+                              <>
+                                <Button
+                                  onClick={() => setReservationToApprove(
+                                    reservation.reservationId,
+                                  )}
+                                >
+                                  Approve
+                                </Button>
+
+                                <Button
+                                  variant="danger"
+                                  onClick={() => handleRejectClick(
+                                    reservation.reservationId,
+                                  )}
+                                >
+                                  Reject
+                                </Button>
+                              </>
+                            ) : null}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
-      <div className="space-y-3 md:hidden">{loading ? <div className="app-panel"><LoadingState label="Loading reservations..." /></div> : filteredReservations.length === 0 ? <div className="app-panel"><EmptyState title="No matching reservations" description="Adjust the search or status filter and try again." /></div> : filteredReservations.map(res => <article key={res.reservationId} className="app-panel p-4"><div className="flex items-start justify-between gap-3"><div><p className="asset-code">{res.reservationCode}</p><p className="mt-1 text-lg font-semibold text-slate-900">{res.requestedEnergyKwh} kWh</p><p className="text-xs text-slate-500">{new Date(res.scheduledStartTimeUtc).toLocaleDateString()} · {res.stationId}</p></div><ReservationStatusBadge status={res.status} /></div><p className="mt-3 border-t border-slate-100 pt-3 text-sm text-slate-600">Prosumer {res.prosumerNic}</p><div className="asset-actions"><Button variant="secondary" onClick={() => handleView(res)}>Details</Button>{isBackoffice && res.status === 'Pending' ? <><Button onClick={() => setReservationToApprove(res.reservationId)}>Approve</Button><Button variant="danger" onClick={() => handleRejectClick(res.reservationId)}>Reject</Button></> : null}</div></article>)}</div>
 
-      {showDetails && (
-        <ReservationDetails 
-          reservation={fullReservationDetails} 
+      <div className="space-y-3 md:hidden">
+        {loading ? (
+          <div className="app-panel">
+            <LoadingState label="Loading reservations..." />
+          </div>
+        ) : filteredReservations.length === 0 ? (
+          <div className="app-panel">
+            <EmptyState
+              title="No matching reservations"
+              description="Adjust the search or status filter and try again."
+            />
+          </div>
+        ) : (
+          filteredReservations.map((reservation) => {
+            const prosumer = usersMap[reservation.prosumerNic];
+            const station = stations[reservation.stationId];
+
+            return (
+              <article
+                key={reservation.reservationId}
+                className="app-panel p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="asset-code">
+                      {reservation.reservationCode}
+                    </p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900">
+                      {reservation.requestedEnergyKwh} kWh
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {new Date(
+                        reservation.scheduledStartTimeUtc,
+                      ).toLocaleDateString()}
+                      {' · '}
+                      {station?.name || reservation.stationId}
+                    </p>
+                  </div>
+
+                  <ReservationStatusBadge status={reservation.status} />
+                </div>
+
+                <div className="mt-3 border-t border-slate-100 pt-3">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {prosumer
+                      ? `${prosumer.firstName} ${prosumer.lastName}`
+                      : 'Prosumer'}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {reservation.prosumerNic}
+                  </p>
+                </div>
+
+                <div className="asset-actions">
+                  <Button
+                    variant="secondary"
+                    onClick={() => handleView(reservation)}
+                  >
+                    Details
+                  </Button>
+
+                  {isBackoffice
+                    && reservation.status === 'Pending' ? (
+                      <>
+                        <Button
+                          onClick={() => setReservationToApprove(
+                            reservation.reservationId,
+                          )}
+                        >
+                          Approve
+                        </Button>
+
+                        <Button
+                          variant="danger"
+                          onClick={() => handleRejectClick(
+                            reservation.reservationId,
+                          )}
+                        >
+                          Reject
+                        </Button>
+                      </>
+                    ) : null}
+                </div>
+              </article>
+            );
+          })
+        )}
+      </div>
+
+      {showDetails ? (
+        <ReservationDetails
+          reservation={fullReservationDetails}
+          stations={stations}
+          usersMap={usersMap}
           onClose={() => {
             setShowDetails(false);
             setFullReservationDetails(null);
-          }} 
+          }}
         />
-      )}
+      ) : null}
 
-      {showRejectDialog && (
+      {showRejectDialog ? (
         <RejectDialog
           isOpen={showRejectDialog}
           isSubmitting={isSubmitting}
@@ -224,8 +486,18 @@ const Reservations = () => {
           }}
           onConfirm={handleRejectConfirm}
         />
-      )}
-      <ConfirmDialog open={Boolean(reservationToApprove)} title="Approve reservation" description="Approve this reservation and allow it to proceed to the next workflow stage?" confirmLabel="Approve reservation" danger={false} loading={isSubmitting} onClose={() => setReservationToApprove(null)} onConfirm={handleApprove} />
+      ) : null}
+
+      <ConfirmDialog
+        open={Boolean(reservationToApprove)}
+        title="Approve reservation"
+        description="Approve this reservation and allow it to proceed to the next workflow stage?"
+        confirmLabel="Approve reservation"
+        danger={false}
+        loading={isSubmitting}
+        onClose={() => setReservationToApprove(null)}
+        onConfirm={handleApprove}
+      />
     </MainLayout>
   );
 };
