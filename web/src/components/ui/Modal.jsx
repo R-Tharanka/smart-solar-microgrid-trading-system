@@ -7,8 +7,8 @@ export default function Modal({ open, title, description, onClose, children, siz
       <div className="fixed inset-0 bg-graphite-950/75 backdrop-blur-sm" aria-hidden="true" />
       <div className="fixed inset-0 overflow-y-auto p-4 sm:p-6">
         <div className="flex min-h-full items-center justify-center">
-          <DialogPanel transition className={`w-full ${size} max-h-[calc(100svh-2rem)] overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-2xl duration-200 data-[closed]:translate-y-3 data-[closed]:opacity-0`}>
-            <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4 sm:px-6">
+          <DialogPanel transition className={`energy-dialog w-full ${size} max-h-[calc(100svh-2rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl duration-200 data-[closed]:translate-y-3 data-[closed]:opacity-0`}>
+            <div className="flex items-start justify-between gap-3 border-b border-slate-200 bg-[#f1f5eb] px-5 py-5 sm:px-6">
               <div>
                 <DialogTitle className="text-lg font-semibold text-slate-900">{title}</DialogTitle>
                 {description ? <p className="mt-1 text-sm text-slate-500">{description}</p> : null}

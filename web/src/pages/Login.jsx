@@ -8,6 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import EnergyNetwork from '../components/EnergyNetwork';
 import BrandMark from '../components/BrandMark';
 import Alert from '../components/ui/Alert';
 import Button from '../components/ui/Button';
@@ -54,7 +55,6 @@ export default function Login() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-graphite-950">
-      <img src="/assets/microgrid-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-25" aria-hidden="true" />
       <div className="network-grid absolute inset-0" aria-hidden="true" />
       <div className="absolute inset-0 bg-gradient-to-r from-graphite-950 via-graphite-950/95 to-graphite-950/75" aria-hidden="true" />
       <header className="relative z-10 mx-auto flex h-20 max-w-[1500px] items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -65,15 +65,16 @@ export default function Login() {
       <main className="relative z-10 mx-auto grid min-h-[calc(100vh-5rem)] max-w-[1500px] items-center gap-12 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_28rem] lg:px-8">
         <section className="hidden max-w-xl lg:block">
           <p className="text-sm font-bold uppercase text-emerald-300" style={{ letterSpacing: '0.08em' }}>Secure operations access</p>
-          <h1 className="mt-4 text-5xl font-bold leading-tight text-white">Your role.<br />Your energy workspace.</h1>
-          <p className="mt-5 text-base leading-7 text-slate-300">Sign in with your staff email or Prosumer business identifier. The platform will route you to the tools authorized for your account.</p>
-          <div className="mt-8 flex gap-6 border-t border-white/10 pt-6 text-sm text-slate-400"><span className="flex items-center gap-2"><LockClosedIcon className="h-4 w-4 text-emerald-300" /> Protected routes</span><span className="flex items-center gap-2"><SignalIcon className="h-4 w-4 text-cyan-300" /> Central API</span></div>
+          <h1 className="mt-4 text-5xl font-bold leading-tight text-white">Good energy.<br />Great connections.</h1>
+          <p className="mt-5 text-base leading-7 text-slate-300">Your connection to a smarter energy network. Coordinate solar capacity, manage reservations and move energy with confidence.</p>
+          <div className="mt-8 flex gap-6 border-t border-white/10 pt-6 text-sm text-slate-400"><span className="flex items-center gap-2"><LockClosedIcon className="h-4 w-4 text-emerald-300" /> Trusted access</span><span className="flex items-center gap-2"><SignalIcon className="h-4 w-4 text-cyan-300" /> Connected energy</span></div>
+          <div className="login-network"><EnergyNetwork compact /></div>
         </section>
 
         <div className="w-full max-w-md justify-self-center lg:justify-self-end">
           <div className="mb-6 text-center lg:hidden"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-md border border-emerald-300/40 bg-emerald-400/10 text-emerald-300 shadow-energy"><BoltIcon className="h-7 w-7" /></div><h1 className="mt-4 text-2xl font-bold text-white">Secure workspace access</h1></div>
 
-        <section className="rounded-lg border border-white/10 bg-white p-6 shadow-2xl sm:p-8" aria-labelledby="login-heading">
+        <section className="rounded-2xl border border-white/10 bg-[#f6f8f1] p-6 shadow-2xl sm:p-8" aria-labelledby="login-heading">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div>
               <h2 id="login-heading" className="text-xl font-semibold text-slate-950">Sign in</h2>
@@ -93,7 +94,7 @@ export default function Login() {
               label="Email or NIC"
               type="text"
               autoComplete="username"
-              placeholder="admin@smartsolar.com or 200012345678"
+              placeholder="Your email address or NIC"
               value={identifier}
               onChange={(event) => {
                 setIdentifier(event.target.value);

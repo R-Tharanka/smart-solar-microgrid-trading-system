@@ -63,7 +63,7 @@ export default function Security() {
 
   return (
     <MainLayout title="Account security">
-      <PageHeader eyebrow="Authentication" title="Change password" description="Update your password through the central identity service. Password values are never stored by the web client." />
+      <PageHeader eyebrow="Authentication" title="Change password" description="Protect your connection to the energy network with a strong, unique password." />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,680px)_320px]">
         <form onSubmit={submit} className="app-panel p-5 sm:p-6" noValidate>
           <input type="email" name="username" autoComplete="username" value={user?.email || ''} readOnly className="sr-only" tabIndex={-1} aria-hidden="true" />
@@ -91,7 +91,7 @@ export default function Security() {
           <h2 className="mt-3 font-semibold text-cyan-950">Security notes</h2>
           <ul className="mt-3 space-y-2 text-sm leading-6 text-cyan-900">
             <li>Use a unique password for this system.</li>
-            <li>The current password is verified by the API.</li>
+            <li>Confirm your current password before choosing a new one.</li>
             <li>No password is written to browser storage.</li>
           </ul>
         </aside>

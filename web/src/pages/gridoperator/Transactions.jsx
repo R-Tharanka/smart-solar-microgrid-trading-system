@@ -1,3 +1,4 @@
+import OperationProgress from '../../components/OperationProgress';
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
   ArrowPathIcon,
@@ -119,17 +120,18 @@ export default function Transactions() {
         eyebrow="Operator verification"
         title="Energy transactions"
         description={isOperator
-          ? 'Verify secure reservation QR payloads, complete energy transfers and review the audit trail.'
+          ? 'Verify reservation credentials, complete energy transfers and review the exchange history.'
           : 'Review verified and completed energy-transfer records and their operator audit trail.'}
         actions={<Button variant="secondary" icon={ArrowPathIcon} onClick={loadTransactions} loading={loading}>Refresh</Button>}
       />
 
+      <OperationProgress />
       {error ? <Alert className="mb-5" title="Transaction request failed">{error}</Alert> : null}
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <MetricCard label="Awaiting verification" value={counts.awaitingVerification} icon={ClockIcon} tone="amber" />
-        <MetricCard label="Ready to finalize" value={counts.awaitingFinalization} icon={CheckBadgeIcon} tone="cyan" />
-        <MetricCard label="Completed transfers" value={counts.completed} icon={BoltIcon} />
+        <MetricCard label="Awaiting verification" value={loading || error ? '—' : counts.awaitingVerification} icon={ClockIcon} tone="amber" />
+        <MetricCard label="Ready to finalize" value={loading || error ? '—' : counts.awaitingFinalization} icon={CheckBadgeIcon} tone="cyan" />
+        <MetricCard label="Completed transfers" value={loading || error ? '—' : counts.completed} icon={BoltIcon} />
       </div>
 
       {isOperator ? <div className="mb-6"><VerifyTransactionPanel onVerify={verify} submitting={submitting} /></div> : null}
@@ -143,7 +145,7 @@ export default function Transactions() {
           placeholder="Reservation code, NIC or station ID"
         />
         <FormField as="select" id="transaction-status" label="Status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-          {statusOptions.map((status) => <option key={status} value={status}>{status === 'All' ? 'All transaction states' : status}</option>)}
+          {statusOptions.map((status) => <option key={status} value={status}>{status === 'All' ? 'All transaction states' : status === 'QrIssued' ? 'QR issued' : status}</option>)}
         </FormField>
       </div>
 

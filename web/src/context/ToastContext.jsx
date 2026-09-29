@@ -28,7 +28,7 @@ export function ToastProvider({ children }) {
           return (
             <div
               key={toast.id}
-              className={`pointer-events-auto flex animate-fade-up items-start gap-3 rounded-lg border p-4 shadow-panel ${
+              className={`energy-toast pointer-events-auto flex animate-fade-up items-start gap-3 rounded-xl border p-4 shadow-panel ${
                 isError
                   ? 'border-red-200 bg-red-50 text-red-900'
                   : 'border-emerald-200 bg-white text-slate-800'

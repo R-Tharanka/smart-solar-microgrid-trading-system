@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowPathIcon, CalendarDaysIcon, CheckCircleIcon, ClockIcon, MapPinIcon, NoSymbolIcon, UserGroupIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import OperationsHero from '../../components/OperationsHero';
 import MainLayout from '../../layouts/MainLayout';
 import apiClient from '../../services/api';
 import Alert from '../../components/ui/Alert';
@@ -36,6 +37,7 @@ export default function BackofficeDashboard() {
   return (
     <MainLayout title="Backoffice overview">
       <PageHeader eyebrow="Administration" title="Operational overview" description="Reservation activity and direct access to core microgrid administration." actions={<Button variant="secondary" icon={ArrowPathIcon} onClick={fetchStats} loading={loading}>Refresh</Button>} />
+      <OperationsHero title="A clearer view of your energy network." description="Connect the people, infrastructure and reservations behind every energy exchange. Your network, coordinated from one place." to="/backoffice/stations" action="Explore your stations" />
       {error ? <Alert title="Unable to refresh dashboard" className="mb-6">{error}</Alert> : null}
       {loading ? <Panel><LoadingState label="Loading operational metrics..." /></Panel> : stats ? (
         <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -48,7 +50,7 @@ export default function BackofficeDashboard() {
         </div>
       ) : null}
       <Panel className="p-5 sm:p-6">
-        <SectionHeader title="Administrative workspaces" description="Move directly to a focused management area." />
+        <SectionHeader title="Network workspaces" description="Move directly to a focused management area." />
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {actions.map(([path, Icon, title, description]) => <Link key={path} to={path} className="group flex min-h-28 items-start gap-4 rounded-md border border-slate-200 p-4 transition hover:border-emerald-300 hover:bg-emerald-50/50"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-slate-900 text-emerald-300"><Icon className="h-5 w-5" /></span><span><span className="font-bold text-slate-900 group-hover:text-emerald-800">{title}</span><span className="mt-1 block text-sm leading-5 text-slate-500">{description}</span></span></Link>)}
         </div>

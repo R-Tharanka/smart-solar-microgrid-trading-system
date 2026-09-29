@@ -1,3 +1,4 @@
+import ParticipantIdentity from '../../components/ParticipantIdentity';
 import { ArrowPathIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import CreateStaffForm from '../../components/staff/CreateStaffForm';
@@ -100,9 +101,9 @@ export default function Staff() {
   return (
     <MainLayout title="Staff accounts">
       <PageHeader
-        eyebrow="Identity administration"
+        eyebrow="Operations team"
         title="Staff accounts"
-        description="Create and manage Backoffice and Grid Operator access. Authorization rules are enforced by the central API."
+        description="Bring your operations team together. Manage Backoffice and Grid Operator accounts and access."
         actions={(
           <>
             <Button variant="secondary" icon={ArrowPathIcon} onClick={loadStaff} disabled={loading}>Refresh</Button>
@@ -146,7 +147,7 @@ export default function Staff() {
                     const isCurrent = account.email === user.email;
                     return (
                       <tr key={account.email} className="hover:bg-slate-50">
-                        <td className="px-5 py-4"><p className="font-semibold text-slate-900">{account.firstName} {account.lastName}</p><p className="text-sm text-slate-500">{account.email}</p></td>
+                        <td className="px-5 py-4"><ParticipantIdentity firstName={account.firstName} lastName={account.lastName} detail={account.email} /></td>
                         <td className="px-5 py-4"><StatusBadge value={account.role} /></td>
                         <td className="px-5 py-4"><StatusBadge value={account.status} /></td>
                         <td className="px-5 py-4 text-sm text-slate-500">{isCurrent ? 'Current account' : 'Staff'}</td>
@@ -183,7 +184,7 @@ export default function Staff() {
         open={Boolean(pendingStatus)}
         title={`${pendingStatus?.status === 'Active' ? 'Deactivate' : 'Reactivate'} staff account?`}
         description={pendingStatus?.status === 'Active'
-          ? `${pendingStatus?.email} will immediately lose access, including with an existing token.`
+          ? `${pendingStatus?.email} will immediately lose access, including any active session.`
           : `${pendingStatus?.email} will regain access and can sign in again.`}
         confirmLabel={pendingStatus?.status === 'Active' ? 'Deactivate account' : 'Reactivate account'}
         danger={pendingStatus?.status === 'Active'}

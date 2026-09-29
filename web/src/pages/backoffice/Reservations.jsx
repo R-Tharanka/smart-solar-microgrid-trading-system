@@ -126,6 +126,7 @@ const Reservations = () => {
     <MainLayout title="Reservations" roleNav={navItems}>
       <PageHeader eyebrow="Booking operations" title="Reservation management" description="Search, review and progress Prosumer energy reservations." actions={<Button variant="secondary" icon={ArrowPathIcon} onClick={fetchReservations} loading={loading}>Refresh</Button>} />
 
+      {!loading && !error && <div className="reservation-pulse" aria-label="Reservation summary">{[['Pending', 'Awaiting approval'], ['Approved', 'Approved bookings'], ['Completed', 'Completed exchanges'], ['Rejected', 'Rejected'], ['Cancelled', 'Cancelled']].map(([status, label]) => <button type="button" key={status} onClick={() => setStatusFilter(status)} aria-pressed={statusFilter === status} className={statusFilter === status ? 'selected' : ''}><span>{label}</span><strong>{reservations.filter((item) => item.status === status).length}</strong></button>)}</div>}
       <div className="app-panel-muted mb-5 grid gap-4 p-4 md:grid-cols-[minmax(0,1fr)_15rem]">
           <FormField id="reservation-search" label="Search reservations"
             type="text"
@@ -142,7 +143,7 @@ const Reservations = () => {
             <option value="Approved">Approved</option>
             <option value="Rejected">Rejected</option>
             <option value="Cancelled">Cancelled</option>
-            <option value="QrIssued">QrIssued</option>
+            <option value="QrIssued">QR issued</option>
             <option value="Verified">Verified</option>
             <option value="Completed">Completed</option>
             <option value="Expired">Expired</option>

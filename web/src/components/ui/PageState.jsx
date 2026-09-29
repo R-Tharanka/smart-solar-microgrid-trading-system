@@ -1,10 +1,10 @@
-import { ExclamationCircleIcon, InboxIcon } from '@heroicons/react/24/outline';
+import { ExclamationCircleIcon, BoltIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
 import Button from './Button';
 
 export function LoadingState({ label = 'Loading...' }) {
   return (
     <div className="flex min-h-48 flex-col items-center justify-center gap-3 text-slate-500" role="status">
-      <span className="h-7 w-7 animate-spin rounded-full border-2 border-emerald-500 border-r-transparent" aria-hidden="true" />
+      <span className="energy-loader" aria-hidden="true"><BoltIcon className="h-5 w-5" /></span>
       <p className="text-sm font-medium">{label}</p>
     </div>
   );
@@ -21,7 +21,7 @@ export function FullPageLoading() {
 export function EmptyState({ title, description, actionLabel, onAction }) {
   return (
     <div className="flex min-h-52 flex-col items-center justify-center px-6 text-center">
-      <InboxIcon className="h-10 w-10 text-slate-400" aria-hidden="true" />
+      <span className="empty-network" aria-hidden="true"><Squares2X2Icon className="h-7 w-7" /></span>
       <h3 className="mt-3 text-base font-semibold text-slate-800">{title}</h3>
       {description ? <p className="mt-1 max-w-md text-sm text-slate-500">{description}</p> : null}
       {onAction ? <Button className="mt-4" variant="secondary" onClick={onAction}>{actionLabel}</Button> : null}
