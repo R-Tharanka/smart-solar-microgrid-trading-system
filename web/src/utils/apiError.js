@@ -12,6 +12,17 @@ const FRIENDLY_MESSAGES = {
   USER_LAST_ADMIN: 'The final active Backoffice account cannot be deactivated.',
   USER_NOT_FOUND: 'The requested account could not be found.',
   VALIDATION_REQUEST: 'Review the highlighted information and try again.',
+  TRANSACTION_NOT_FOUND: 'The requested reservation transaction could not be found.',
+  TRANSACTION_FORBIDDEN: 'You cannot issue or manage this reservation transaction.',
+  QR_STATUS_INVALID: 'This reservation is not awaiting QR verification.',
+  QR_WINDOW_EXPIRED: 'The reservation window has already expired.',
+  QR_ALREADY_ISSUED: 'A QR transaction has already been issued for this reservation.',
+  QR_EXPIRED: 'This QR transaction has expired. Request a new approved transaction.',
+  QR_TOKEN_INVALID: 'The QR transaction token is invalid.',
+  QR_VERIFY_CONFLICT: 'This QR transaction was already processed or changed.',
+  FINALIZE_STATUS_INVALID: 'Only a verified transaction can be finalized.',
+  FINALIZE_CONFLICT: 'This transfer was already finalized or changed.',
+  TRANSFER_ENERGY_INVALID: 'Transferred energy must be positive and cannot exceed the reserved amount.',
 };
 
 export function getApiError(error, fallback = 'The request could not be completed.') {
@@ -34,6 +45,7 @@ export function getApiError(error, fallback = 'The request could not be complete
     403: 'You do not have permission to perform this action.',
     404: 'The requested item could not be found.',
     409: 'The request conflicts with the current account state.',
+    422: 'The request violates an energy transaction rule.',
     500: 'The service encountered an error. Try again later.',
   }[status];
 
