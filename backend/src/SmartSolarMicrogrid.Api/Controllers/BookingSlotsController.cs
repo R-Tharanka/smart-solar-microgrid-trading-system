@@ -26,9 +26,9 @@ public sealed class BookingSlotsController(IBookingSlotService bookingSlotServic
         return Ok(new ApiEnvelope<BookingSlotResponse>(slot));
     }
 
-    // Updates an energy slot when no active reservation prevents the change.
+    // Allows Backoffice and Grid Operator staff to update an unreserved energy slot.
     [HttpPut("{slotCode}")]
-    [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
+    [Authorize(Policy = AuthorizationPolicies.Staff)]
     [ProducesResponseType<ApiEnvelope<BookingSlotResponse>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiEnvelope<BookingSlotResponse>>> Update(
         string slotCode,
