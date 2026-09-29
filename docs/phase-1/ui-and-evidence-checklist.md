@@ -2,6 +2,8 @@
 
 Purpose: ensure Phase 1 defines every expected web/mobile surface and the evidence each member must collect later.
 
+Member 1 React implementation status and the final live evidence procedure are documented in `docs/web/member-1-react-web.md`.
+
 ## Web Screens
 
 | Screen | Owner | Main API Modules | Evidence |
@@ -51,4 +53,3 @@ Purpose: ensure Phase 1 defines every expected web/mobile surface and the eviden
 | QR verification | Member 4 | Valid QR, invalid QR, expired QR |
 | Transfer finalization | Member 4 | Successful completion, duplicate completion blocked |
 | Deployment | Member 4, Member 1 reviewer | IIS URL called by web and Android |
-

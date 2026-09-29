@@ -69,7 +69,7 @@ Audit date: 2026-09-29
 | Stations and slots | Backend/web implemented | Android maps/slots and live evidence |
 | Reservations and dashboards | Backend/staff web implemented | Android workflow, transaction hardening and live evidence |
 | QR verification and finalization | Backend implemented with validation risk | MVC DTO test/fix, web/mobile flows and live evidence |
-| React web client | Partial | Staff/profile/transaction pages and tests |
+| React web client | Partial overall | Member 4 transaction pages and final live evidence |
 | Native Android Java and SQLite | Not started | Entire mobile application |
 | IIS deployment | Not started | Publish, configure, test and document |
 | Final testing/report evidence | Partial | Full Postman/E2E/screenshots/contributions/report |
