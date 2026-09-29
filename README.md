@@ -1,5 +1,12 @@
 # smart-solar-microgrid-trading-system
-An end-to-end Smart Solar Microgrid Trading System. The project includes a React and Tailwind CSS web application, a native Android application built with Java and SQLite, and a centralized C# Web API using MongoDB and IIS hosting to manage solar prosumers, microgrid nodes, energy slot reservations, and operator-verified energy transfers.
+An end-to-end Smart Solar Microgrid Trading System. The planned system combines a React and Tailwind CSS web application, a native Android application built with Java and SQLite, and a centralized C# Web API using MongoDB and IIS hosting to manage solar prosumers, microgrid nodes, energy slot reservations, and operator-verified energy transfers.
+
+## Current project status
+
+The central backend is substantially implemented and its Release test suite currently passes 93/93 tests. The React staff client is partial, the native Android client has not been started, and IIS deployment plus final evidence remain pending.
+
+- [Full system progress and completion report](docs/project-status/full-system-progress-report.md)
+- [Requirements traceability matrix](docs/requirements/requirements-traceability-matrix.md)
 
 ## Phase 1 foundation
 
@@ -25,9 +32,10 @@ Phase 1 requirements analysis and project foundation documents:
 - [Phase 2 diagrams](docs/architecture/phase-2-diagrams.md)
 - [Verification and team handoff](docs/phase-2/verification-and-handoff.md)
 
-## Phase 3 identity backend
+## Backend implementation
 
 - [Member 1 implementation and verification](docs/phase-3/member-1-identity-backend.md)
+- [Member 2 stations and slots implementation](docs/phase-4/member-2-stations-slots-backend.md)
 - [Implemented identity API contract](docs/api-contracts/identity-api.md)
 - [Member integration contract](docs/phase-3/member-integration-contract.md)
 - [Postman collection and execution guide](docs/postman/README.md)

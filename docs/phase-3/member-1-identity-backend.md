@@ -78,7 +78,7 @@ Health endpoints are `/health/live` and `/health/ready`. The readiness endpoint 
 | MongoDB indexes and persistence | Startup initializer | Requires live Atlas verification |
 | HTTP status/response evidence | Postman collection prepared | Requires Collection Runner capture |
 
-Current automated result: 43 tests passed, 0 failed.
+Current repository-wide backend result (2026-09-29): 93 tests passed, 0 failed, 0 skipped. Identity remains covered by its service, DTO, JWT and authorization tests; live Atlas HTTP/Postman evidence is still required.
 
 ## Member 3 Integration Contract
 
