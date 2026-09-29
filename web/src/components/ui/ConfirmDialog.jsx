@@ -16,7 +16,7 @@ export default function ConfirmDialog({
     <Dialog open={open} onClose={loading ? () => {} : onClose} className="relative z-50">
       <div className="fixed inset-0 bg-graphite-950/75 backdrop-blur-sm" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center overflow-y-auto p-4">
-        <DialogPanel transition className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-2xl duration-200 data-[closed]:translate-y-3 data-[closed]:opacity-0">
+        <DialogPanel transition className="energy-dialog w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl duration-200 data-[closed]:translate-y-3 data-[closed]:opacity-0">
           <div className="flex items-start gap-4">
             <div className={`rounded-full p-2 ${danger ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'}`}>
               <ExclamationTriangleIcon className="h-6 w-6" aria-hidden="true" />

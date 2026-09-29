@@ -34,7 +34,7 @@ export function getApiError(error, fallback = 'The request could not be complete
     return {
       status: null,
       errorCode: 'NETWORK_ERROR',
-      message: 'The API is unavailable. Check your connection and try again.',
+      message: 'The platform is temporarily unavailable. Check your connection and try again.',
       validationErrors: {},
     };
   }

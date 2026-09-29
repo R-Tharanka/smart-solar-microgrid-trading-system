@@ -9,6 +9,7 @@ const styles = {
   Prosumer: 'border-violet-200 bg-violet-50 text-violet-700',
   Maintenance: 'border-amber-200 bg-amber-50 text-amber-700',
   Available: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  Reserved: 'border-violet-200 bg-violet-50 text-violet-700',
   Unavailable: 'border-slate-300 bg-slate-100 text-slate-600',
   FullyBooked: 'border-amber-200 bg-amber-50 text-amber-700',
   Approved: 'border-cyan-200 bg-cyan-50 text-cyan-700',
@@ -22,8 +23,8 @@ const styles = {
 
 export default function StatusBadge({ value }) {
   return (
-    <span className={clsx('inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold', styles[value] || 'border-slate-200 bg-white text-slate-600')}>
-      {value}
+    <span className={clsx('energy-badge inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold', styles[value] || 'border-slate-200 bg-white text-slate-600')}>
+      {{ QrIssued: 'QR issued', GridOperator: 'Grid operator', FullyBooked: 'Fully booked' }[value] || value}
     </span>
   );
 }

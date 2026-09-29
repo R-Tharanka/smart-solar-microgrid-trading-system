@@ -99,7 +99,7 @@ export default function Profile() {
 
   return (
     <MainLayout title="My profile">
-      <PageHeader eyebrow="Account identity" title="My profile" description="Review your server-managed identity and update the profile fields available to your role." />
+      <PageHeader eyebrow="Account identity" title="My profile" description="Keep your energy network identity and contact details up to date." />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <form onSubmit={save} className="app-panel p-5 sm:p-6" noValidate>
@@ -111,7 +111,7 @@ export default function Profile() {
           <div className="grid gap-5 sm:grid-cols-2">
             <FormField id="profile-first-name" label="First name" value={form.firstName} onChange={(e) => update('firstName', e.target.value)} error={errors.firstName} maxLength={100} disabled={saving} />
             <FormField id="profile-last-name" label="Last name" value={form.lastName} onChange={(e) => update('lastName', e.target.value)} error={errors.lastName} maxLength={100} disabled={saving} />
-            <FormField id="profile-email" label="Email address" value={user.email} disabled hint="Email is a server-controlled account identifier." />
+            <FormField id="profile-email" label="Email address" value={user.email} disabled hint="Your sign-in email cannot be changed here." />
             <FormField id="profile-nic" label="NIC" value={user.nic || 'Not applicable for staff'} disabled hint="NIC is only assigned to Prosumer accounts." />
             {user.role === 'Prosumer' ? (
               <>
@@ -139,7 +139,7 @@ export default function Profile() {
           {user.role === 'Prosumer' ? (
             <section className="app-panel border-red-200 p-5">
               <h2 className="font-semibold text-slate-900">Account deactivation</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Deactivation is blocked while you have a non-terminal reservation.</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Resolve active reservations before deactivating. Only Backoffice can restore your account.</p>
               <Button className="mt-4 w-full" variant="danger" icon={PowerIcon} onClick={() => setDeactivateOpen(true)}>Deactivate my account</Button>
             </section>
           ) : null}

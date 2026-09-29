@@ -109,23 +109,11 @@ const Reservations = () => {
     return matchesStatus && matchesSearch;
   });
 
-  const navItems = isBackoffice ? [
-    { name: 'Dashboard', path: '/backoffice' },
-    { name: 'Prosumer Management', path: '/backoffice/prosumers' },
-    { name: 'Microgrid Nodes', path: '/backoffice/stations' },
-    { name: 'Energy Slots', path: '/backoffice/slots' },
-    { name: 'Reservations', path: '/backoffice/reservations' },
-  ] : [
-    { name: 'Dashboard', path: '/grid-operator' },
-    { name: 'Stations / Nodes', path: '/grid-operator/stations' },
-    { name: 'Slots', path: '/grid-operator/slots' },
-    { name: 'Bookings / Reservations', path: '/grid-operator/reservations' },
-  ];
-
   return (
-    <MainLayout title="Reservations" roleNav={navItems}>
+    <MainLayout title="Reservations">
       <PageHeader eyebrow="Booking operations" title="Reservation management" description="Search, review and progress Prosumer energy reservations." actions={<Button variant="secondary" icon={ArrowPathIcon} onClick={fetchReservations} loading={loading}>Refresh</Button>} />
 
+      {!loading && !error && <div className="reservation-pulse" aria-label="Reservation summary">{[['Pending', 'Awaiting approval'], ['Approved', 'Approved bookings'], ['Completed', 'Completed exchanges'], ['Rejected', 'Rejected'], ['Cancelled', 'Cancelled']].map(([status, label]) => <button type="button" key={status} onClick={() => setStatusFilter(status)} aria-pressed={statusFilter === status} className={statusFilter === status ? 'selected' : ''}><span>{label}</span><strong>{reservations.filter((item) => item.status === status).length}</strong></button>)}</div>}
       <div className="app-panel-muted mb-5 grid gap-4 p-4 md:grid-cols-[minmax(0,1fr)_15rem]">
           <FormField id="reservation-search" label="Search reservations"
             type="text"
@@ -142,7 +130,7 @@ const Reservations = () => {
             <option value="Approved">Approved</option>
             <option value="Rejected">Rejected</option>
             <option value="Cancelled">Cancelled</option>
-            <option value="QrIssued">QrIssued</option>
+            <option value="QrIssued">QR issued</option>
             <option value="Verified">Verified</option>
             <option value="Completed">Completed</option>
             <option value="Expired">Expired</option>
@@ -195,31 +183,17 @@ const Reservations = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <ReservationStatusBadge status={res.status} />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                      <button 
-                        onClick={() => handleView(res)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        View
-                      </button>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end gap-2">
+                      <Button variant="ghost" onClick={() => handleView(res)}>Details</Button>
                       
                       {isBackoffice && res.status === 'Pending' && (
                         <>
-                          <button 
-                            onClick={() => setReservationToApprove(res.reservationId)}
-                            className="text-emerald-600 hover:text-emerald-900"
-                          >
-                            Approve
-                          </button>
+                          <Button onClick={() => setReservationToApprove(res.reservationId)}>Approve</Button>
                           
-                          <button 
-                            onClick={() => handleRejectClick(res.reservationId)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Reject
-                          </button>
+                          <Button variant="danger" onClick={() => handleRejectClick(res.reservationId)}>Reject</Button>
                         </>
-                      )}
+                      )}</div>
                     </td>
                   </tr>
                 ))
@@ -228,7 +202,7 @@ const Reservations = () => {
           </table>
         </div>
       </div>
-      <div className="space-y-3 md:hidden">{loading ? <div className="app-panel"><LoadingState label="Loading reservations..." /></div> : filteredReservations.length === 0 ? <div className="app-panel"><EmptyState title="No matching reservations" description="Adjust the search or status filter and try again." /></div> : filteredReservations.map(res => <article key={res.reservationId} className="app-panel p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-mono text-xs font-bold text-emerald-700">{res.reservationCode}</p><p className="mt-1 text-sm font-semibold text-slate-900">{res.requestedEnergyKwh} kWh</p><p className="text-xs text-slate-500">{new Date(res.scheduledStartTimeUtc).toLocaleDateString()} · {res.stationId}</p></div><ReservationStatusBadge status={res.status} /></div><p className="mt-3 border-t border-slate-100 pt-3 text-sm text-slate-600">Prosumer {res.prosumerNic}</p><div className="mt-3 flex gap-3 text-sm font-bold"><button onClick={() => handleView(res)} className="text-emerald-700">View</button>{isBackoffice && res.status === 'Pending' ? <><button onClick={() => setReservationToApprove(res.reservationId)} className="text-cyan-700">Approve</button><button onClick={() => handleRejectClick(res.reservationId)} className="text-red-700">Reject</button></> : null}</div></article>)}</div>
+      <div className="space-y-3 md:hidden">{loading ? <div className="app-panel"><LoadingState label="Loading reservations..." /></div> : filteredReservations.length === 0 ? <div className="app-panel"><EmptyState title="No matching reservations" description="Adjust the search or status filter and try again." /></div> : filteredReservations.map(res => <article key={res.reservationId} className="app-panel p-4"><div className="flex items-start justify-between gap-3"><div><p className="asset-code">{res.reservationCode}</p><p className="mt-1 text-lg font-semibold text-slate-900">{res.requestedEnergyKwh} kWh</p><p className="text-xs text-slate-500">{new Date(res.scheduledStartTimeUtc).toLocaleDateString()} · {res.stationId}</p></div><ReservationStatusBadge status={res.status} /></div><p className="mt-3 border-t border-slate-100 pt-3 text-sm text-slate-600">Prosumer {res.prosumerNic}</p><div className="asset-actions"><Button variant="secondary" onClick={() => handleView(res)}>Details</Button>{isBackoffice && res.status === 'Pending' ? <><Button onClick={() => setReservationToApprove(res.reservationId)}>Approve</Button><Button variant="danger" onClick={() => handleRejectClick(res.reservationId)}>Reject</Button></> : null}</div></article>)}</div>
 
       {showDetails && (
         <ReservationDetails 
