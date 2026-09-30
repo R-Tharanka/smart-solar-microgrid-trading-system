@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="solar_green">#176B52</color>
+    <color name="solar_green_dark">#0D4A38</color>
+    <color name="solar_accent">#F5B700</color>
+    <color name="surface_light">#F6FAF8</color>
+    <color name="text_primary">#17211D</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

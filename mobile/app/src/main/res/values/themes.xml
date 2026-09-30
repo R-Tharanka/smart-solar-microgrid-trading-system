@@ -1,0 +1,13 @@
+<resources>
+    <style name="Base.Theme.SmartSolarMicrogrid" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/solar_green</item>
+        <item name="colorPrimaryDark">@color/solar_green_dark</item>
+        <item name="colorAccent">@color/solar_accent</item>
+        <item name="android:colorBackground">@color/surface_light</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:statusBarColor">@color/solar_green_dark</item>
+        <item name="android:navigationBarColor">@color/surface_light</item>
+    </style>
+
+    <style name="Theme.SmartSolarMicrogrid" parent="Base.Theme.SmartSolarMicrogrid" />
+</resources>
