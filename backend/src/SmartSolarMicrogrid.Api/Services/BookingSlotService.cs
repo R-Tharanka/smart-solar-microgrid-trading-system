@@ -210,7 +210,9 @@ public sealed class BookingSlotService(
         var approvedReservationsEnergy = await reservationQueryService.GetTotalApprovedEnergyForStationAsync(station.Id, cancellationToken);
         var allocatedCapacity = activeSlotsAvailableEnergy + approvedReservationsEnergy;
         
-        var remainingCapacity = station.BatteryStorageKwh - allocatedCapacity;
+        var availableIncomingCapacity = station.CapacityKwh - station.BatteryStorageKwh;
+        var remainingCapacity = availableIncomingCapacity - allocatedCapacity;
+        
         if (excludedId.HasValue)
         {
             var excludedSlot = activeSlots.FirstOrDefault(s => s.Id == excludedId.Value);

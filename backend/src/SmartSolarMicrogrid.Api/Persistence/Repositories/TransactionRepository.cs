@@ -80,8 +80,16 @@ public sealed class TransactionRepository(MongoDbContext context) : ITransaction
         }
 
         var stations = context.Database.GetCollection<SolarStation>(CollectionNames.SolarStations);
+        
+        var station = await stations.Find(session, s => s.Id == stationId).FirstOrDefaultAsync(cancellationToken);
+        if (station == null || station.BatteryStorageKwh + actualEnergyTransferredKwh > station.CapacityKwh)
+        {
+            await session.AbortTransactionAsync(cancellationToken);
+            return false;
+        }
+
         var stationUpdate = Builders<SolarStation>.Update
-            .Inc(s => s.BatteryStorageKwh, -actualEnergyTransferredKwh)
+            .Inc(s => s.BatteryStorageKwh, actualEnergyTransferredKwh)
             .Set(s => s.UpdatedAtUtc, finalizedAtUtc);
         await stations.UpdateOneAsync(session, s => s.Id == stationId, stationUpdate, cancellationToken: cancellationToken);
 
