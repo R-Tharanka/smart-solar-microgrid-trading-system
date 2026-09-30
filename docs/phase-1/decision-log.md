@@ -22,3 +22,11 @@ Purpose: record decisions needed before backend implementation starts.
 | D-16 | Reservation approval and rejection can be performed by Backoffice and Grid Operator users. | Accepted | Backoffice needs administrative control and Grid Operator needs operational control. |
 | D-17 | Station deactivation is blocked when active/future reservations exist. | Accepted | Prevents breaking existing bookings. |
 | D-18 | Terminal reservation states are `Rejected`, `Cancelled`, `Expired`, `Completed`. | Accepted | Prevents invalid state transitions. |
+| D-19 | Pending reservations do not allocate slot energy; approval conditionally allocates it and later eligible transitions restore or reallocate it. | Accepted in implementation | Avoids locking capacity for unapproved requests and provides a concurrency boundary. |
+| D-20 | Transaction security and audit fields remain embedded in `energyReservations`; no fifth transaction collection is created. | Accepted in implementation | Preserves the assignment's four-collection model and keeps the lifecycle together. |
+| D-21 | Finalization records actual energy and a note, then updates the reservation and station battery storage in a MongoDB transaction; it does not close a shared-capacity slot. | Accepted in implementation | Provides auditable completion, validates storage capacity and prevents a partial final state. |
+| D-22 | Android SQLite currently persists only the authenticated token, role, display name and expiry. | Provisional | Server data remains authoritative; the team must confirm whether reference-data caching is also required. |
+| D-23 | Public Prosumer registration currently creates an `Active` account rather than a `Pending` account. | Review required | The individual marking table mentions a pending-activation web view, so the changed requirement must be confirmed or implemented. |
+| D-24 | Slot updates are available to both staff roles, while slot creation and status changes remain Backoffice-only. | Review required | The scenario assigns availability updates to Grid Operators, so the final authorization rule needs confirmation. |
+
+Post-plan changes and their client/evidence impact are tracked in `docs/requirements/backend-requirements-change-register.md`.
