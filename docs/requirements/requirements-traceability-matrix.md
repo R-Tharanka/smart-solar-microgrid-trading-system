@@ -59,19 +59,19 @@ Current implementation and evidence status is audited in `docs/project-status/fu
 
 ## Current Implementation Summary
 
-Audit date: 2026-09-29
+Audit date: 2026-09-30
 
 | Requirement group | Current status | Main gap |
 | --- | --- | --- |
-| Central API and FAT Service architecture | Implemented | Real HTTP/MongoDB integration evidence |
-| MongoDB collections and indexes | Implemented | Current Atlas screenshots and live verification |
-| Identity and authorization | Implemented, verification pending | Final Postman/Atlas evidence and client completion |
-| Stations and slots | Backend/web implemented | Android maps/slots and live evidence |
-| Reservations and dashboards | Backend/staff web implemented | Android workflow, transaction hardening and live evidence |
-| QR verification and finalization | Backend implemented with validation risk | MVC DTO test/fix, web/mobile flows and live evidence |
-| React web client | Partial overall | Member 4 transaction pages and final live evidence |
+| Central API and FAT Service architecture | Implemented | Complete all-domain HTTP/MongoDB and IIS evidence |
+| MongoDB collections and indexes | Implemented | Current Atlas screenshots and concurrency/transaction evidence |
+| Identity and authorization | Backend/web implemented | Android identity flow and final Postman/Atlas evidence |
+| Stations and slots | Backend/web implemented | Android Maps/slots and final live evidence |
+| Reservations and dashboards | Backend/staff web implemented | Android workflow, concurrency and end-to-end evidence |
+| QR verification and finalization | Backend/web implemented; DTO validation tested | Android camera scanner/maps and final live evidence |
+| React web client | Broadly implemented; automated checks pass | Full authenticated browser matrix and final screenshots |
 | Native Android Java and SQLite | Not started | Entire mobile application |
 | IIS deployment | Not started | Publish, configure, test and document |
 | Final testing/report evidence | Partial | Full Postman/E2E/screenshots/contributions/report |
 
-Backend verification at this audit: 105 passed, 0 failed, 0 skipped. This result covers the automated .NET suite; it does not replace HTTP, Atlas, client or IIS verification.
+Verification on 2026-09-30: backend 111 passed; web 12 passed; web production build passed; ESLint reported 0 errors and 1 warning. These automated checks do not replace HTTP, Atlas, browser, Android or IIS verification.

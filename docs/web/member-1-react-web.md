@@ -1,6 +1,6 @@
 # React Web Implementation and UI System
 
-Status: UI modernization complete; final live API evidence pending
+Status: UI modernization complete; transaction surfaces integrated; final live API/browser evidence pending
 Owners: Shared web client, with Member 1 identity/account workflows
 Audit date: 2026-09-29
 
@@ -44,7 +44,7 @@ Motion is limited to page entrance, energy-path movement, loading indicators, di
 
 ## Full-Web Visual Alignment
 
-The same visual system is applied to login, Backoffice and Grid Operator dashboards, Prosumer home, staff and Prosumer management, stations, energy slots, reservations, profile, password security, access denied and not found. Existing endpoint calls and business workflows were retained. No transaction/operator React page exists in the current checkout, so the modernization did not fabricate one.
+The same visual system is applied to login, Backoffice and Grid Operator dashboards, Prosumer home, staff and Prosumer management, stations, energy slots, reservations, transactions, profile, password security, access denied and not found. Existing endpoint calls and business workflows were retained. Member 4's transaction routes and components now use the shared shell and design system; their functional details are recorded in `docs/web/member-4-react-web.md`.
 
 ## Responsive Strategy
 
@@ -179,4 +179,4 @@ Do not show full JWTs, passwords, signing keys, MongoDB credentials or real pers
 
 ## Scope Boundary
 
-No Android, MongoDB schema, station/slot backend, reservation backend or transaction backend code was changed. Member 4's transaction UI remains outside this implementation.
+No Android, MongoDB schema, station/slot backend, reservation backend or transaction backend code was changed by the shared UI modernization. Member 4's transaction UI was integrated separately and is documented in `docs/web/member-4-react-web.md`.

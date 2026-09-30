@@ -1,405 +1,437 @@
 # Full System Progress and Completion Report
 
-Audit date: 2026-09-29  
+Audit date: 2026-09-30
 Project: Smart Solar Microgrid Trading System  
-Scope: Whole system and all four members
+Scope: Complete repository and the planned responsibilities of all four members
 
 ## 1. Assessment Basis
 
-This report compares the repository with:
+This report compares the current repository with:
 
-- `docs/references/Smart_Solar_Microgrid_Trading_System-plan.md`
-- `docs/references/EAD_SE4040_Assignment_2026.pdf`
-- The PDF-derived requirements, marking constraints and acceptance criteria already captured in the Phase 1 requirements and traceability documents
-- The implementation currently present under `backend/`, `web/`, `mobile/`, `docs/` and `report/`
+- `docs/references/Smart_Solar_Microgrid_Trading_System-plan.md`, the approved full-marks-oriented implementation plan.
+- `docs/references/EAD_SE4040_Assignment_2026.pdf`, the assignment brief and marking guidance.
+- The PDF-derived requirements and acceptance criteria recorded under `docs/phase-1/`, `docs/requirements/`, `docs/api-contracts/`, `docs/phase-2/`, `docs/architecture/` and `docs/database-design/`.
+- The implementation currently present under `backend/`, `web/` and `docs/`.
 
-The assignment requires a centralized C# REST API, MongoDB, a React web client, a native Android Java client with SQLite, IIS deployment, testing evidence, diagrams, screenshots, source documentation and individual contribution evidence. The plan additionally assigns each member meaningful backend, web, Android, integration-test and documentation work.
+The assessment requires a centralized C# REST API, MongoDB, a React web application, a native Android Java application with SQLite, IIS deployment, testing evidence, diagrams, screenshots, documentation and defensible individual contributions. The project plan assigns every member backend, web, Android, integration/testing and evidence responsibilities.
 
-Status terms used in this report:
+Status meanings:
 
 | Status | Meaning |
 | --- | --- |
-| Complete | Required artifact is present and the available automated verification passed. |
-| Implemented, verification pending | Code exists, but required live HTTP, database, client or deployment evidence is missing. |
-| Partial | Some required functions exist, but material scope remains. |
-| Not started | No implementation artifact was found in the repository. |
-| Historical evidence | A document records a past successful check, but it was not reproduced during this audit. |
+| Implemented and automated checks pass | Required code exists and the current automated check passed. |
+| Implemented, live evidence pending | Code exists, but final HTTP, database, browser, device or deployment evidence remains. |
+| Partial | Material parts exist, but required scope remains. |
+| Not started | No implementation artifact was found. |
+| Not independently verified | A claim is documented, but was not reproduced during this audit. |
 
 ## 2. Executive Conclusion
 
-The full system is **not complete**.
+The full system is **not complete or submission-ready**.
 
-The strongest area is the ASP.NET Core backend. All four domains are represented in the API, and the current test run passes **105 of 105 tests**. Phase 1 documentation is comprehensive, and Phase 2 architecture, database and API contracts are substantially documented.
+The central API and React staff application are the strongest areas. All four backend domains are present, the current .NET suite passes **111/111 tests**, and the web client now includes identity, stations, slots, reservations and Member 4 transaction operations. The web suite passes **12/12 tests**, the production build succeeds, and lint reports no errors and one warning.
 
-The largest outstanding area is the native Android application: `mobile/` contains no files. This leaves every member's Android contribution, SQLite, maps and QR scanning unimplemented. The React web application is partially implemented overall: Member 1 identity/account management, stations, slots, reservations and dashboards exist, but Member 4 transaction details and QR verification/finalization views are missing. IIS deployment, full-system Postman coverage, real MongoDB HTTP integration evidence, final UI screenshots and the final report are also incomplete.
+The largest missing deliverable is the native Android Java application: no `mobile/` directory exists. Consequently, the required mobile identity, nearby station/Google Maps, reservation, QR scanner, operator transfer and SQLite work are all absent. IIS hosting, a consolidated all-domain Postman collection, complete end-to-end execution, final database/browser/device screenshots and the final assignment report are also pending.
 
-The repository should therefore be described as:
+| Area | Status |
+| --- | --- |
+| Requirements and project foundation | Substantially complete; member sign-off fields remain blank. |
+| Architecture, database design and API contracts | Substantially complete; implementation-alignment review and final evidence remain. |
+| ASP.NET Core backend | Implemented; automated checks pass; broader live HTTP/Atlas evidence remains. |
+| React web application | Functionally broad and buildable; final live workflow and responsive-browser evidence remains. |
+| Native Android Java and SQLite | Not started. |
+| IIS deployment | Not evidenced/not started in the repository. |
+| Final test and assessment evidence | Partial. |
 
-- Requirements and architecture: substantially complete.
-- Central backend: substantially implemented, with live integration verification and at least one transaction DTO validation risk remaining.
-- Web client: partial.
-- Android client: not started.
-- IIS deployment: not started in repository evidence.
-- Final testing/evidence/report: partial to not started.
+## 3. Current Architecture and Repository Evidence
 
-## 3. Repository Evidence Snapshot
+Implemented architecture:
 
-| Area | Evidence found | Current result |
+- React 18, React Router, Axios and Tailwind CSS web client.
+- ASP.NET Core REST API with controller, service and repository separation.
+- MongoDB persistence through the official .NET driver.
+- JWT authentication, BCrypt password hashing and role policies for `Backoffice`, `GridOperator` and `Prosumer`.
+- RFC 7807 problem details plus application error codes.
+- Four server collections: `users`, `solarStationInfo`, `energyBookingSlots` and `energyReservations`.
+- Dockerfile, Compose configuration, liveness and MongoDB readiness endpoints.
+- Environment-based MongoDB, JWT, bootstrap administrator and CORS configuration.
+
+| Artifact | Evidence | Status |
 | --- | --- | --- |
-| Backend source | Controllers, services, repositories, models, middleware and configuration for all four domains | Present |
-| Backend automated tests | Identity, authorization, request validation, stations/slots, reservations and transactions | 105 passed, 0 failed on 2026-09-29 |
-| Backend HTTP surface | 35 controller actions plus two health endpoints | Present |
-| MongoDB design | Four required collections, indexes and initializer | Present |
-| React web source | Login, protected routes, Member 1 account management, two staff dashboards and domain management pages | Present; Member 4 transaction UI remains incomplete |
-| Web reproducible build | `package-lock.json` exists | Passed on 2026-09-29; 667 modules transformed |
-| Android source | `mobile/` | 0 files; not started |
-| Postman | Identity collection with 57 ordered requests | Identity only; other domains missing |
-| Local deployment | Dockerfile and `compose.yaml` for the API | Present |
-| IIS deployment | IIS configuration, publish profile, deployment guide and screenshots | Not found |
-| Final report | `report/` | 0 files; not started |
+| Backend implementation | 74 files under `backend/src`; controllers/services/repositories for all domains | Present |
+| Backend tests | 11 test files; 111 tests executed | Passed 2026-09-30 |
+| API surface | 37 controller actions plus liveness/readiness health endpoints | Present |
+| React implementation | 60 source files and role-aware routes for all current web domains | Present |
+| React tests | 3 test files; 12 tests executed | Passed 2026-09-30 |
+| React lint | ESLint | 0 errors, 1 warning |
+| React production build | Vite; 678 modules transformed | Passed 2026-09-30 |
+| Android implementation | No `mobile/` directory | Not started |
+| Postman | Identity-only collection | Partial |
+| IIS artifacts/evidence | No deployment guide, publish profile or IIS screenshots found | Pending |
+| Final assignment report | No final report artifact found | Pending |
 
-## 4. Progress Against the Planned Phases
+## 4. Progress by Planned Phase
 
-| Planned phase | Status | Completed work | Work still required |
+| Planned work | Current status | Completed | Still required |
 | --- | --- | --- | --- |
-| Phase 1 - Requirements Analysis and Project Foundation | Complete, sign-off pending | Requirements, roles/permissions, architecture/use-case/DFD diagrams, collection design, endpoint catalogue, ownership, evidence checklist and RTM exist | Obtain the four member sign-offs recorded as blank in the Phase 2 handoff document |
-| Phase 2 - Architecture, Database and API Contracts | Substantially complete | .NET/MongoDB/JWT conventions, DTO/error conventions, four collection designs, API contracts and architecture diagrams exist | Reconfirm contracts after implementation drift; complete member sign-off; retain current Atlas/index evidence |
-| Phase 3 - Backend Core Implementation | Implemented, verification pending | All four feature domains, authentication, role policies, Mongo repositories, business rules and 93 passing tests exist | Fix/verify transaction MVC DTO validation; add real HTTP plus MongoDB integration tests; run complete API scenarios; capture database/index evidence |
-| Frontend - React web | Partial overall | Login, three-role guards, staff/Prosumer accounts, profile/password, stations, slots, reservations and dashboards exist | Member 4 must add transaction details and operator verify/finalize flows; complete live integration evidence |
-| Frontend - Android Java | Not started | None found | Build all planned Member 1-4 Android screens, API layer, SQLite cache, maps and QR scanner |
-| IIS deployment | Not started | Docker local API configuration exists | Publish to IIS, configure HTTPS/CORS/secrets, connect Atlas, test both clients against IIS and document the process |
-| Testing and evidence | Partial | Backend unit/service tests and identity Postman collection exist | Add all-domain Postman collection, HTTP/database integration, web/mobile tests, end-to-end workflow, IIS tests and screenshots |
-| Final report and viva material | Not started/partial | Design and phase documents provide source material | Assemble report, UI screenshots, diagrams, DB evidence, code excerpts, contributions, challenges, references, repository link and viva notes |
+| Phase 1 - Requirements Analysis and Project Foundation | Substantially complete | Requirements, roles, use cases, diagrams, collection designs, endpoint catalogue, ownership, UI/evidence checklist and RTM | Record formal four-member review/sign-off and maintain traceability through final evidence |
+| Phase 2 - Architecture, Database and API Contracts | Substantially complete | Architecture, MongoDB conventions, indexes, API/error conventions and four domain contracts | Reconcile minor documentation drift, sign off contracts and capture final Atlas evidence |
+| Backend core | Implemented, live evidence pending | Identity, station/slot, reservation/dashboard and transaction domains with automated tests | Execute all endpoints against final Atlas configuration, concurrency/E2E checks and evidence |
+| React web | Implemented, final verification pending | Public home, authentication, role shell, accounts, stations, slots, reservations, transactions, profile/security and responsive design system | Complete authenticated browser matrix, live API scenarios and final screenshots |
+| Native Android Java | Not started | None found | Build the complete native Java client, SQLite, Maps and QR workflows |
+| Deployment | Partial | Docker local deployment and health checks | Publish API to IIS, configure HTTPS/CORS/secrets, point both clients to it and capture proof |
+| Testing/evidence/report | Partial | Automated backend/web checks and identity Postman collection | All-domain Postman, real E2E, Android tests, IIS tests, screenshots, contribution evidence and final report |
 
-## 5. Backend Status by Domain
+## 5. Shared Backend Foundation
 
-### 5.1 Shared Backend Foundation
+Implemented:
 
-Completed:
+- Dependency injection for repositories and services.
+- MongoDB collection initialization, legacy user-field migration, named indexes and optional secure administrator bootstrap.
+- Three authenticated roles with explicit policies and active-account checks.
+- Consistent success envelopes and centralized problem-details errors.
+- Health, CORS, logging and environment-driven configuration.
+- Docker development deployment.
 
-- ASP.NET Core API with controller, service and repository layering.
-- MongoDB configuration and initialization for `users`, `solarStationInfo`, `energyBookingSlots` and `energyReservations`.
-- JWT authentication, role policies and active-account authorization checks.
-- BCrypt password hashing.
-- RFC 7807 error handling and application error codes.
-- CORS, health endpoints, dependency injection, logging and environment configuration.
-- Docker image and Compose configuration for local API execution.
+Remaining:
 
-Pending:
+- Consolidated HTTP integration suite using the running API and a controlled MongoDB database.
+- One Postman collection covering all 37 controller actions and the complete cross-domain lifecycle.
+- Atlas screenshots of four collections, named indexes and redacted representative documents.
+- Final security review for secrets, role boundaries, token expiry and sensitive fields.
+- Load/reliability checks appropriate to the assignment scope.
 
-- End-to-end HTTP tests that boot the actual application and use a real/test MongoDB instance.
-- One consolidated Postman collection covering every current endpoint and cross-domain workflow.
-- Current Atlas screenshots proving collections, indexes and representative records.
-- Load, reliability and basic security verification.
+## 6. Member 1 - Identity, Authentication and Account Management
 
-### 5.2 Member 1 Backend - Identity and Accounts
+### Planned responsibility
 
-Status: **Implemented, live verification pending**.
+Member 1 owns identity and account lifecycle across backend, web and Android: authentication, authorization, role management, Prosumer registration, profile/status management, account deactivation/reactivation, mobile account screens, integration tests and evidence.
 
-Completed:
+### Completed backend work
 
-- Prosumer registration with NIC identity and required contact data.
-- Staff creation for Backoffice and Grid Operator roles.
-- Email/NIC uniqueness, normalization and validation.
-- Login, JWT generation and role/business-identifier claims.
+- User model and `users` MongoDB collection.
+- Unique email and sparse unique NIC indexes.
+- Prosumer registration using NIC as the business identifier.
+- Backoffice creation of Backoffice and Grid Operator accounts.
+- Backoffice Prosumer creation and editing.
+- Login by supported business identifier and JWT issuance.
+- Role-based policies and active-account authorization.
 - Current profile retrieval/update and password change.
-- Self/admin deactivation and Backoffice reactivation.
-- Reservation-aware deactivation guard.
-- Active-account checks that invalidate protected access after deactivation.
-- User indexes, migration support and optional initial Backoffice bootstrap.
-- Identity-focused Postman collection and automated tests.
+- Self/admin deactivation and Backoffice-only reactivation.
+- Reservation-aware account deactivation guard.
+- Secure BCrypt hashing and environment-driven bootstrap administrator.
+- Identity, JWT, authorization, controller and request-validation tests.
 
-Pending:
+### Completed web work
 
-- Execute the identity Postman runner against the final Atlas-backed API and retain its report.
-- Verify `users` indexes and representative documents in Atlas.
-- Capture 200/400/401/403/404/409 responses and redacted JWT evidence.
-- Resolve or deliberately reset the actual bootstrap admin password before final evidence collection; changing `.env` does not reset an existing account.
+- Login, session hydration, token persistence, logout and invalid-session handling.
+- Role-aware `/` redirect and protected routes.
+- Backoffice staff list, creation, filtering and status controls.
+- Prosumer list/details, creation/editing and status controls.
+- Current-user profile, password management and Prosumer self-deactivation.
+- Friendly validation/API errors, confirmation dialogs, loading/empty/success/error states.
+- Shared responsive application shell and identity/account UI.
 
-### 5.3 Member 2 Backend - Stations and Slots
+### Remaining Member 1 work
 
-Status: **Implemented, live verification pending**.
+- Implement native Java Prosumer registration, login, profile edit, deactivation request and role-home integration.
+- Implement the Member 1 portion of Android SQLite session/reference persistence.
+- Run the complete identity Postman collection against the final Atlas/IIS API and retain the runner report.
+- Capture redacted login, role denial, staff/Prosumer management, profile/password, account-status and MongoDB evidence.
+- Record contribution evidence and viva explanation; never expose credentials or full JWT values.
 
-Completed:
+**Member 1 conclusion:** backend and React responsibilities are implemented, but Member 1's total planned responsibility is **not complete** until Android, final live integration and assessment evidence are finished.
 
+## 7. Member 2 - Microgrid Nodes and Energy Slots
+
+### Planned responsibility
+
+Member 2 owns station infrastructure, location/capacity/schedules, slot availability, station and slot web management, nearby/map-based Android discovery, tests and evidence.
+
+### Completed backend work
+
+- `solarStationInfo` and `energyBookingSlots` models and repositories.
 - Station create/list/detail/update/status endpoints.
-- GPS, capacity, battery storage, operating schedule and station status rules.
-- Nearby-coordinate ordering support.
+- GPS, capacity, battery storage, schedule and status validation.
 - Slot create/list/detail/update/status endpoints.
-- Slot overlap, schedule, time, energy and availability rules.
-- Active-reservation protection for station/slot changes.
-- MongoDB repositories, indexes and service tests.
+- Slot overlap, schedule, energy, availability and active-reservation guards.
+- Named station and slot indexes, including a geospatial station index.
+- Station/slot service tests and authorization integration through the shared API.
 
-Pending:
+### Completed web work
 
-- Add Member 2 endpoints and negative scenarios to the consolidated Postman collection.
-- Verify station/slot persistence and geospatial/index behavior against Atlas.
-- Capture authorized/unauthorized and active-reservation conflict evidence.
-- Verify real client map consumption of stored GPS values.
+- Backoffice station management with create/edit/status/details.
+- Backoffice slot management with create/edit/status/details.
+- Shared Grid Operator station and slot views.
+- Location entry/picker, responsive tables/cards and domain error states.
 
-### 5.4 Member 3 Backend - Reservations and Dashboards
+### Remaining Member 2 work
 
-Status: **Implemented, integration hardening pending**.
+- Implement native Java nearby-station list, station detail, station selection and available-slot screens.
+- Implement Google Maps markers and location interaction using actual station coordinates.
+- Run station/slot HTTP and Atlas scenarios, including overlap and active-reservation rejection.
+- Capture database, web, Android map and validation evidence.
+- Add Member 2 requests to the consolidated all-domain Postman collection.
 
-Completed:
+**Member 2 conclusion:** backend and web responsibilities are implemented; Android, live evidence and final documentation remain.
 
-- Reservation creation, own/all lists, detail, update and cancellation.
-- Approval and rejection workflow.
-- Seven-day booking window and 12-hour update/cancel notice rules.
-- Ownership, station, slot, energy and status validation.
-- Staff and Prosumer dashboard counts.
-- Atomic conditional status updates and active-reservation uniqueness protection.
-- Automated reservation and dashboard service tests.
+## 8. Member 3 - Reservation Workflow and Booking Dashboards
 
-Pending:
+### Planned responsibility
 
-- Add reservation/dashboard endpoints and all rule failures to Postman.
-- Add application-level HTTP/database integration tests.
-- Harden creation across reservation insert and slot status update. These are currently separate writes, so a failure after the insert can leave a reservation and slot inconsistent.
-- Verify concurrent reservation attempts against real MongoDB.
-- Capture booking history, filters, dashboard counts and 7-day/12-hour evidence.
+Member 3 owns reservation creation/update/cancellation, seven-day and twelve-hour rules, availability/conflict checks, status/history/dashboard APIs, staff web booking views, Android reservation screens, tests and evidence.
 
-### 5.5 Member 4 Backend - Operator Transactions
+### Completed backend work
 
-Status: **Implemented, defect-risk and live verification pending**.
+- Reservation create, own/all list, detail, update and cancellation endpoints.
+- Staff approval and rejection workflow.
+- Seven-day booking window and twelve-hour modification/cancellation notice rules.
+- Ownership, station, slot, energy, status and conflict validation.
+- Staff and Prosumer dashboard summary endpoints.
+- Conditional status updates, energy allocation/restoration and reservation tests.
+- Reservation codes and lifecycle statuses integrated with Member 4's QR workflow.
 
-Completed:
+### Completed web work
 
-- Secure random QR token issuance with only a SHA-256 hash persisted.
-- Ownership/staff authorization for QR issuance.
-- Grid Operator-only QR verification.
-- Expiry, invalid-token, replay and state checks.
-- Transaction finalization with delivered energy and confirmation note.
-- MongoDB transaction for reservation completion and slot consumption.
-- Transaction audit/detail endpoint and service tests.
+- Backoffice and Grid Operator reservation lists.
+- Search, status filtering, responsive list/table presentation and details.
+- Approval/rejection actions and booking-specific feedback.
+- Dashboard summaries backed by real API data.
 
-Pending:
+### Remaining Member 3 work
 
-- Replace or verify the positional transaction request records. `VerifyTransactionRequest` and `FinalizeTransactionRequest` place validation metadata on positional record properties, the same MVC pattern that previously caused the login request to fail before reaching its controller.
-- Add an ASP.NET Core MVC validation regression test for both transaction DTOs.
-- Execute valid, invalid, expired, unauthorized and duplicate flows through HTTP against MongoDB.
-- Confirm the target Atlas deployment supports multi-document transactions.
-- Add transaction endpoints to Postman and capture state/audit evidence.
+- Implement native Java slot selection, reservation create/update/cancel, action summary, history, pending view and dashboard counts.
+- Add all reservation/dashboard scenarios to the consolidated Postman collection.
+- Run concurrent capacity-allocation and lifecycle tests against real MongoDB.
+- Verify the complete reservation-to-transaction lifecycle through HTTP and both clients.
+- Capture seven-day, twelve-hour, ownership, conflict, dashboard and Android evidence.
 
-## 6. React Web Application Status
+**Member 3 conclusion:** backend and staff-web scope is implemented; Android, deeper live/concurrency verification and evidence remain.
 
-### Implemented surfaces
+## 9. Member 4 - Operator Verification and Transactions
 
-- Staff login and token persistence.
-- Protected Backoffice, Grid Operator and Prosumer routes with session-expiry handling.
-- Role-specific dashboard shells.
-- Backoffice Prosumer list/details, create/update forms, and deactivate/reactivate controls.
-- Backoffice staff list/create/deactivate/reactivate controls.
-- Current-user profile, password change and Prosumer self-deactivation.
-- Station create/edit/status/list/detail interface.
-- Slot create/edit/status/list/detail interface.
-- Reservation list, search/filter, details, approve and reject interface.
-- Shared staff views for stations, slots and reservations.
+### Planned responsibility
 
-### Missing or incomplete surfaces
+Member 4 owns secure QR issuance, operator verification, final energy-transfer completion, transaction audit/state rules, operator web views, Android scanner/maps, tests and evidence.
 
-- Transaction detail page.
-- Grid Operator QR verification and transfer finalization interface.
-- Explicit transaction success/failure states tied to Member 4 APIs.
-- Persistent component/API integration test suite beyond Member 1's utility tests.
-- Final live responsive/browser screenshots against the Atlas-backed API.
+### Completed backend work
 
-The web client is useful but does not yet satisfy every web responsibility assigned in the plan.
+- Secure random QR transaction-token issuance for approved reservations.
+- SHA-256 token-hash persistence without exposing the stored hash to clients.
+- Owner/Backoffice QR issuance authorization and Grid Operator verification authorization.
+- QR expiry, invalid-token, state, replay and duplicate-finalization prevention.
+- Verified transfer finalization with actual energy and confirmation note.
+- Transaction detail/audit endpoint.
+- MongoDB transaction for reservation completion and booking-slot closure.
+- Service and MVC request-validation tests for transaction DTOs.
 
-## 7. Android Application Status
+### Completed web work
 
-Status: **Not started**. The `mobile/` directory contains no source files.
+- Backoffice and Grid Operator transaction routes.
+- Transaction lifecycle list and status filtering.
+- QR payload parsing and manual/scanned-payload verification panel.
+- Transaction details and finalization dialog.
+- Loading, empty, validation, authorization and conflict feedback.
+- Responsive transaction UI and helper tests.
+
+The web flow intentionally accepts a decoded QR payload; camera scanning remains an Android/device responsibility.
+
+### Remaining Member 4 work
+
+- Implement native Java Grid Operator login integration, camera QR scanner, verification result, transfer confirmation/finalization and success/failure screens.
+- Implement required operational Google Maps integration.
+- Run valid, invalid, expired, unauthorized, replay and duplicate flows against the final MongoDB deployment.
+- Confirm the final Atlas tier/configuration supports the multi-document transaction used by finalization.
+- Add transaction requests and chained variables to the all-domain Postman collection.
+- Capture QR, scanner, transfer, audit, map and failure-state evidence.
+
+**Member 4 conclusion:** backend and web transaction responsibilities are implemented; Android scanner/maps, live transaction evidence and final documentation remain.
+
+## 10. React Web Status
+
+Implemented pages and behavior:
+
+- Public Home/Index at `/`; authenticated users are redirected to their role workspace after session hydration.
+- Login, access-denied and not-found pages.
+- Backoffice and Grid Operator dashboards.
+- Prosumer account home.
+- Staff and Prosumer account management.
+- Station and slot management.
+- Reservation management and operational approval/rejection.
+- Transaction verification, details and finalization.
+- Shared profile and security/password pages.
+- One role-aware application shell, responsive navigation, reusable controls, dialogs, toasts and page states.
+- Smart-energy visual system, project-owned branding/favicon and reduced-motion support.
+
+Verification performed on 2026-09-30:
+
+```text
+npm test       12 passed, 0 failed
+npm run lint   0 errors, 1 warning
+npm run build  passed; 678 modules transformed
+```
+
+Known web verification gaps:
+
+- `Reservations.jsx` has one `react-hooks/exhaustive-deps` warning for `fetchReservations`; it is not a build failure but should be resolved.
+- The audit did not complete a browser matrix for every authenticated page at 1440, 1280, 1024, 768, 390 and 360 pixels.
+- Final live API error/success screenshots and browser-console evidence are still required.
+- Current tests cover utility/session/error/transaction helpers, not full React component or browser end-to-end behavior.
+
+## 11. Android, SQLite, Maps and QR Status
+
+Status: **Not started**. No `mobile/` directory or Android project was found.
 
 Required shared foundation:
 
-- Native Android Java project and Gradle configuration.
-- HTTP API client, DTOs, error handling and JWT/session handling.
-- SQLite schema/helper for required local session/reference persistence.
-- Role-aware navigation.
-- Secure configuration of API and Google Maps keys.
+- Native Android Java project and Gradle setup.
+- API client, DTO mapping, RFC 7807 error handling, JWT/session handling and role navigation.
+- SQLite schema/helper for required local session/reference data.
+- Environment-safe API and Google Maps configuration.
+- Unit/instrumentation tests and real-device/emulator verification.
 
-Required feature work:
-
-| Owner | Android work still required |
+| Owner | Mobile responsibility still required |
 | --- | --- |
-| Member 1 | Prosumer registration, login, profile edit, deactivation request, role home integration and SQLite session/reference persistence |
-| Member 2 | Nearby station list, station details, Google Maps markers, station selection and available slots |
-| Member 3 | Slot selection integration, reservation create/update/cancel, action summaries, history, pending view and dashboard counts |
-| Member 4 | Grid Operator login integration, QR scanner, verification result, transaction confirmation/finalization, success/failure states and operational map integration |
+| Member 1 | Registration, login, profile, deactivation, role home and identity/session SQLite support |
+| Member 2 | Nearby stations, station details, map markers, station selection and slots |
+| Member 3 | Reservation create/update/cancel, summaries, history, pending and dashboard counts |
+| Member 4 | Operator flow, camera QR scan, verification/finalization, results and operational maps |
 
-Without this client, the project cannot meet the assignment's native Android, SQLite, maps, QR scanning or equal individual contribution expectations.
+This missing client blocks the assignment's native Android, SQLite, Google Maps, QR scanning and device-integration evidence.
 
-## 8. Individual Responsibility Status
+## 12. Database Status
 
-### Member 1 - Identity, Authentication and Account Management
+Implemented:
 
-| Responsibility | Status | Remaining action |
-| --- | --- | --- |
-| Backend identity/auth/account lifecycle | Implemented | Complete live HTTP/Atlas evidence |
-| Web login and role routing | Implemented and browser-verified | Capture final live screenshots |
-| Web Prosumer status management | Implemented and browser-verified | Run live active-reservation rejection evidence |
-| Web staff management | Implemented and browser-verified | Run live API/Atlas evidence |
-| Web profile/password management | Implemented and browser-verified | Run live API evidence |
-| Android registration/login/profile/deactivation | Not started | Implement native Java screens and API integration |
-| Android SQLite identity/session data | Not started | Implement and demonstrate SQLite persistence |
-| Member 1 tests/evidence | Partial | Run Postman, capture UI/DB evidence and contribution notes |
+- Four planned MongoDB collections.
+- Named indexes: 3 user, 3 station, 3 slot and 5 reservation application indexes, plus MongoDB `_id` indexes.
+- Unique business identifiers, sparse optional NIC, geospatial station location and QR hash index.
+- Clients communicate only through the API; neither React nor the future Android client should access MongoDB directly.
 
-Member 1's React implementation is complete. Member 1's overall assignment responsibility is **not fully complete** because Android work and final live API/Atlas/report evidence remain.
+Pending evidence:
 
-### Member 2 - Microgrid Nodes and Energy Slots
+- Current Atlas screenshots of collections and index definitions.
+- Redacted representative documents for each domain.
+- Live proof of uniqueness, geospatial queries, capacity concurrency and transaction rollback behavior.
+- Confirmation of final database user permissions, network allow-list and secret rotation.
 
-| Responsibility | Status | Remaining action |
-| --- | --- | --- |
-| Backend stations/slots | Implemented | Complete live HTTP/Atlas verification |
-| Web station/slot management | Implemented | Rebuild/test and capture validation screenshots |
-| Android station list/details/slots | Not started | Implement native Java screens and API integration |
-| Google Maps markers/nearby nodes | Not started | Implement and capture map evidence |
-| Member 2 tests/evidence | Partial | Add Postman/integration tests and DB/map evidence |
+## 13. Testing and Verification Record
 
-### Member 3 - Reservation Workflow and Dashboards
-
-| Responsibility | Status | Remaining action |
-| --- | --- | --- |
-| Backend reservation lifecycle/rules | Implemented | Harden cross-document creation and run live concurrency checks |
-| Backend dashboard/history/filter APIs | Implemented | Complete HTTP/Atlas verification |
-| Web booking management | Implemented for staff | Rebuild/test and capture screenshots |
-| Android reservation workflow | Not started | Implement create/update/cancel/history/pending/summary/counts |
-| Member 3 tests/evidence | Partial | Add Postman/E2E and 7-day/12-hour evidence |
-
-### Member 4 - Operator Verification and Energy Transfer
-
-| Responsibility | Status | Remaining action |
-| --- | --- | --- |
-| Backend QR verification/finalization | Implemented with validation risk | Fix/verify transaction DTO MVC validation and run live workflows |
-| Web operator dashboard | Partial | Existing dashboard/booking views need transaction operations |
-| Web transaction details/status/errors | Not implemented | Add transaction detail, verify and finalize pages |
-| Android QR scanner and transfer completion | Not started | Implement complete native operator flow |
-| Android/operational maps | Not started | Integrate station map views |
-| IIS deployment ownership | Not started | Publish, configure, test and document IIS deployment |
-| Member 4 tests/evidence | Partial | Add HTTP/E2E QR tests and screenshots |
-
-## 9. Requirement Completion Matrix
-
-| Req | Summary | Status | Key remaining evidence/work |
-| --- | --- | --- | --- |
-| REQ-01 | Central REST API | Implemented | Prove both final clients use it |
-| REQ-02 | FAT Service business logic | Implemented | Integration evidence |
-| REQ-03 | IIS hosting | Not started | IIS publish/configuration/tests |
-| REQ-04 | MongoDB | Implemented, verification pending | Current Atlas records/index screenshots |
-| REQ-05 | React/Tailwind web | Partial | Missing pages, tests and build evidence |
-| REQ-06 | Native Android Java | Not started | Entire mobile project |
-| REQ-07 | Android SQLite | Not started | Schema, helper and evidence |
-| REQ-08 | Three-role authentication | Implemented | Live API/client evidence |
-| REQ-09 | NIC Prosumer registration | Backend implemented | Android registration/evidence |
-| REQ-10 | User/account status management | Web/backend implemented | Android and final live evidence |
-| REQ-11 | Role authorization | Implemented | HTTP 401/403 evidence across domains |
-| REQ-12 | Station management | Backend/web implemented | Android and live evidence |
-| REQ-13 | GPS storage | Backend/web implemented | Android map evidence |
-| REQ-14 | Capacity/storage/slots | Backend/web implemented | Android and DB evidence |
-| REQ-15 | Safe station deactivation | Implemented | Real DB conflict evidence |
-| REQ-16 | Booking slots | Backend/web implemented | Android selection and live evidence |
-| REQ-17 | Prosumer reservations | Backend implemented | Android workflow and E2E evidence |
-| REQ-18 | Seven-day rule | Implemented/tested | HTTP evidence |
-| REQ-19 | Twelve-hour rule | Implemented/tested | HTTP evidence |
-| REQ-20 | History/pending/summary | Backend and staff web partial | Android views and screenshots |
-| REQ-21 | Approve/reject workflow | Backend/web implemented | Live evidence |
-| REQ-22 | Secure QR generation | Backend implemented | Mobile QR display and live evidence |
-| REQ-23 | Operator scan/verify | Backend implemented | Android scanner and DTO/API verification |
-| REQ-24 | Finalize transfer | Backend implemented | Web/mobile flow and live transaction evidence |
-| REQ-25 | Invalid/duplicate prevention | Service-tested | HTTP/database evidence |
-| REQ-26 | Nearby nodes/maps | Backend query support only | Android Google Maps implementation |
-| REQ-27 | Consistent API errors | Implemented for API and Member 1 web | Other-client display and response evidence |
-| REQ-28 | Documentation/evidence | Partial | Final report, screenshots, deployment and contributions |
-
-## 10. Testing and Verification Gaps
-
-Completed during this audit:
+Performed during this audit:
 
 ```text
-dotnet test backend/SmartSolarMicrogrid.slnx --configuration Release --no-restore
-Passed: 93, Failed: 0, Skipped: 0
+dotnet test backend/SmartSolarMicrogrid.slnx --configuration Release
+Passed: 111, Failed: 0, Skipped: 0
+
+npm test
+Passed: 12, Failed: 0
+
+npm run lint
+Errors: 0, Warnings: 1
+
+npm run build
+Passed: 678 modules transformed
 ```
 
-Not yet demonstrated:
+Previously demonstrated in the current development environment and retained as project evidence:
 
-- Real application HTTP integration tests using MongoDB.
-- One Postman runner for all endpoints and all four domains.
-- Browser tests for React role routing and workflows.
-- Android unit, instrumentation and API-integration tests.
-- Complete workflow: register -> login -> browse station/slot -> reserve -> approve -> issue QR -> scan/verify -> finalize.
-- Concurrent booking and duplicate transaction tests against MongoDB.
-- IIS-hosted API access from both web and Android.
-- Security checks for secrets, token handling, role boundaries and sensitive response fields across the whole API.
+- Docker API liveness and MongoDB readiness returned HTTP 200.
+- Authenticated requests to dashboard summary, stations and reservations returned HTTP 200.
+- The same protected routes rejected unauthenticated requests with HTTP 401.
 
-## 11. Deployment and Configuration Status
+Still required:
 
-Completed:
+- All-domain Postman execution against the final deployment.
+- Full lifecycle E2E: register/login -> station/slot -> reserve -> approve -> issue QR -> scan/verify -> finalize.
+- Browser tests across all roles and responsive targets.
+- Android unit, instrumentation, API, SQLite, Maps and scanner tests.
+- Real MongoDB concurrency and rollback scenarios.
+- IIS-hosted smoke, authorization and client-integration tests.
 
-- Untracked root `.env` pattern and committed `.env.example`.
-- API Dockerfile and Compose service.
-- Health endpoints for liveness and MongoDB readiness.
-- Environment-driven MongoDB, JWT, bootstrap and CORS configuration.
+## 14. Deployment Status
+
+Available:
+
+- Root `.env.example` and ignored local `.env` convention.
+- Dockerfile, `compose.yaml`, health endpoints and environment-driven settings.
 
 Pending:
 
-- Production/assessment IIS publish output and `web.config`.
-- IIS application pool, hosting bundle and site configuration.
-- HTTPS certificate/binding or clearly documented assessment setup.
-- Final Atlas network access and least-privilege database user configuration.
-- Final allowed origins and client base URLs.
-- Deployment smoke tests and screenshots.
-- Secret rotation/check before submission.
+- Publish the ASP.NET Core API for Windows IIS.
+- Install/verify the ASP.NET Core Hosting Bundle and application pool configuration.
+- Configure IIS site/bindings, HTTPS, environment secrets and production CORS origins.
+- Connect IIS to Atlas using a least-privilege database user.
+- Point React and Android clients to the hosted API.
+- Capture deployment configuration, health, API and both-client evidence.
 
-## 12. Documentation and Evidence Still Required
+## 15. Documentation and Evidence Status
 
-The final report should follow the planned structure and include:
+Present:
 
-1. Introduction and system overview.
-2. Requirements analysis and completed traceability matrix.
-3. Architecture, use-case and DFD diagrams.
-4. MongoDB collection/index design and representative records.
-5. API design, authorization matrix and endpoint evidence.
-6. React implementation with screenshots of every required screen.
-7. Native Android Java implementation with all required screenshots.
-8. SQLite, Google Maps and QR scanner evidence.
-9. Unit, integration, Postman, client and end-to-end test results.
-10. IIS deployment steps, configuration and reachable endpoint evidence.
-11. Individual contributions for all four members, supported by commits/artifacts.
-12. Challenges, solutions, references and repository link.
+- Phase 1 requirements, ownership, diagrams, data model, API contracts, UI/evidence checklist and decision log.
+- Phase 2 architecture, database/API governance and handoff documents.
+- Member 1 and Member 2 backend implementation notes.
+- Member 1/shared web and Member 4 web implementation notes.
+- Identity Postman collection and execution guide.
 
-Tokens, full password hashes, database credentials and signing keys must be redacted from screenshots and the final report.
+Missing or incomplete:
 
-## 13. Prioritized Completion Plan
+- Dedicated Member 3 and Member 4 backend implementation/verification documents.
+- One consolidated Postman collection for all domains.
+- Android implementation documentation.
+- IIS deployment guide and evidence.
+- Final screenshots and test result artifacts.
+- Final assignment report with contribution evidence, challenges, references and repository link.
+- Formal member contract/sign-off entries.
 
-### Priority 0 - Correct backend release risks
+## 16. Requirements Readiness Summary
 
-1. Add MVC validation tests for Member 4 transaction request DTOs and correct the positional-record validation pattern if reproduced.
-2. Make reservation creation and slot reservation atomic or add reliable compensation.
-3. Run all-domain HTTP tests against the final MongoDB database.
-4. Combine all endpoints and cross-domain flows into one Postman collection.
+| Requirement group | Current coverage | Main remaining gap |
+| --- | --- | --- |
+| Central REST API/FAT Service | Implemented | Final live/E2E evidence |
+| MongoDB and data model | Implemented | Atlas and concurrency evidence |
+| Identity/RBAC/accounts | Backend/web implemented | Android and final live evidence |
+| Stations/slots | Backend/web implemented | Android Maps/slots and evidence |
+| Reservations/dashboards | Backend/staff web implemented | Android workflow and E2E evidence |
+| QR/transactions | Backend/web implemented | Android scanner/maps and live evidence |
+| React/Tailwind web | Broadly implemented and buildable | Full browser matrix and final screenshots |
+| Native Android Java/SQLite | Not started | Entire client |
+| IIS deployment | Not evidenced | Entire IIS deployment/evidence |
+| Documentation/report | Partial | Final report and assessment package |
 
-### Priority 1 - Build the required Android client
+## 17. Prioritized Completion Plan
 
-1. Establish the Java project, API client, session handling and SQLite.
-2. Implement Member 1 identity screens.
+### Priority 0 - Start the required Android application
+
+1. Establish the native Java project, API layer, session handling, SQLite and shared navigation.
+2. Implement Member 1 identity/account screens.
 3. Implement Member 2 station, slot and Google Maps screens.
 4. Implement Member 3 reservation and dashboard screens.
-5. Implement Member 4 QR scanner, verification and finalization screens.
+5. Implement Member 4 QR scanner, verification/finalization and operational map screens.
 
-### Priority 2 - Complete the React client
+### Priority 1 - Complete integration verification
 
-1. Add Member 4 operator transaction details, verification and finalization.
-2. Add broader web component/integration tests.
-3. Capture final screenshots against the live API.
+1. Build one all-domain Postman collection with chained environment variables.
+2. Run every positive, validation, authentication, authorization and conflict case against Atlas.
+3. Execute the complete reservation-to-transfer workflow and concurrency cases.
+4. Resolve the remaining web lint warning and perform the full responsive browser matrix.
 
-### Priority 3 - Deploy and prove the whole system
+### Priority 2 - Deploy on IIS
 
-1. Publish the API to IIS and connect it to Atlas.
-2. Point React and Android to the IIS URL.
-3. Execute the complete end-to-end workflow.
-4. Capture API, MongoDB, web, Android, SQLite, Maps, QR and IIS evidence.
-5. Assemble the final report and member contribution sections.
+1. Publish and configure the API securely on IIS.
+2. Connect IIS to Atlas and configure final CORS/client URLs.
+3. Verify React and Android against IIS.
+4. Capture redacted deployment and health evidence.
 
-## 14. Final Readiness Decision
+### Priority 3 - Assemble assessment evidence
 
-The project is ready for the remaining members to continue because the central API contracts and most backend domain logic exist. It is **not submission-ready**. Completion requires the Android application, remaining web pages, full live integration testing, IIS deployment and the final evidence/report package. No member can yet claim their complete plan responsibility, because the plan explicitly assigns every member work across backend, web, Android, testing and documentation.
+1. Capture web, Android, database, SQLite, Maps, QR and IIS screenshots.
+2. Export backend/web/Android and Postman test results.
+3. Add Member 3/4 implementation notes and all four contribution records.
+4. Produce the final report and viva notes using the traceability matrix.
+
+## 18. Final Readiness Decision
+
+The repository provides a usable central API and a broad React staff client, so members can continue integration work from the current contracts. It is **not a complete assignment submission**. The whole native Android client, SQLite, Google Maps, camera QR scanning, IIS deployment, consolidated live testing and final evidence/report package still have to be delivered.
+
+No member should claim their entire planned responsibility is complete yet because every member has explicit Android and final evidence obligations. Backend/web completion should be reported separately from total member completion.
