@@ -31,9 +31,10 @@ Run all commands from the `mobile` directory.
 
 ```powershell
 cd mobile
+$androidSdk = "$env:LOCALAPPDATA\Android\Sdk"
 ./gradlew.bat assembleDebug
 ./gradlew.bat installDebug
-adb shell am start -n com.smartsolar.microgrid/.MainActivity
+& "$androidSdk\platform-tools\adb.exe" shell am start -n com.smartsolar.microgrid/.MainActivity
 ```
 
 ### macOS or Linux
@@ -46,7 +47,14 @@ chmod +x gradlew
 adb shell am start -n com.smartsolar.microgrid/.MainActivity
 ```
 
-`installDebug` requires a running emulator or a connected Android device with USB debugging enabled. Confirm that Android Debug Bridge can see it:
+`installDebug` requires a running emulator or a connected Android device with USB debugging enabled. On Windows PowerShell, confirm that Android Debug Bridge can see it with:
+
+```powershell
+$androidSdk = "$env:LOCALAPPDATA\Android\Sdk"
+& "$androidSdk\platform-tools\adb.exe" devices
+```
+
+On macOS or Linux, use:
 
 ```text
 adb devices
@@ -55,6 +63,33 @@ adb devices
 If `adb` is not available globally, run it from the Android SDK `platform-tools` directory or add that directory to `PATH`.
 
 ## Start an existing emulator from the terminal
+
+### Windows PowerShell
+
+The Android SDK tools are not always added to the Windows `PATH`. Call them using their full SDK paths:
+
+```powershell
+$androidSdk = "$env:LOCALAPPDATA\Android\Sdk"
+& "$androidSdk\emulator\emulator.exe" -list-avds
+```
+
+If this command returns no names, no Android Virtual Device has been created. Create one in Android Studio using **Tools > Device Manager > Add a new device**, select a phone, choose an installed system image, and finish the wizard.
+
+After creating the device, list the AVDs again and start one by replacing `DEVICE_NAME` with the returned name:
+
+```powershell
+& "$androidSdk\emulator\emulator.exe" -avd DEVICE_NAME
+```
+
+Keep that PowerShell window open while the emulator runs. In a second PowerShell window, return to the `mobile` directory and run:
+
+```powershell
+$androidSdk = "$env:LOCALAPPDATA\Android\Sdk"
+./gradlew.bat installDebug
+& "$androidSdk\platform-tools\adb.exe" shell am start -n com.smartsolar.microgrid/.MainActivity
+```
+
+### macOS or Linux
 
 List configured Android Virtual Devices:
 
@@ -69,6 +104,17 @@ emulator -avd DEVICE_NAME
 ```
 
 Wait for Android to finish booting, then run the install and launch commands above.
+
+### Optional: add Android tools to the current PowerShell session
+
+This makes the shorter `adb` and `emulator` commands available until the terminal is closed:
+
+```powershell
+$androidSdk = "$env:LOCALAPPDATA\Android\Sdk"
+$env:Path += ";$androidSdk\platform-tools;$androidSdk\emulator"
+adb devices
+emulator -list-avds
+```
 
 ## Useful Gradle commands
 
@@ -90,6 +136,8 @@ app/build/outputs/apk/debug/app-debug.apk
 ## Common setup problems
 
 - **SDK location not found:** Open the project once in Android Studio, or create an untracked `local.properties` file containing `sdk.dir=C:\\Users\\YOUR_NAME\\AppData\\Local\\Android\\Sdk` on Windows.
-- **No devices/emulators found:** Start an emulator or connect a device, then verify it appears in `adb devices`.
+- **`emulator` is not recognized:** Use `& "$env:LOCALAPPDATA\Android\Sdk\emulator\emulator.exe"` or add the SDK's `emulator` directory to `PATH`.
+- **The AVD list is empty:** Create an emulator in Android Studio under **Tools > Device Manager > Add a new device**.
+- **`adb devices` has an empty list:** No device is connected. Start an AVD or connect a physical device with USB debugging enabled, then run the command again.
 - **Gradle cannot download dependencies:** Check the internet connection and Android Studio's Gradle offline-mode setting.
 - **Wrong Java version:** Configure Android Studio's Gradle JDK to its bundled JDK, or set `JAVA_HOME` to JDK 17 or newer.
