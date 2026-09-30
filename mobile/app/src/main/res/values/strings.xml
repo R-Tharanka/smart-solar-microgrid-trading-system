@@ -3,4 +3,7 @@
     <string name="home_title">Mobile application is running</string>
     <string name="home_message">The native Android foundation is ready.</string>
     <string name="home_technology">Java • XML Views • Android</string>
+    <string name="prosumer_foundation_title">Prosumer mobile foundation</string>
+    <string name="grid_operator_foundation_title">Grid operator mobile foundation</string>
+    <string name="role_foundation_message">Role navigation is ready. Features will be added later.</string>
 </resources>

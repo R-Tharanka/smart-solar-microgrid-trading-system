@@ -13,6 +13,9 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.appbar.MaterialToolbar;
+import com.smartsolar.microgrid.data.session.Session;
+import com.smartsolar.microgrid.data.session.SessionManager;
+import com.smartsolar.microgrid.navigation.RoleNavigator;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,9 +37,15 @@ public class MainActivity extends AppCompatActivity {
 
         if (navHostFragment != null) {
             NavController navController = navHostFragment.getNavController();
-            AppBarConfiguration appBarConfiguration =
-                    new AppBarConfiguration.Builder(navController.getGraph()).build();
+            AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
+                    R.id.homeFragment,
+                    R.id.prosumerHomeFragment,
+                    R.id.gridOperatorHomeFragment
+            ).build();
             NavigationUI.setupWithNavController(toolbar, navController, appBarConfiguration);
+
+            Session session = SessionManager.getInstance(this).loadSession();
+            RoleNavigator.navigateToRoleHome(navController, session);
         }
     }
 }
