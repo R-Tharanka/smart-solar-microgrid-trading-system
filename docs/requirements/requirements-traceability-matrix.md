@@ -6,6 +6,7 @@ Source references:
 
 - `docs/references/EAD_SE4040_Assignment_2026.pdf`
 - `docs/references/Smart_Solar_Microgrid_Trading_System-plan.md`
+- `docs/requirements/backend-requirements-change-register.md`
 
 Current implementation and evidence status is audited in `docs/project-status/full-system-progress-report.md`.
 
@@ -18,9 +19,9 @@ Current implementation and evidence status is audited in `docs/project-status/fu
 | REQ-03 | Host the C# Web API on Windows IIS. | Member 4, Member 1 reviewer | Deployment endpoints | MongoDB connection | Calls hosted API | Calls hosted API | IIS screenshots, deployed URL tests |
 | REQ-04 | Use MongoDB as the server-side NoSQL database. | All | All API contracts | `users`, `solarStationInfo`, `energyBookingSlots`, `energyReservations` | None direct | None direct | MongoDB records |
 | REQ-05 | Use React.js with Tailwind CSS or permitted equivalent for web. | All | Web consumes API | None direct | All web pages | Not applicable | Web screenshots |
-| REQ-06 | Use native Android Java, not a cross-platform framework. | All | Android consumes API | SQLite local cache | Not applicable | All Android screens | Android project and screenshots |
-| REQ-07 | Use SQLite for Android local persistence. | Member 1, Member 3 support | Auth/reference APIs | SQLite tables | Not applicable | Session/reference cache | SQLite data evidence |
-| REQ-08 | Authenticate Backoffice, Grid Operator and Prosumer users. | Member 1 | `identity-api.md` | `users` | Login, role routing | Login, role routing | Login success/failure tests |
+| REQ-06 | Use native Android Java, not a cross-platform framework. | All | Android consumes API | SQLite local cache | Not applicable | Java/XML project; identity slice implemented | APK/build evidence; remaining domain screens |
+| REQ-07 | Use SQLite for Android local persistence. | Member 1, Member 3 support | Auth/reference APIs | SQLite `session` table | Not applicable | Token, role, display name and expiry persisted | Device/SQLite proof; confirm reference-cache scope |
+| REQ-08 | Authenticate Backoffice, Grid Operator and Prosumer users. | Member 1 | `identity-api.md` | `users` | Login, role routing | Prosumer/Grid Operator login and role homes | Login success/failure and device tests |
 | REQ-09 | Register Prosumer profile using NIC as primary identity. | Member 1 | `POST /api/users/prosumer/register` | `users` | Prosumer management | Registration | Duplicate NIC test |
 | REQ-10 | Let Backoffice create, update, deactivate and reactivate Prosumer accounts; only Backoffice may reactivate. | Member 1 | `identity-api.md` | `users` | Prosumer management forms and status controls | Own-profile/deactivation only | Administrative CRUD and authorization tests |
 | REQ-11 | Enforce role-based authorization. | Member 1 | All protected endpoints | `users` | Auth guard | Auth guard | 401/403 tests |
@@ -65,13 +66,13 @@ Audit date: 2026-09-30
 | --- | --- | --- |
 | Central API and FAT Service architecture | Implemented | Complete all-domain HTTP/MongoDB and IIS evidence |
 | MongoDB collections and indexes | Implemented | Current Atlas screenshots and concurrency/transaction evidence |
-| Identity and authorization | Backend/web implemented | Android identity flow and final Postman/Atlas evidence |
+| Identity and authorization | Backend/web plus Android identity/account slice implemented | Pending-activation decision, device tests and final Postman/Atlas evidence |
 | Stations and slots | Backend/web implemented | Android Maps/slots and final live evidence |
 | Reservations and dashboards | Backend/staff web implemented | Android workflow, concurrency and end-to-end evidence |
 | QR verification and finalization | Backend/web implemented; DTO validation tested | Android camera scanner/maps and final live evidence |
 | React web client | Broadly implemented; automated checks pass | Full authenticated browser matrix and final screenshots |
-| Native Android Java and SQLite | Not started | Entire mobile application |
+| Native Android Java and SQLite | Partial; identity/account/session foundation builds and tests pass | Stations/Maps, reservations/views, QR/scanner/finalization and device evidence |
 | IIS deployment | Not started | Publish, configure, test and document |
 | Final testing/report evidence | Partial | Full Postman/E2E/screenshots/contributions/report |
 
-Verification on 2026-09-30: backend 111 passed; web 12 passed; web production build passed; ESLint reported 0 errors and 1 warning. These automated checks do not replace HTTP, Atlas, browser, Android or IIS verification.
+Verification on 2026-09-30: backend 113 passed; web 12 passed; web production build passed; ESLint reported 0 errors and 1 warning; Android 7 JVM tests, debug APK and lint tasks passed, with 23 lint warnings. These automated checks do not replace HTTP, Atlas, browser, Android device or IIS verification.

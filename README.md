@@ -1,12 +1,17 @@
 # smart-solar-microgrid-trading-system
 An end-to-end Smart Solar Microgrid Trading System. The planned system combines a React and Tailwind CSS web application, a native Android application built with Java and SQLite, and a centralized C# Web API using MongoDB and IIS hosting to manage solar prosumers, microgrid nodes, energy slot reservations, and operator-verified energy transfers.
 
+Repository: https://github.com/R-Tharanka/smart-solar-microgrid-trading-system
+
+Demonstration video: pending; the assignment requires a video of no more than five minutes before submission.
+
 ## Current project status
 
-The central backend implements all four planned domains and its current test suite passes 111/111 tests. The React client includes the public Home/Index page, identity/accounts, stations, slots, reservations and transaction operations; its current 12 tests and production build pass. The native Android Java/SQLite client has not been started, while IIS deployment, all-domain live testing and final assessment evidence remain pending.
+The central backend implements all four planned domains and its current test suite passes 113/113 tests. The React client includes the public Home/Index page, identity/accounts, stations, slots, reservations and transaction operations; its 12 tests and production build pass. A native Android Java/SQLite identity foundation now provides registration, login, role routing, profile management, self-deactivation and persisted sessions; its debug APK builds and 7/7 JVM tests pass. Android station/Maps, reservation, booking-view and QR scanner/finalization features remain pending, as do IIS deployment, all-domain live testing and final assessment evidence.
 
 - [Full system progress and completion report](docs/project-status/full-system-progress-report.md)
 - [Requirements traceability matrix](docs/requirements/requirements-traceability-matrix.md)
+- [Backend requirements change and alignment register](docs/requirements/backend-requirements-change-register.md)
 - [Member 1 React web implementation](docs/web/member-1-react-web.md)
 - [Member 4 React transaction implementation](docs/web/member-4-react-web.md)
 

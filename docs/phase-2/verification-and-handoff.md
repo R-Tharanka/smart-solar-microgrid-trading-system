@@ -4,12 +4,13 @@
 
 ## Current Verification Addendum - 2026-09-30
 
-- The backend automated suite passes 111/111 tests.
+- The backend automated suite passes 113/113 tests.
 - The web automated suite passes 12/12 tests.
 - The web production build succeeds; ESLint reports no errors and one reservation-hook warning.
 - All four backend domains and their current React staff surfaces, including transaction verification/finalization, are implemented.
+- A native Android Java/SQLite Member 1 identity foundation is present. Its debug APK builds, 7/7 JVM tests pass, and lint completes with zero errors and 23 warnings.
 - Docker liveness/readiness and selected authenticated API routes have previously returned HTTP 200 against the configured MongoDB environment.
-- Final all-domain Postman, Atlas screenshots, Android, IIS and complete end-to-end evidence remain pending.
+- Android stations/Maps, reservations/views, QR scanner/finalization, final all-domain Postman, Atlas screenshots, IIS and complete end-to-end evidence remain pending.
 
 This addendum does not replace the original Phase 2 sign-off table below; team members must still record their approval.
 
