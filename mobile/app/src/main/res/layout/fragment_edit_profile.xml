@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+        <ProgressBar
+            android:id="@+id/edit_profile_load_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal" />
+        <LinearLayout
+            android:id="@+id/edit_profile_form"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+            <com.google.android.material.textfield.TextInputLayout android:id="@+id/first_name_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/first_name_label">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/first_name_input" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textPersonName" android:maxLength="100" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout android:id="@+id/last_name_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:hint="@string/last_name_label">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/last_name_input" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textPersonName" android:maxLength="100" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout android:id="@+id/phone_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:hint="@string/phone_label">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/phone_input" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="phone" android:maxLength="16" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout android:id="@+id/address_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:hint="@string/address_label">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/address_input" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="top" android:inputType="textPostalAddress|textMultiLine" android:maxLength="300" android:minLines="2" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <TextView android:id="@+id/edit_profile_error" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="?attr/colorError" android:visibility="gone" />
+            <ProgressBar android:id="@+id/edit_profile_save_progress" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:layout_marginTop="12dp" android:visibility="gone" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/save_profile_button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="@string/save_action" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

@@ -2,6 +2,7 @@ package com.smartsolar.microgrid.navigation;
 
 import androidx.annotation.IdRes;
 import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
 
 import com.smartsolar.microgrid.R;
 import com.smartsolar.microgrid.data.session.Session;
@@ -27,9 +28,21 @@ public final class RoleNavigator {
                 return;
         }
 
-        if (navController.getCurrentDestination() != null
-                && navController.getCurrentDestination().getId() == R.id.homeFragment) {
-            navController.navigate(destination);
+        if (navController.getCurrentDestination() != null) {
+            int currentId = navController.getCurrentDestination().getId();
+            if (currentId == R.id.loginFragment || currentId == R.id.homeFragment) {
+                NavOptions options = new NavOptions.Builder()
+                        .setPopUpTo(R.id.loginFragment, true)
+                        .build();
+                navController.navigate(destination, null, options);
+            }
         }
+    }
+
+    public static void navigateToLogin(NavController navController) {
+        NavOptions options = new NavOptions.Builder()
+                .setPopUpTo(navController.getGraph().getId(), true)
+                .build();
+        navController.navigate(R.id.loginFragment, null, options);
     }
 }

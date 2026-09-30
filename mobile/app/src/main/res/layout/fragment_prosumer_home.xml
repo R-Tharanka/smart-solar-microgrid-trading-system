@@ -7,6 +7,7 @@
     android:padding="32dp">
 
     <TextView
+        android:id="@+id/prosumer_welcome"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
@@ -23,5 +24,20 @@
         android:text="@string/role_foundation_message"
         android:textColor="@color/text_primary"
         android:textSize="16sp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/profile_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:text="@string/profile_action" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/logout_button"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="@string/logout_action" />
 
 </LinearLayout>

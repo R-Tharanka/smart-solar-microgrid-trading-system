@@ -2,7 +2,17 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main_navigation"
-    app:startDestination="@id/homeFragment">
+    app:startDestination="@id/loginFragment">
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.smartsolar.microgrid.ui.auth.LoginFragment"
+        android:label="@string/login_title" />
+
+    <fragment
+        android:id="@+id/registerFragment"
+        android:name="com.smartsolar.microgrid.ui.auth.RegisterFragment"
+        android:label="@string/register_title" />
 
     <fragment
         android:id="@+id/homeFragment"
@@ -18,5 +28,15 @@
         android:id="@+id/gridOperatorHomeFragment"
         android:name="com.smartsolar.microgrid.ui.operator.GridOperatorHomeFragment"
         android:label="@string/grid_operator_foundation_title" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.smartsolar.microgrid.ui.profile.ProfileFragment"
+        android:label="@string/profile_title" />
+
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.smartsolar.microgrid.ui.profile.EditProfileFragment"
+        android:label="@string/edit_profile_title" />
 
 </navigation>

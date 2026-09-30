@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ProgressBar
+        android:id="@+id/profile_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center" />
+
+    <LinearLayout
+        android:id="@+id/profile_error_state"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:visibility="gone">
+        <TextView
+            android:id="@+id/profile_error"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="?attr/colorError" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/profile_retry_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/retry_action" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/profile_empty_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:padding="32dp"
+        android:text="@string/profile_empty"
+        android:textColor="@color/text_primary"
+        android:visibility="gone" />
+
+    <ScrollView
+        android:id="@+id/profile_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/first_name_label" android:textStyle="bold" />
+            <TextView android:id="@+id/profile_first_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:textSize="18sp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/last_name_label" android:textStyle="bold" />
+            <TextView android:id="@+id/profile_last_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:textSize="18sp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/email_label" android:textStyle="bold" />
+            <TextView android:id="@+id/profile_email" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:textSize="18sp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/nic_label" android:textStyle="bold" />
+            <TextView android:id="@+id/profile_nic" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:textSize="18sp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/phone_label" android:textStyle="bold" />
+            <TextView android:id="@+id/profile_phone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:textSize="18sp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/address_label" android:textStyle="bold" />
+            <TextView android:id="@+id/profile_address" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:textSize="18sp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/status_label" android:textStyle="bold" />
+            <TextView android:id="@+id/profile_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="24dp" android:textSize="18sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/edit_profile_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/edit_profile_action" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/deactivate_button"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/deactivate_action" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/profile_logout_button"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/logout_action" />
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>

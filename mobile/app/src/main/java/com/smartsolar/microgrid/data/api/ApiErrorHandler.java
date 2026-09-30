@@ -9,7 +9,7 @@ public final class ApiErrorHandler {
 
     public static ApiError fromHttpResponse(int statusCode, String responseBody) {
         String errorCode = readErrorCode(responseBody);
-        return new ApiError(statusCode, errorCode, messageForStatus(statusCode));
+        return new ApiError(statusCode, errorCode, messageForError(statusCode, errorCode));
     }
 
     public static ApiError networkError() {
@@ -43,7 +43,24 @@ public final class ApiErrorHandler {
         return "HTTP_ERROR";
     }
 
-    private static String messageForStatus(int statusCode) {
+    private static String messageForError(int statusCode, String errorCode) {
+        switch (errorCode) {
+            case "AUTH_INVALID_CREDENTIALS":
+                return "The identifier or password is incorrect.";
+            case "AUTH_ACCOUNT_INACTIVE":
+                return "This account is not active. Contact an administrator.";
+            case "USER_NIC_EXISTS":
+                return "An account already exists with this NIC.";
+            case "USER_EMAIL_EXISTS":
+                return "An account already exists with this email address.";
+            case "USER_IDENTIFIER_EXISTS":
+                return "An account already exists with these details.";
+            case "USER_ACTIVE_RESERVATIONS":
+                return "The account cannot be deactivated while it has active reservations.";
+            default:
+                break;
+        }
+
         switch (statusCode) {
             case 400:
                 return "The request could not be completed. Check the information and try again.";
