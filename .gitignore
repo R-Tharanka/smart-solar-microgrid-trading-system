@@ -10,3 +10,13 @@ docs/references
 **/obj/
 
 node_modules
+
+# Android / Gradle (mobile application)
+/mobile/.gradle/
+/mobile/.idea/
+/mobile/local.properties
+/mobile/**/build/
+/mobile/captures/
+/mobile/.externalNativeBuild/
+/mobile/.cxx/
+*.iml

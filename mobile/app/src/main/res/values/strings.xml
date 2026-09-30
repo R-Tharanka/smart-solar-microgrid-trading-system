@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Smart Solar Microgrid</string>
+    <string name="home_title">Mobile application is running</string>
+    <string name="home_message">The native Android foundation is ready.</string>
+    <string name="home_technology">Java • XML Views • Android</string>
+</resources>
