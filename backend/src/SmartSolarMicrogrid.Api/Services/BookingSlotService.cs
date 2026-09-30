@@ -197,11 +197,34 @@ public sealed class BookingSlotService(
                 "SLOT_OUTSIDE_SCHEDULE",
                 "Slot times must fall within the station operating schedule on the same UTC day.");
         }
-        if (availableEnergyKwh <= 0 || availableEnergyKwh > station.CapacityKwh)
+        if (availableEnergyKwh <= 0)
         {
             throw StationSlotException.Validation(
                 "SLOT_CAPACITY_INVALID",
-                "Slot energy must be greater than zero and cannot exceed station capacity.");
+                "Slot energy must be greater than zero.");
+        }
+
+        var allSlots = await slotRepository.GetForStationAsync(station.Id, null, null, null, cancellationToken);
+        var activeSlots = allSlots.Where(s => s.Status is SlotStatus.Available or SlotStatus.Reserved).ToList();
+        var activeSlotsAvailableEnergy = activeSlots.Sum(s => s.AvailableEnergyKwh);
+        var approvedReservationsEnergy = await reservationQueryService.GetTotalApprovedEnergyForStationAsync(station.Id, cancellationToken);
+        var allocatedCapacity = activeSlotsAvailableEnergy + approvedReservationsEnergy;
+        
+        var remainingCapacity = station.BatteryStorageKwh - allocatedCapacity;
+        if (excludedId.HasValue)
+        {
+            var excludedSlot = activeSlots.FirstOrDefault(s => s.Id == excludedId.Value);
+            if (excludedSlot != null)
+            {
+                remainingCapacity += excludedSlot.AvailableEnergyKwh;
+            }
+        }
+
+        if (availableEnergyKwh > remainingCapacity)
+        {
+            throw StationSlotException.Validation(
+                "SLOT_CAPACITY_INVALID",
+                $"Slot energy ({availableEnergyKwh} kWh) cannot exceed the station's available unallocated battery capacity ({remainingCapacity} kWh).");
         }
         if (await slotRepository.HasOverlapAsync(
             station.Id, startTimeUtc, endTimeUtc, excludedId, cancellationToken))

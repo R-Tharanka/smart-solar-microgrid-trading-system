@@ -284,6 +284,9 @@ public sealed class StationSlotServiceTests
         // Returns the configured slot-reservation result for the current test.
         public Task<bool> HasActiveReservationsForSlotAsync(ObjectId slotId, CancellationToken cancellationToken = default) =>
             Task.FromResult(SlotHasActive);
+
+        public Task<decimal> GetTotalApprovedEnergyForStationAsync(ObjectId stationId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(0m);
     }
 
     private sealed class FakeStationRepository : ISolarStationRepository

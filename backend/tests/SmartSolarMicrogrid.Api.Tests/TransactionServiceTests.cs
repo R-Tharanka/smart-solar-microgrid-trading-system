@@ -177,7 +177,7 @@ public sealed class TransactionServiceTests
             return Task.FromResult(true);
         }
 
-        public Task<bool> FinalizeAsync(string reservationCode, ObjectId slotId, string operatorIdentifier,
+        public Task<bool> FinalizeAsync(string reservationCode, ObjectId stationId, ObjectId slotId, string operatorIdentifier,
             string confirmationNote, decimal actualEnergyTransferredKwh, DateTime finalizedAtUtc,
             CancellationToken cancellationToken = default)
         {
