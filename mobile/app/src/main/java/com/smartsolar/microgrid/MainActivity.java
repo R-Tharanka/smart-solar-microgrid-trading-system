@@ -1,6 +1,7 @@
 package com.smartsolar.microgrid;
 
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -13,6 +14,9 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.appbar.MaterialToolbar;
+import com.smartsolar.microgrid.data.session.Session;
+import com.smartsolar.microgrid.data.session.SessionManager;
+import com.smartsolar.microgrid.navigation.RoleNavigator;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,9 +38,21 @@ public class MainActivity extends AppCompatActivity {
 
         if (navHostFragment != null) {
             NavController navController = navHostFragment.getNavController();
-            AppBarConfiguration appBarConfiguration =
-                    new AppBarConfiguration.Builder(navController.getGraph()).build();
+            AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
+                    R.id.loginFragment,
+                    R.id.homeFragment,
+                    R.id.prosumerHomeFragment,
+                    R.id.gridOperatorHomeFragment
+            ).build();
             NavigationUI.setupWithNavController(toolbar, navController, appBarConfiguration);
+            navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+                boolean authenticationScreen = destination.getId() == R.id.loginFragment
+                        || destination.getId() == R.id.registerFragment;
+                toolbar.setVisibility(authenticationScreen ? View.GONE : View.VISIBLE);
+            });
+
+            Session session = SessionManager.getInstance(this).loadSession();
+            RoleNavigator.navigateToRoleHome(navController, session);
         }
     }
 }
