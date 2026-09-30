@@ -6,4 +6,10 @@
         <item name="android:fontFamily">sans</item>
         <item name="android:statusBarColor">@color/solar_green_dark</item>
     </style>
+
+    <style name="Theme.SmartSolarMicrogrid.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/surface_light</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo_full</item>
+        <item name="postSplashScreenTheme">@style/Theme.SmartSolarMicrogrid</item>
+    </style>
 </resources>
