@@ -33,4 +33,32 @@ public sealed class ReservationQueryService(MongoDbContext context) : IReservati
         };
         return await _reservations.CountDocumentsAsync(filter, cancellationToken: cancellationToken) > 0;
     }
+
+    public async Task<decimal> GetTotalApprovedEnergyForStationAsync(ObjectId stationId, CancellationToken cancellationToken = default)
+    {
+        var filter = new BsonDocument
+        {
+            { "stationId", stationId },
+            { "status", new BsonDocument("$in", new BsonArray { "Approved", "QrIssued", "Verified" }) }
+        };
+        
+        var pipeline = new BsonDocument[]
+        {
+            new BsonDocument("$match", filter),
+            new BsonDocument("$group", new BsonDocument
+            {
+                { "_id", BsonNull.Value },
+                { "totalEnergy", new BsonDocument("$sum", "$requestedEnergyKwh") }
+            })
+        };
+
+        var cursor = await _reservations.AggregateAsync<BsonDocument>(pipeline, cancellationToken: cancellationToken);
+        var result = await cursor.FirstOrDefaultAsync(cancellationToken);
+
+        if (result != null && result.Contains("totalEnergy"))
+        {
+            return (decimal)result["totalEnergy"].AsDecimal128;
+        }
+        return 0m;
+    }
 }

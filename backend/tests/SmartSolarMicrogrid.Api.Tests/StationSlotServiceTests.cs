@@ -151,15 +151,42 @@ public sealed class StationSlotServiceTests
     {
         var stations = new FakeStationRepository();
         var station = Station();
+        station.CapacityKwh = 100;
+        station.BatteryStorageKwh = 60; // 40 incoming capacity
         stations.Items.Add(station);
         var slots = new FakeSlotRepository();
 
+        var request = ValidSlot() with { AvailableEnergyKwh = 20 };
         var response = await SlotService(stations, slots).CreateAsync(
-            station.StationCode, ValidSlot(), TestCancellation);
+            station.StationCode, request, TestCancellation);
 
         Assert.Equal("SLT-CMB-001", response.SlotCode);
         Assert.Equal("Available", response.Status);
         Assert.Single(slots.Items);
+    }
+
+    [Fact]
+    public async Task CreateSlot_ExceedingIncomingCapacity_IsRejected()
+    {
+        var stations = new FakeStationRepository();
+        var station = Station();
+        station.CapacityKwh = 100;
+        station.BatteryStorageKwh = 60; // 40 incoming capacity
+        stations.Items.Add(station);
+        var slots = new FakeSlotRepository();
+        
+        // Add an existing slot of 20 kWh
+        var existingSlot = Slot(station.Id);
+        existingSlot.AvailableEnergyKwh = 20;
+        slots.Items.Add(existingSlot);
+
+        // Attempting to create another 21 kWh slot should be rejected (20 + 21 > 40)
+        var request = ValidSlot() with { SlotCode = "SLT-CMB-002", AvailableEnergyKwh = 21 };
+        var exception = await Assert.ThrowsAsync<StationSlotException>(() =>
+            SlotService(stations, slots).CreateAsync(
+                station.StationCode, request, TestCancellation));
+
+        Assert.Equal("SLOT_CAPACITY_INVALID", exception.ErrorCode);
     }
 
     // Verifies that active reservations prevent slot updates.
@@ -284,6 +311,9 @@ public sealed class StationSlotServiceTests
         // Returns the configured slot-reservation result for the current test.
         public Task<bool> HasActiveReservationsForSlotAsync(ObjectId slotId, CancellationToken cancellationToken = default) =>
             Task.FromResult(SlotHasActive);
+
+        public Task<decimal> GetTotalApprovedEnergyForStationAsync(ObjectId stationId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(0m);
     }
 
     private sealed class FakeStationRepository : ISolarStationRepository

@@ -12,4 +12,7 @@ public interface IReservationQueryService
 
     /// <summary>Checks whether a slot has a reservation in a non-terminal state.</summary>
     Task<bool> HasActiveReservationsForSlotAsync(ObjectId slotId, CancellationToken cancellationToken = default);
+
+    /// <summary>Gets the total energy currently requested by approved/active reservations for a station.</summary>
+    Task<decimal> GetTotalApprovedEnergyForStationAsync(ObjectId stationId, CancellationToken cancellationToken = default);
 }

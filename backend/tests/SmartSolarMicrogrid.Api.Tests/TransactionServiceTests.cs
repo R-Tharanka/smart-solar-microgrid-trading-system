@@ -122,6 +122,23 @@ public sealed class TransactionServiceTests
         Assert.Equal(ReservationStatus.Verified, repository.Item.Status);
     }
 
+    [Fact]
+    public async Task Finalize_RejectsTransferExceedingBatteryCapacity()
+    {
+        var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Verified))
+        {
+            SimulateStationCapacityExceeded = true
+        };
+        var request = new FinalizeTransactionRequest(
+            repository.Item.ReservationCode, "Transfer completed", 10m);
+
+        var error = await Assert.ThrowsAsync<TransactionException>(() => Service(repository).FinalizeAsync(
+            request, "operator@example.com", TestContext.Current.CancellationToken));
+
+        Assert.Equal("FINALIZE_CONFLICT", error.ErrorCode);
+        Assert.Equal(ReservationStatus.Verified, repository.Item.Status);
+    }
+
     private static TransactionService Service(ITransactionRepository repository) =>
         new(repository, new FixedTimeProvider(Now), NullLogger<TransactionService>.Instance);
 
@@ -177,10 +194,13 @@ public sealed class TransactionServiceTests
             return Task.FromResult(true);
         }
 
-        public Task<bool> FinalizeAsync(string reservationCode, ObjectId slotId, string operatorIdentifier,
+        public bool SimulateStationCapacityExceeded { get; init; }
+
+        public Task<bool> FinalizeAsync(string reservationCode, ObjectId stationId, ObjectId slotId, string operatorIdentifier,
             string confirmationNote, decimal actualEnergyTransferredKwh, DateTime finalizedAtUtc,
             CancellationToken cancellationToken = default)
         {
+            if (SimulateStationCapacityExceeded) return Task.FromResult(false);
             if (reservationCode != Item.ReservationCode || slotId != Item.SlotId ||
                 Item.Status != ReservationStatus.Verified) return Task.FromResult(false);
             Item.Status = ReservationStatus.Completed;

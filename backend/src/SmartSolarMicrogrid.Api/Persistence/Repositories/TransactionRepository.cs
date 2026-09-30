@@ -53,7 +53,7 @@ public sealed class TransactionRepository(MongoDbContext context) : ITransaction
     }
 
     // Completes one verified reservation without closing a shared-capacity slot.
-    public async Task<bool> FinalizeAsync(string reservationCode, ObjectId slotId, string operatorIdentifier,
+    public async Task<bool> FinalizeAsync(string reservationCode, ObjectId stationId, ObjectId slotId, string operatorIdentifier,
         string confirmationNote, decimal actualEnergyTransferredKwh, DateTime finalizedAtUtc,
         CancellationToken cancellationToken = default)
     {
@@ -78,6 +78,20 @@ public sealed class TransactionRepository(MongoDbContext context) : ITransaction
             await session.AbortTransactionAsync(cancellationToken);
             return false;
         }
+
+        var stations = context.Database.GetCollection<SolarStation>(CollectionNames.SolarStations);
+        
+        var station = await stations.Find(session, s => s.Id == stationId).FirstOrDefaultAsync(cancellationToken);
+        if (station == null || station.BatteryStorageKwh + actualEnergyTransferredKwh > station.CapacityKwh)
+        {
+            await session.AbortTransactionAsync(cancellationToken);
+            return false;
+        }
+
+        var stationUpdate = Builders<SolarStation>.Update
+            .Inc(s => s.BatteryStorageKwh, actualEnergyTransferredKwh)
+            .Set(s => s.UpdatedAtUtc, finalizedAtUtc);
+        await stations.UpdateOneAsync(session, s => s.Id == stationId, stationUpdate, cancellationToken: cancellationToken);
 
         await session.CommitTransactionAsync(cancellationToken);
         return true;

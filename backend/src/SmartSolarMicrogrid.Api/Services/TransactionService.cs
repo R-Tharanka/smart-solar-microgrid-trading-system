@@ -116,7 +116,7 @@ public sealed class TransactionService(
         }
         var now = UtcNow();
         if (!await repository.FinalizeAsync(
-                code, reservation.SlotId, operatorIdentifier, request.ConfirmationNote.Trim(),
+                code, reservation.StationId, reservation.SlotId, operatorIdentifier, request.ConfirmationNote.Trim(),
                 transferredEnergy, now, cancellationToken))
         {
             throw TransactionException.Conflict("FINALIZE_CONFLICT", "The transaction was already finalized or changed.");

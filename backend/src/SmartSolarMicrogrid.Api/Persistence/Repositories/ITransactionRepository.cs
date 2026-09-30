@@ -22,7 +22,7 @@ public interface ITransactionRepository
     /// <summary>
     /// Completes the reservation and expires its consumed slot in one MongoDB transaction.
     /// </summary>
-    Task<bool> FinalizeAsync(string reservationCode, ObjectId slotId, string operatorIdentifier,
+    Task<bool> FinalizeAsync(string reservationCode, ObjectId stationId, ObjectId slotId, string operatorIdentifier,
         string confirmationNote, decimal actualEnergyTransferredKwh, DateTime finalizedAtUtc,
         CancellationToken cancellationToken = default);
 }
