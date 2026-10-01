@@ -39,6 +39,17 @@ public class UserRepository(MongoDbContext context) : IUserRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<List<User>> GetProsumersByStatusAsync(
+        UserStatus status,
+        CancellationToken cancellationToken = default)
+    {
+        // Return a deterministic review queue containing only Prosumers in the requested state.
+        return await _users.Find(u => u.Role == UserRole.Prosumer && u.Status == status)
+            .SortBy(u => u.CreatedAtUtc)
+            .ThenBy(u => u.Email)
+            .ToListAsync(cancellationToken);
+    }
+
     public Task<long> CountActiveBackofficeAsync(CancellationToken cancellationToken = default)
     {
         // Count active administrators to protect the final Backoffice account.
@@ -73,7 +84,8 @@ public class UserRepository(MongoDbContext context) : IUserRepository
         UserStatus status,
         string changedByIdentifier,
         DateTime changedAtUtc,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? rejectionReason = null)
     {
         // Use the expected status in the filter to make the lifecycle transition atomic.
         var filter = Builders<User>.Filter.And(
@@ -86,12 +98,52 @@ public class UserRepository(MongoDbContext context) : IUserRepository
             .Set(u => u.StatusChangedByIdentifier, changedByIdentifier)
             .Set(u => u.UpdatedAtUtc, changedAtUtc);
 
-        update = status == UserStatus.Deactivated
-            ? update.Set(u => u.DeactivatedAtUtc, changedAtUtc)
-            : update.Set(u => u.ReactivatedAtUtc, changedAtUtc);
+        if (status == UserStatus.Deactivated)
+        {
+            update = update
+                .Set(u => u.DeactivatedAtUtc, changedAtUtc)
+                .Set(u => u.DeactivationRequested, false)
+                .Unset(u => u.DeactivationRequestedAtUtc);
+        }
+        else if (status == UserStatus.Rejected)
+        {
+            update = update
+                .Set(u => u.RejectionReason, rejectionReason)
+                .Set(u => u.RejectedAtUtc, changedAtUtc);
+        }
+        else if (status == UserStatus.Active)
+        {
+            update = update
+                .Unset(u => u.RejectionReason)
+                .Unset(u => u.RejectedAtUtc);
+            if (expectedStatus == UserStatus.Deactivated)
+            {
+                update = update.Set(u => u.ReactivatedAtUtc, changedAtUtc);
+            }
+        }
 
         var result = await _users.UpdateOneAsync(filter, update, new UpdateOptions(), cancellationToken);
         return result.MatchedCount == 1;
+    }
+
+    public async Task<bool> RequestDeactivationAsync(
+        string nic,
+        DateTime requestedAtUtc,
+        CancellationToken cancellationToken = default)
+    {
+        // Keep the account active while atomically preventing duplicate pending requests.
+        var filter = Builders<User>.Filter.And(
+            Builders<User>.Filter.Eq(u => u.Nic, nic),
+            Builders<User>.Filter.Eq(u => u.Role, UserRole.Prosumer),
+            Builders<User>.Filter.Eq(u => u.Status, UserStatus.Active),
+            Builders<User>.Filter.Ne(u => u.DeactivationRequested, true));
+        var update = Builders<User>.Update
+            .Set(u => u.DeactivationRequested, true)
+            .Set(u => u.DeactivationRequestedAtUtc, requestedAtUtc)
+            .Set(u => u.UpdatedAtUtc, requestedAtUtc);
+
+        var result = await _users.UpdateOneAsync(filter, update, new UpdateOptions(), cancellationToken);
+        return result.ModifiedCount == 1;
     }
 
     public async Task RecordSuccessfulLoginAsync(

@@ -24,12 +24,12 @@ Authority: Central ASP.NET Core API only
 
 Required fields: `_id`, `email`, `firstName`, `lastName`, `role`, `status`, `passwordHash`, `createdAtUtc`, `updatedAtUtc`.
 
-Prosumer-only fields: unique `nic`, `phoneNumber`, and `address`. Staff accounts keep these fields absent. `createdByIdentifier` records the Backoffice email identity that administratively created a staff or Prosumer account, and remains absent for public self-registration. `lastLoginAtUtc` records successful authentication. Lifecycle changes record `deactivatedAtUtc`, `reactivatedAtUtc`, and `statusChangedByIdentifier`.
+Prosumer-only fields: unique `nic`, `phoneNumber`, and `address`. Staff accounts keep these fields absent. `createdByIdentifier` records the Backoffice email identity that administratively created a staff or Prosumer account, and remains absent for public self-registration. `lastLoginAtUtc` records successful authentication. Lifecycle data includes `deactivatedAtUtc`, `reactivatedAtUtc`, `statusChangedByIdentifier`, `deactivationRequested`, `deactivationRequestedAtUtc`, `rejectionReason`, and `rejectedAtUtc` where applicable. Missing request fields on older documents deserialize as false/null, so no migration is required.
 
 Enums:
 
 - `role`: `Backoffice`, `GridOperator`, `Prosumer`.
-- `status`: `Pending`, `Active`, `Deactivated`. Phase 3 registration creates `Active`; `Pending` is reserved for a future approval workflow.
+- `status`: `Pending`, `Active`, `Deactivated`, `Rejected`. Public registration creates `Pending`; Backoffice-created Prosumers remain `Active`.
 
 Indexes:
 

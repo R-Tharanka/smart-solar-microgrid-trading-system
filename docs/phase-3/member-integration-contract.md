@@ -7,7 +7,7 @@ This document defines the identity boundary Members 2, 3 and 4 may depend on. Ch
 
 ## Authentication Contract
 
-- Clients authenticate through `POST /api/users/login` and send `Authorization: Bearer <accessToken>` on protected requests.
+- Clients authenticate through `POST /api/users/login`, including required `clientType` (`Web` or `Android`), and send `Authorization: Bearer <accessToken>` on protected requests. Web permits Backoffice/Grid Operator; Android permits Prosumer/Grid Operator.
 - `sub` and `user_identifier` contain the Prosumer NIC or normalized staff email.
 - `email` and `role` are present for every account; `nic` is present only for a Prosumer.
 - Roles are exactly `Backoffice`, `GridOperator`, and `Prosumer`.
@@ -52,9 +52,9 @@ Member 3 must store the returned normalized `Nic` in `energyReservations.prosume
 - MongoDB `_id` is internal to identity and is not an account business identifier.
 - Other modules may retain NIC/email snapshots needed for audit, but identity remains the authority for role and active status.
 - Other modules must not issue JWTs, hash/check passwords, duplicate user records, or implement alternate authentication middleware.
-- Public identity response fields are `nic`, `email`, `firstName`, `lastName`, `phoneNumber`, `address`, `role`, and `status`.
+- Public identity response fields are `nic`, `email`, `firstName`, `lastName`, `phoneNumber`, `address`, `role`, `status`, `deactivationRequested`, `deactivationRequestedAtUtc`, and safe `rejectionReason` where applicable.
 - Identity errors use RFC 7807 Problem Details with `errorCode` and `traceId`.
 
 ## Reservation Deactivation Dependency
 
-Member 1 blocks Prosumer deactivation while an `energyReservations` document has the same `prosumerNic` and status `Pending`, `Approved`, `QrIssued`, or `Verified`. Member 3 owns reservation transitions and must coordinate any change to those values before implementation.
+Member 1 blocks Backoffice administrative Prosumer deactivation while an `energyReservations` document has the same `prosumerNic` and status `Pending`, `Approved`, `QrIssued`, or `Verified`. A Prosumer's self-service request does not change account status and therefore does not run this guard. Member 3 owns reservation transitions and must coordinate any change to those values before implementation.

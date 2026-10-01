@@ -22,10 +22,10 @@ public sealed class LoginRequest
         // Support ASP.NET Core model binding with a parameterless constructor.
     }
 
-    public LoginRequest(string identifier, string password)
+    public LoginRequest(string identifier, string password, string clientType)
     {
         // Initialize the login request for direct callers and tests.
-        (Identifier, Password) = (identifier, password);
+        (Identifier, Password, ClientType) = (identifier, password, clientType);
     }
 
     [Required, StringLength(320, MinimumLength = 3)]
@@ -33,6 +33,22 @@ public sealed class LoginRequest
 
     [Required, StringLength(128)]
     public string Password { get; init; } = string.Empty;
+
+    [Required, RegularExpression("^(Web|Android)$", ErrorMessage = "Client type must be Web or Android.")]
+    public string ClientType { get; init; } = string.Empty;
+}
+
+public sealed class RejectProsumerRequest
+{
+    public RejectProsumerRequest()
+    {
+        // Support ASP.NET Core model binding with a parameterless constructor.
+    }
+
+    public RejectProsumerRequest(string reason) => Reason = reason;
+
+    [Required, StringLength(500, MinimumLength = 3)]
+    public string Reason { get; init; } = string.Empty;
 }
 
 public sealed class RegisterProsumerRequest

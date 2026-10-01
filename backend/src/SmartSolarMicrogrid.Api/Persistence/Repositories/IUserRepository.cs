@@ -17,6 +17,8 @@ public interface IUserRepository
     Task<User?> FindByIdentifierAsync(string identifier, CancellationToken cancellationToken = default);
     // Return all accounts for Backoffice administration.
     Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default);
+    // Return Prosumer accounts in the requested lifecycle state.
+    Task<List<User>> GetProsumersByStatusAsync(UserStatus status, CancellationToken cancellationToken = default);
     // Count active Backoffice accounts before an administrative deactivation.
     Task<long> CountActiveBackofficeAsync(CancellationToken cancellationToken = default);
     // Persist a newly registered account.
@@ -30,6 +32,12 @@ public interface IUserRepository
         UserStatus status,
         string changedByIdentifier,
         DateTime changedAtUtc,
+        CancellationToken cancellationToken = default,
+        string? rejectionReason = null);
+    // Atomically record one pending self-service deactivation request.
+    Task<bool> RequestDeactivationAsync(
+        string nic,
+        DateTime requestedAtUtc,
         CancellationToken cancellationToken = default);
     // Record the latest successful authentication time.
     Task RecordSuccessfulLoginAsync(string identifier, DateTime loginAtUtc, CancellationToken cancellationToken = default);
