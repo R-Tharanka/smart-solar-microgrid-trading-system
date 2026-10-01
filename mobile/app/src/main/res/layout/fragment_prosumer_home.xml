@@ -26,10 +26,24 @@
         android:textSize="16sp" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/profile_button"
+        android:id="@+id/browse_stations_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="28dp"
+        android:text="Browse Stations" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/my_bookings_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="My Bookings" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/profile_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
         android:text="@string/profile_action" />
 
     <com.google.android.material.button.MaterialButton

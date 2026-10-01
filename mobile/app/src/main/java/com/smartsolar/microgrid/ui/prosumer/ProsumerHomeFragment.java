@@ -30,6 +30,10 @@ public class ProsumerHomeFragment extends Fragment {
 
         TextView welcome = view.findViewById(R.id.prosumer_welcome);
         welcome.setText(getString(R.string.welcome_user, session.getDisplayName()));
+        view.findViewById(R.id.browse_stations_button).setOnClickListener(button ->
+                NavHostFragment.findNavController(this).navigate(R.id.stationsFragment));
+        view.findViewById(R.id.my_bookings_button).setOnClickListener(button ->
+                NavHostFragment.findNavController(this).navigate(R.id.myBookingsFragment));
         view.findViewById(R.id.profile_button).setOnClickListener(button ->
                 NavHostFragment.findNavController(this).navigate(R.id.profileFragment));
         view.findViewById(R.id.logout_button).setOnClickListener(button ->
