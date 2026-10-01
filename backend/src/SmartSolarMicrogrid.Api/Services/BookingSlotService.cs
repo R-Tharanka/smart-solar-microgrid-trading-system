@@ -190,13 +190,8 @@ public sealed class BookingSlotService(
         {
             throw StationSlotException.Validation("SLOT_TIME_PAST", "Slot start time must be in the future.");
         }
-        if (startTimeUtc.Date != endTimeUtc.Date ||
-            startTimeUtc.TimeOfDay < station.OpeningTime || endTimeUtc.TimeOfDay > station.ClosingTime)
-        {
-            throw StationSlotException.Validation(
-                "SLOT_OUTSIDE_SCHEDULE",
-                "Slot times must fall within the station operating schedule on the same UTC day.");
-        }
+        // Removed restriction: Slots no longer need to be on the same UTC day
+        // or within the station operating schedule, per user request.
         if (availableEnergyKwh <= 0)
         {
             throw StationSlotException.Validation(
