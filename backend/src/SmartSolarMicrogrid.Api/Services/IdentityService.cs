@@ -326,6 +326,7 @@ public sealed class IdentityService(
     public async Task<List<UserResponse>> GetPendingProsumersAsync(
         CancellationToken cancellationToken = default)
     {
+        // Load and map only pending Prosumer registrations for Backoffice review.
         var users = await userRepository.GetProsumersByStatusAsync(UserStatus.Pending, cancellationToken);
         return users.Select(MapToResponse).ToList();
     }
@@ -335,6 +336,7 @@ public sealed class IdentityService(
         string nic,
         CancellationToken cancellationToken = default)
     {
+        // Enforce the pending-to-active Prosumer lifecycle transition.
         var user = await FindProsumerByNicAsync(nic, cancellationToken);
         if (user.Status != UserStatus.Pending)
         {
@@ -350,6 +352,7 @@ public sealed class IdentityService(
         RejectProsumerRequest request,
         CancellationToken cancellationToken = default)
     {
+        // Enforce the pending-to-rejected transition and persist its safe reason.
         var user = await FindProsumerByNicAsync(nic, cancellationToken);
         if (user.Status != UserStatus.Pending)
         {
@@ -428,6 +431,7 @@ public sealed class IdentityService(
 
     private async Task<User> FindProsumerByNicAsync(string nic, CancellationToken cancellationToken)
     {
+        // Resolve a normalized NIC only when it belongs to a Prosumer account.
         var user = await userRepository.FindByNicAsync(NormalizeNic(nic), cancellationToken);
         return user is { Role: UserRole.Prosumer } ? user : throw IdentityException.NotFound();
     }
@@ -482,6 +486,7 @@ public sealed class IdentityService(
 
     private static void EnsureLoginStatus(User user)
     {
+        // Return only for active accounts and map every inactive state to a stable login error.
         switch (user.Status)
         {
             case UserStatus.Active:
@@ -508,6 +513,7 @@ public sealed class IdentityService(
 
     private static void EnsureClientRoleAccess(UserRole role, string clientType)
     {
+        // Enforce the assignment's Web/Android role matrix before issuing a token.
         var normalizedClient = clientType.Trim();
         var allowed = normalizedClient.Equals("Web", StringComparison.OrdinalIgnoreCase)
             ? role is UserRole.Backoffice or UserRole.GridOperator

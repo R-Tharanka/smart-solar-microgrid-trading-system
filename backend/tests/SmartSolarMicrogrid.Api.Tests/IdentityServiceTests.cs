@@ -93,6 +93,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task PendingProsumer_CanBeActivatedOrRejectedOnlyByExpectedTransition()
     {
+        // Verify Backoffice review applies only the required pending-state outcomes.
         var repository = new FakeUserRepository();
         var activated = Prosumer();
         activated.Status = UserStatus.Pending;
@@ -119,6 +120,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task RegisterProsumer_ReusesRejectedNicRecordAsPending()
     {
+        // Verify resubmission updates the rejected NIC document instead of inserting a duplicate.
         var repository = new FakeUserRepository();
         var rejected = Prosumer();
         rejected.Status = UserStatus.Rejected;
@@ -222,6 +224,7 @@ public sealed class IdentityServiceTests
         string clientType,
         bool allowed)
     {
+        // Verify every allowed and forbidden Web/Android role combination.
         var repository = new FakeUserRepository();
         var user = role == UserRole.Prosumer
             ? Prosumer()
@@ -298,6 +301,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task RequestOwnDeactivation_RejectsDuplicateRequest()
     {
+        // Verify a Prosumer cannot create multiple pending deactivation requests.
         var repository = new FakeUserRepository();
         var user = Prosumer();
         user.DeactivationRequested = true;
@@ -314,6 +318,7 @@ public sealed class IdentityServiceTests
     [Fact]
     public async Task DeactivateUser_WithNonTerminalReservation_IsRejected()
     {
+        // Verify administrative deactivation retains the existing reservation safeguard.
         var repository = new FakeUserRepository();
         var user = Prosumer();
         user.DeactivationRequested = true;

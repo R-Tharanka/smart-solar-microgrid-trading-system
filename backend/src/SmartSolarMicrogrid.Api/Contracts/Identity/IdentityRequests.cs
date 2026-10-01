@@ -45,7 +45,11 @@ public sealed class RejectProsumerRequest
         // Support ASP.NET Core model binding with a parameterless constructor.
     }
 
-    public RejectProsumerRequest(string reason) => Reason = reason;
+    public RejectProsumerRequest(string reason)
+    {
+        // Initialize the required rejection reason for direct callers and tests.
+        Reason = reason;
+    }
 
     [Required, StringLength(500, MinimumLength = 3)]
     public string Reason { get; init; } = string.Empty;

@@ -65,6 +65,7 @@ public sealed class UsersController(IIdentityService identityService) : Controll
     public async Task<ActionResult<ApiEnvelope<IReadOnlyCollection<UserResponse>>>> GetPendingProsumers(
         CancellationToken cancellationToken)
     {
+        // Return the pending public registrations awaiting Backoffice review.
         var users = await identityService.GetPendingProsumersAsync(cancellationToken);
         return Ok(new ApiEnvelope<IReadOnlyCollection<UserResponse>>(users));
     }
@@ -74,6 +75,7 @@ public sealed class UsersController(IIdentityService identityService) : Controll
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> ActivateProsumer(string nic, CancellationToken cancellationToken)
     {
+        // Activate the selected pending Prosumer using the authenticated Backoffice actor.
         await identityService.ActivateProsumerAsync(CurrentIdentifier(), nic, cancellationToken);
         return NoContent();
     }
@@ -86,6 +88,7 @@ public sealed class UsersController(IIdentityService identityService) : Controll
         RejectProsumerRequest request,
         CancellationToken cancellationToken)
     {
+        // Reject the selected pending Prosumer and retain the supplied review reason.
         await identityService.RejectProsumerAsync(CurrentIdentifier(), nic, request, cancellationToken);
         return NoContent();
     }
