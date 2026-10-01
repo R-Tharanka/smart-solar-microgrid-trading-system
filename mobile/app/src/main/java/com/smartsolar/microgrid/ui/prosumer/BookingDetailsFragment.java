@@ -175,7 +175,7 @@ public class BookingDetailsFragment extends Fragment {
             @Override
             public void onError(ApiError error) {
                 showLoading(false);
-                Toast.makeText(requireContext(), error.getUserMessage(), Toast.LENGTH_LONG).show();
+                showErrorDialog("Update Failed", error.getUserMessage());
             }
         });
     }
@@ -204,9 +204,17 @@ public class BookingDetailsFragment extends Fragment {
             @Override
             public void onError(ApiError error) {
                 showLoading(false);
-                Toast.makeText(requireContext(), error.getUserMessage(), Toast.LENGTH_LONG).show();
+                showErrorDialog("Cancel Failed", error.getUserMessage());
             }
         });
+    }
+
+    private void showErrorDialog(String title, String message) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .show();
     }
 
     private void showLoading(boolean isLoading) {
