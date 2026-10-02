@@ -12,6 +12,7 @@ import Button from '../../components/ui/Button';
 import FormField from '../../components/ui/FormField';
 import Modal from '../../components/ui/Modal';
 import PageHeader from '../../components/ui/PageHeader';
+import ViewToggle from '../../components/ui/ViewToggle';
 import { EmptyState, LoadingState } from '../../components/ui/PageState';
 import { useToast } from '../../context/ToastContext';
 
@@ -45,6 +46,14 @@ const toUtcBoundary = (date, endOfDay = false) => {
   return new Date(`${date}${suffix}`).toISOString();
 };
 
+const SlotActions = ({ slot, canEditSlots, isBackoffice, onDetails, onEdit, onStatus }) => (
+  <div className="flex flex-wrap gap-1">
+    <Button variant="secondary" onClick={() => onDetails(slot)}>Details</Button>
+    {canEditSlots && <Button variant="ghost" onClick={() => onEdit(slot)} disabled={['Reserved', 'Expired'].includes(slot.status)}>Edit</Button>}
+    {isBackoffice && <Button variant="ghost" onClick={() => onStatus(slot)} disabled={!['Available', 'Unavailable'].includes(slot.status)}>Availability</Button>}
+  </div>
+);
+
 const Slots = () => {
   const { user } = useContext(AuthContext);
   const { notify } = useToast();
@@ -60,6 +69,7 @@ const Slots = () => {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [viewMode, setViewMode] = useState('grid');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -233,10 +243,32 @@ const Slots = () => {
         </div>
       </div>
 
+      <div className="mb-5"><ViewToggle value={viewMode} onChange={setViewMode} label="Energy slots" /></div>
+
       {error && <Alert className="mb-5" title="Unable to complete slot request">{error}</Alert>}
 
       {loadingSlots || loadingStations ? <LoadingState label="Loading energy windows…" /> : visibleSlots.length === 0 ? <EmptyState title="No energy windows found" description={selectedStationCode ? 'Adjust your filters to explore other schedules.' : 'Select a station to explore its energy availability.'} /> : (
-        <div className="energy-slot-grid">
+        viewMode === 'list' ? (
+          <section className="app-table-wrap" aria-label="Energy slot list">
+            <div className="overflow-x-auto">
+              <table className="app-table">
+                <thead><tr><th scope="col">Slot</th><th scope="col">Station</th><th scope="col">From (UTC)</th><th scope="col">Until (UTC)</th><th scope="col">Energy</th><th scope="col">Price / kWh</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
+                <tbody>{visibleSlots.map((slot) => (
+                  <tr key={slot.slotCode}>
+                    <td className="whitespace-nowrap font-mono">{slot.slotCode}</td>
+                    <td className="min-w-36">{selectedStation?.name || selectedStationCode}</td>
+                    <td className="whitespace-nowrap">{formatUtcDateTime(slot.startTimeUtc)}</td>
+                    <td className="whitespace-nowrap">{formatUtcDateTime(slot.endTimeUtc)}</td>
+                    <td className="whitespace-nowrap">{slot.availableEnergyKwh} kWh</td>
+                    <td className="whitespace-nowrap">${Number(slot.pricePerKwh).toFixed(2)}</td>
+                    <td><SlotStatusBadge status={slot.status} /></td>
+                    <td className="min-w-52"><SlotActions slot={slot} canEditSlots={canEditSlots} isBackoffice={isBackoffice} onDetails={openDetails} onEdit={openEdit} onStatus={openStatusDialog} /></td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          </section>
+        ) : <div className="energy-slot-grid">
           {visibleSlots.map((slot) => (
             <article key={slot.slotCode} className="energy-slot-card">
               <div className="flex flex-wrap items-center justify-between gap-2"><span className="asset-code">{slot.slotCode}</span><SlotStatusBadge status={slot.status} /></div>
@@ -245,7 +277,7 @@ const Slots = () => {
               <p className="text-sm text-slate-500">{selectedStation?.name || selectedStationCode}</p>
               <div className="slot-window"><div><span>From</span><strong>{formatUtcDateTime(slot.startTimeUtc)}</strong></div><div><span>Until</span><strong>{formatUtcDateTime(slot.endTimeUtc)}</strong></div></div>
               <div className="asset-meta"><span>Price per kWh</span><strong>${Number(slot.pricePerKwh).toFixed(2)}</strong></div>
-              <div className="asset-actions"><Button variant="secondary" onClick={() => openDetails(slot)}>Details</Button>{canEditSlots && <Button variant="ghost" onClick={() => openEdit(slot)} disabled={['Reserved', 'Expired'].includes(slot.status)}>Edit</Button>}{isBackoffice && <Button variant="ghost" onClick={() => openStatusDialog(slot)} disabled={!['Available', 'Unavailable'].includes(slot.status)}>Availability</Button>}</div>
+              <div className="asset-actions"><SlotActions slot={slot} canEditSlots={canEditSlots} isBackoffice={isBackoffice} onDetails={openDetails} onEdit={openEdit} onStatus={openStatusDialog} /></div>
             </article>
           ))}
         </div>

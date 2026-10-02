@@ -10,6 +10,10 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.smartsolar.microgrid.R;
+import com.smartsolar.microgrid.data.api.ApiCallback;
+import com.smartsolar.microgrid.data.api.ApiError;
+import com.smartsolar.microgrid.data.identity.IdentityRepository;
+import com.smartsolar.microgrid.data.identity.UserResponse;
 import com.smartsolar.microgrid.data.session.Session;
 import com.smartsolar.microgrid.data.session.SessionManager;
 import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
@@ -34,5 +38,20 @@ public class ProsumerHomeFragment extends Fragment {
                 NavHostFragment.findNavController(this).navigate(R.id.profileFragment));
         view.findViewById(R.id.logout_button).setOnClickListener(button ->
                 AuthenticationNavigator.logout(this));
+
+        new IdentityRepository(requireContext()).getProfile(new ApiCallback<UserResponse>() {
+            @Override
+            public void onSuccess(UserResponse user, String message) {
+                if (getView() != view || user == null) return;
+                view.findViewById(R.id.prosumer_deactivation_request)
+                        .setVisibility(user.isDeactivationRequested() ? View.VISIBLE : View.GONE);
+            }
+
+            @Override
+            public void onError(ApiError error) {
+                if (getView() != view) return;
+                AuthenticationNavigator.handleExpiredSession(ProsumerHomeFragment.this, error);
+            }
+        });
     }
 }

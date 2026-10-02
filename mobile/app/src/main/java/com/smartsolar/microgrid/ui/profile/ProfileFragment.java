@@ -61,8 +61,8 @@ public class ProfileFragment extends Fragment {
         repository.getProfile(new ApiCallback<UserResponse>() {
             @Override
             public void onSuccess(UserResponse user, String message) {
-                if (!isAdded() || getView() == null) return;
                 requestRunning = false;
+                if (!isAdded() || getView() == null) return;
                 if (user == null) {
                     showOnly(emptyState);
                     return;
@@ -73,8 +73,8 @@ public class ProfileFragment extends Fragment {
 
             @Override
             public void onError(ApiError error) {
-                if (!isAdded()) return;
                 requestRunning = false;
+                if (!isAdded() || getView() == null) return;
                 if (AuthenticationNavigator.handleExpiredSession(ProfileFragment.this, error)) return;
                 errorView.setText(error.getUserMessage());
                 showOnly(errorState);
@@ -90,6 +90,14 @@ public class ProfileFragment extends Fragment {
         setText(view, R.id.profile_phone, user.getPhoneNumber());
         setText(view, R.id.profile_address, user.getAddress());
         setText(view, R.id.profile_status, user.getStatus());
+        showDeactivationRequestState(view, user.isDeactivationRequested());
+    }
+
+    private void showDeactivationRequestState(View view, boolean requested) {
+        // Keep the pending request separate from the account's active status.
+        view.findViewById(R.id.profile_deactivation_request)
+                .setVisibility(requested ? View.VISIBLE : View.GONE);
+        view.findViewById(R.id.deactivate_button).setEnabled(!requested);
     }
 
     private void setText(View view, int id, String value) {
@@ -109,24 +117,31 @@ public class ProfileFragment extends Fragment {
     }
 
     private void deactivateAccount() {
+        if (requestRunning) return;
         showOnly(progressBar);
         requestRunning = true;
-        repository.deactivateOwnAccount(new ApiCallback<Void>() {
+        repository.requestOwnDeactivation(new ApiCallback<Void>() {
             @Override
             public void onSuccess(Void data, String message) {
-                if (!isAdded()) return;
                 requestRunning = false;
-                repository.logout();
-                Toast.makeText(requireContext(), R.string.account_deactivated,
+                if (!isAdded() || getView() == null) return;
+                showDeactivationRequestState(requireView(), true);
+                showOnly(content);
+                Toast.makeText(requireContext(), R.string.deactivation_request_sent,
                         Toast.LENGTH_LONG).show();
-                AuthenticationNavigator.logout(ProfileFragment.this);
             }
 
             @Override
             public void onError(ApiError error) {
-                if (!isAdded()) return;
                 requestRunning = false;
+                if (!isAdded() || getView() == null) return;
                 if (AuthenticationNavigator.handleExpiredSession(ProfileFragment.this, error)) return;
+                if ("USER_DEACTIVATION_ALREADY_REQUESTED".equals(error.getErrorCode())) {
+                    showDeactivationRequestState(requireView(), true);
+                    showOnly(content);
+                    Toast.makeText(requireContext(), error.getUserMessage(), Toast.LENGTH_LONG).show();
+                    return;
+                }
                 errorView.setText(error.getUserMessage());
                 showOnly(errorState);
             }

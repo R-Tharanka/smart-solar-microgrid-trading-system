@@ -25,6 +25,17 @@
         android:textColor="@color/text_primary"
         android:textSize="16sp" />
 
+    <TextView
+        android:id="@+id/prosumer_deactivation_request"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:text="@string/deactivation_request_pending"
+        android:textColor="@color/text_primary"
+        android:textSize="14sp"
+        android:visibility="gone" />
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/profile_button"
         android:layout_width="match_parent"

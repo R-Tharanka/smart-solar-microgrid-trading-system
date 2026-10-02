@@ -1,8 +1,7 @@
-import { CheckBadgeIcon, IdentificationIcon, PowerIcon } from '@heroicons/react/24/outline';
+import { CheckBadgeIcon, IdentificationIcon } from '@heroicons/react/24/outline';
 import { useContext, useEffect, useState } from 'react';
 import Alert from '../../components/ui/Alert';
 import Button from '../../components/ui/Button';
-import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import FormField from '../../components/ui/FormField';
 import PageHeader from '../../components/ui/PageHeader';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -15,14 +14,12 @@ import { firstValidationMessage, getApiError } from '../../utils/apiError';
 const PHONE_PATTERN = /^\+?[0-9]{9,15}$/;
 
 export default function Profile() {
-  const { user, refreshUser, logout } = useContext(AuthContext);
+  const { user, refreshUser } = useContext(AuthContext);
   const { notify } = useToast();
   const [form, setForm] = useState({ firstName: '', lastName: '', phoneNumber: '', address: '' });
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [deactivateOpen, setDeactivateOpen] = useState(false);
-  const [deactivating, setDeactivating] = useState(false);
 
   useEffect(() => {
     setForm({
@@ -84,19 +81,6 @@ export default function Profile() {
     }
   };
 
-  const deactivate = async () => {
-    setDeactivating(true);
-    try {
-      await apiClient.post('/users/me/deactivate');
-      logout('Your account was deactivated. Contact Backoffice if it needs to be restored.');
-    } catch (error) {
-      notify(getApiError(error, 'Your account could not be deactivated.').message, 'error');
-      setDeactivateOpen(false);
-    } finally {
-      setDeactivating(false);
-    }
-  };
-
   return (
     <MainLayout title="My profile">
       <PageHeader eyebrow="Account identity" title="My profile" description="Keep your energy network identity and contact details up to date." />
@@ -136,25 +120,9 @@ export default function Profile() {
             </dl>
           </section>
 
-          {user.role === 'Prosumer' ? (
-            <section className="app-panel border-red-200 p-5">
-              <h2 className="font-semibold text-slate-900">Account deactivation</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Resolve active reservations before deactivating. Only Backoffice can restore your account.</p>
-              <Button className="mt-4 w-full" variant="danger" icon={PowerIcon} onClick={() => setDeactivateOpen(true)}>Deactivate my account</Button>
-            </section>
-          ) : null}
         </aside>
       </div>
 
-      <ConfirmDialog
-        open={deactivateOpen}
-        title="Deactivate your account?"
-        description="You will be signed out immediately and cannot sign in again until Backoffice reactivates the account."
-        confirmLabel="Deactivate my account"
-        loading={deactivating}
-        onConfirm={deactivate}
-        onClose={() => setDeactivateOpen(false)}
-      />
     </MainLayout>
   );
 }

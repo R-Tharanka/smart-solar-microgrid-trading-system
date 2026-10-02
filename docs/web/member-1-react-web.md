@@ -2,7 +2,19 @@
 
 Status: UI modernization complete; transaction surfaces integrated; final live API/browser evidence pending
 Owners: Shared web client, with Member 1 identity/account workflows
-Audit date: 2026-09-29
+Audit date: 2026-10-02
+
+## Member 1 API Integration Correction
+
+Web login now sends `clientType: "Web"`. Only active Backoffice and Grid Operator accounts establish Web sessions. Legacy Prosumer sessions are cleared with guidance to use the mobile application; `/prosumer/*` redirects to login. The historical Prosumer Web features described below are superseded by this correction.
+
+Prosumer management includes an addressable `?view=pending` activation queue with profile cards, search, a current pending count, focused review, activation confirmation, and rejection with the required 3–500 character reason. Reviews use the existing pending/activate/reject endpoints through `services/identity.js`. Successful decisions remove the item immediately; returning to all accounts reloads current data. The existing sidebar entry remains the parent of both management views.
+
+All four account statuses are supported. Deactivation requests appear as a separate badge and filter while the account remains Active. The existing administrative action processes requests with confirmation and reservation-aware error feedback. Details expose the request timestamp when available and the safe rejection reason. Web self-deactivation has been removed.
+
+Contract limitations: registration dates and pending duration are not supplied by the user DTO and are therefore omitted. Protected authorization can return an undifferentiated 403; the existing API interceptor performs one shared `/users/me` check after an ambiguous denial, preserving valid sessions on ordinary role denial. It never polls. Backend code is unchanged.
+
+Verification: edited JavaScript/JSX receives targeted lint and a production build; no browser automation or visual evidence is produced. Live API and keyboard/responsive acceptance remain manual follow-up. Android still needs its separate clientType, lifecycle, and deactivation-request integration.
 
 ## Public Home and Route Behavior
 
@@ -14,7 +26,7 @@ The root route now supports a public Home/Index page without changing authentica
 | Unauthenticated | Public Home/Index page |
 | Backoffice | `/backoffice` |
 | Grid Operator | `/grid-operator` |
-| Prosumer | `/prosumer` |
+| Legacy Prosumer session | Cleared; redirected to login with mobile application guidance |
 
 The Home/Index page introduces the real system through a generated project-owned microgrid hero image, system workflow, role responsibilities, implemented capabilities, smart-grid relationship visualization, actual project technologies, final sign-in action and project footer. It contains no authenticated records or fabricated operational metrics.
 

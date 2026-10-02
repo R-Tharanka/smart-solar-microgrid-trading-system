@@ -26,4 +26,14 @@ public class ApiErrorHandlerTest {
         assertEquals("The server is temporarily unavailable. Please try again later.",
                 error.getUserMessage());
     }
+
+    @Test
+    public void fromHttpResponse_explainsPendingActivation() {
+        ApiError error = ApiErrorHandler.fromHttpResponse(403,
+                "{\"errorCode\":\"AUTH_ACCOUNT_PENDING\"}");
+
+        assertEquals("AUTH_ACCOUNT_PENDING", error.getErrorCode());
+        assertEquals("Your registration is awaiting Backoffice activation. Please try again after it has been approved.",
+                error.getUserMessage());
+    }
 }
