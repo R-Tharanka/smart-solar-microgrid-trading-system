@@ -61,6 +61,21 @@ public class User
     [BsonElement("reactivatedAtUtc")]
     public DateTime? ReactivatedAtUtc { get; set; }
 
+    [BsonElement("deactivationRequested")]
+    public bool DeactivationRequested { get; set; }
+
+    [BsonIgnoreIfNull]
+    [BsonElement("deactivationRequestedAtUtc")]
+    public DateTime? DeactivationRequestedAtUtc { get; set; }
+
+    [BsonIgnoreIfNull]
+    [BsonElement("rejectionReason")]
+    public string? RejectionReason { get; set; }
+
+    [BsonIgnoreIfNull]
+    [BsonElement("rejectedAtUtc")]
+    public DateTime? RejectedAtUtc { get; set; }
+
     [BsonIgnoreIfNull]
     [BsonElement("statusChangedByIdentifier")]
     public string? StatusChangedByIdentifier { get; set; }

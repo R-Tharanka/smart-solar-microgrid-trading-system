@@ -22,7 +22,7 @@ public sealed class IdentityService(
         LoginRequest request,
         CancellationToken cancellationToken = default)
     {
-        // Normalize the login identifier, verify credentials, and enforce active status.
+        // Normalize the login identifier, verify credentials, and enforce status and client access.
         var identifier = NormalizeIdentifier(request.Identifier);
         var user = await userRepository.FindByIdentifierAsync(identifier, cancellationToken);
 
@@ -32,11 +32,8 @@ public sealed class IdentityService(
             throw IdentityException.Unauthorized();
         }
 
-        if (user.Status != UserStatus.Active)
-        {
-            logger.LogWarning("Authentication denied for inactive {Role} account", user.Role);
-            throw IdentityException.Forbidden("AUTH_ACCOUNT_INACTIVE", "Account is not active.");
-        }
+        EnsureLoginStatus(user);
+        EnsureClientRoleAccess(user.Role, request.ClientType);
 
         var token = jwtTokenGenerator.GenerateToken(user);
         await userRepository.RecordSuccessfulLoginAsync(identifier, DateTime.UtcNow, cancellationToken);
@@ -51,6 +48,8 @@ public sealed class IdentityService(
         await CreateProsumerAccountAsync(
             request,
             createdByIdentifier: null,
+            initialStatus: UserStatus.Pending,
+            allowRejectedResubmission: true,
             cancellationToken: cancellationToken);
 
     public async Task<UserResponse> CreateProsumerAsync(
@@ -60,11 +59,15 @@ public sealed class IdentityService(
         await CreateProsumerAccountAsync(
             request,
             NormalizeIdentifier(actorIdentifier),
+            UserStatus.Active,
+            allowRejectedResubmission: false,
             cancellationToken);
 
     private async Task<UserResponse> CreateProsumerAccountAsync(
         RegisterProsumerRequest request,
         string? createdByIdentifier,
+        UserStatus initialStatus,
+        bool allowRejectedResubmission,
         CancellationToken cancellationToken)
     {
         // Normalize Prosumer data and reject duplicate business identifiers.
@@ -75,8 +78,45 @@ public sealed class IdentityService(
         var phoneNumber = RequiredPhone(request.PhoneNumber);
         var address = RequiredText(request.Address, "Address");
 
-        if (await userRepository.FindByNicAsync(nic, cancellationToken) is not null)
+        var existingNic = await userRepository.FindByNicAsync(nic, cancellationToken);
+        if (existingNic is not null)
         {
+            if (allowRejectedResubmission &&
+                existingNic.Role == UserRole.Prosumer &&
+                existingNic.Status == UserStatus.Rejected)
+            {
+                var emailOwner = await userRepository.FindByEmailAsync(email, cancellationToken);
+                if (emailOwner is not null && emailOwner.Nic != nic)
+                {
+                    throw IdentityException.Conflict("USER_EMAIL_EXISTS", "Email is already registered.");
+                }
+
+                existingNic.Email = email;
+                existingNic.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+                existingNic.FirstName = firstName;
+                existingNic.LastName = lastName;
+                existingNic.PhoneNumber = phoneNumber;
+                existingNic.Address = address;
+                existingNic.Status = UserStatus.Pending;
+                existingNic.StatusChangedByIdentifier = nic;
+                existingNic.RejectionReason = null;
+                existingNic.RejectedAtUtc = null;
+                existingNic.DeactivationRequested = false;
+                existingNic.DeactivationRequestedAtUtc = null;
+
+                try
+                {
+                    await userRepository.UpdateAsync(existingNic, cancellationToken);
+                }
+                catch (MongoWriteException exception) when (exception.WriteError.Category == ServerErrorCategory.DuplicateKey)
+                {
+                    throw IdentityException.Conflict("USER_EMAIL_EXISTS", "Email is already registered.");
+                }
+
+                logger.LogInformation("Rejected Prosumer registration resubmitted for Backoffice review");
+                return MapToResponse(existingNic);
+            }
+
             throw IdentityException.Conflict("USER_NIC_EXISTS", "NIC is already registered.");
         }
 
@@ -95,7 +135,7 @@ public sealed class IdentityService(
             PhoneNumber = phoneNumber,
             Address = address,
             Role = UserRole.Prosumer,
-            Status = UserStatus.Active,
+            Status = initialStatus,
             CreatedByIdentifier = createdByIdentifier
         };
 
@@ -254,26 +294,77 @@ public sealed class IdentityService(
         logger.LogInformation("Password changed for {Role} account", user.Role);
     }
 
-    public async Task DeactivateOwnAccountAsync(
+    public async Task RequestOwnDeactivationAsync(
         string identifier,
         CancellationToken cancellationToken = default)
     {
-        // Permit self-deactivation only for active Prosumers without blocking reservations.
+        // Record a Prosumer request without changing the active account status.
         var user = await FindRequiredUserAsync(identifier, cancellationToken);
         if (user.Role != UserRole.Prosumer)
         {
             throw IdentityException.Forbidden(
                 "USER_SELF_DEACTIVATION_FORBIDDEN",
-                "Only Prosumers can deactivate their own account.");
+                "Only Prosumers can request deactivation of their own account.");
         }
 
         if (user.Status != UserStatus.Active)
         {
-            throw IdentityException.Conflict("USER_INVALID_STATUS", "Only an active account can be deactivated.");
+            throw IdentityException.Conflict("USER_INVALID_STATUS", "Only an active account can request deactivation.");
         }
 
-        await accountDeactivationGuard.EnsureCanDeactivateAsync(user.Nic!, cancellationToken);
-        await SetStatusAsync(user, UserStatus.Deactivated, user.Nic!, cancellationToken);
+        if (user.DeactivationRequested ||
+            !await userRepository.RequestDeactivationAsync(user.Nic!, DateTime.UtcNow, cancellationToken))
+        {
+            throw IdentityException.Conflict(
+                "USER_DEACTIVATION_ALREADY_REQUESTED",
+                "A deactivation request is already pending Backoffice review.");
+        }
+
+        logger.LogInformation("Prosumer deactivation requested");
+    }
+
+    public async Task<List<UserResponse>> GetPendingProsumersAsync(
+        CancellationToken cancellationToken = default)
+    {
+        // Load and map only pending Prosumer registrations for Backoffice review.
+        var users = await userRepository.GetProsumersByStatusAsync(UserStatus.Pending, cancellationToken);
+        return users.Select(MapToResponse).ToList();
+    }
+
+    public async Task ActivateProsumerAsync(
+        string actorIdentifier,
+        string nic,
+        CancellationToken cancellationToken = default)
+    {
+        // Enforce the pending-to-active Prosumer lifecycle transition.
+        var user = await FindProsumerByNicAsync(nic, cancellationToken);
+        if (user.Status != UserStatus.Pending)
+        {
+            throw IdentityException.Conflict("USER_INVALID_STATUS", "Only a pending Prosumer can be activated.");
+        }
+
+        await SetStatusAsync(user, UserStatus.Active, actorIdentifier, cancellationToken);
+    }
+
+    public async Task RejectProsumerAsync(
+        string actorIdentifier,
+        string nic,
+        RejectProsumerRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        // Enforce the pending-to-rejected transition and persist its safe reason.
+        var user = await FindProsumerByNicAsync(nic, cancellationToken);
+        if (user.Status != UserStatus.Pending)
+        {
+            throw IdentityException.Conflict("USER_INVALID_STATUS", "Only a pending Prosumer can be rejected.");
+        }
+
+        await SetStatusAsync(
+            user,
+            UserStatus.Rejected,
+            actorIdentifier,
+            cancellationToken,
+            RequiredText(request.Reason, "Rejection reason"));
     }
 
     public async Task ReactivateUserAsync(
@@ -338,6 +429,13 @@ public sealed class IdentityService(
             ?? throw IdentityException.NotFound();
     }
 
+    private async Task<User> FindProsumerByNicAsync(string nic, CancellationToken cancellationToken)
+    {
+        // Resolve a normalized NIC only when it belongs to a Prosumer account.
+        var user = await userRepository.FindByNicAsync(NormalizeNic(nic), cancellationToken);
+        return user is { Role: UserRole.Prosumer } ? user : throw IdentityException.NotFound();
+    }
+
     private async Task CreateUserAsync(User user, CancellationToken cancellationToken)
     {
         // Translate a database unique-index race into the public identity conflict contract.
@@ -357,7 +455,8 @@ public sealed class IdentityService(
         User user,
         UserStatus status,
         string changedByIdentifier,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? rejectionReason = null)
     {
         // Perform an expected-state transition and retain the normalized actor for auditing.
         var normalizedActor = NormalizeIdentifier(changedByIdentifier);
@@ -367,7 +466,8 @@ public sealed class IdentityService(
                 status,
                 normalizedActor,
                 DateTime.UtcNow,
-                cancellationToken))
+                cancellationToken,
+                rejectionReason))
         {
             throw IdentityException.NotFound();
         }
@@ -382,6 +482,54 @@ public sealed class IdentityService(
         {
             throw IdentityException.Forbidden("AUTH_ACCOUNT_INACTIVE", "Account is not active.");
         }
+    }
+
+    private static void EnsureLoginStatus(User user)
+    {
+        // Return only for active accounts and map every inactive state to a stable login error.
+        switch (user.Status)
+        {
+            case UserStatus.Active:
+                return;
+            case UserStatus.Pending:
+                throw IdentityException.Forbidden(
+                    "AUTH_ACCOUNT_PENDING",
+                    "Your registration is pending Backoffice activation.");
+            case UserStatus.Rejected:
+                var reason = string.IsNullOrWhiteSpace(user.RejectionReason)
+                    ? string.Empty
+                    : $" Reason: {user.RejectionReason}";
+                throw IdentityException.Forbidden(
+                    "AUTH_REGISTRATION_REJECTED",
+                    $"Your registration was rejected. You may submit it again for review.{reason}");
+            case UserStatus.Deactivated:
+                throw IdentityException.Forbidden(
+                    "AUTH_ACCOUNT_DEACTIVATED",
+                    "This account has been deactivated. Contact Backoffice for assistance.");
+            default:
+                throw IdentityException.Forbidden("AUTH_ACCOUNT_INACTIVE", "Account is not active.");
+        }
+    }
+
+    private static void EnsureClientRoleAccess(UserRole role, string clientType)
+    {
+        // Enforce the assignment's Web/Android role matrix before issuing a token.
+        var normalizedClient = clientType.Trim();
+        var allowed = normalizedClient.Equals("Web", StringComparison.OrdinalIgnoreCase)
+            ? role is UserRole.Backoffice or UserRole.GridOperator
+            : normalizedClient.Equals("Android", StringComparison.OrdinalIgnoreCase)
+                ? role is UserRole.Prosumer or UserRole.GridOperator
+                : throw IdentityException.Validation("Client type must be Web or Android.");
+
+        if (allowed)
+        {
+            return;
+        }
+
+        var message = role == UserRole.Prosumer
+            ? "Prosumer accounts are accessed through the mobile application."
+            : "Backoffice accounts are accessed through the web application.";
+        throw IdentityException.Forbidden("AUTH_CLIENT_ROLE_FORBIDDEN", message);
     }
 
     private static string NormalizeIdentifier(string identifier)
@@ -436,6 +584,9 @@ public sealed class IdentityService(
             user.PhoneNumber,
             user.Address,
             user.Role.ToString(),
-            user.Status.ToString());
+            user.Status.ToString(),
+            user.DeactivationRequested,
+            user.DeactivationRequestedAtUtc,
+            user.RejectionReason);
     }
 }

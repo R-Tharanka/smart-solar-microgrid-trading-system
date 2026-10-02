@@ -7,10 +7,12 @@ Scope: Identity, authentication, authorization and account management
 
 | Question | Phase 3 decision |
 | --- | --- |
-| Prosumer registration status | Immediately `Active`; `Pending` remains reserved for a future approval workflow. |
+| Prosumer registration status | Public registration enters `Pending`; only Backoffice activation transitions it to `Active`. |
+| Login client access | Web permits Backoffice/Grid Operator; Android permits Prosumer/Grid Operator. The API enforces this from required `clientType`. |
 | Public identity | NIC for Prosumers and normalized email for staff; MongoDB `_id` remains internal. |
 | Initial Backoffice account | Optional one-time environment-configured bootstrap; no default password exists in source. |
-| Prosumer deactivation with reservations | Block while any reservation is `Pending`, `Approved`, `QrIssued`, or `Verified`. |
+| Prosumer deactivation | Self-service records a request while status remains `Active`; Backoffice performs the guarded administrative transition. |
+| Prosumer deactivation with reservations | Administrative deactivation is blocked while any reservation is `Pending`, `Approved`, `QrIssued`, or `Verified`. |
 | Deactivated JWT behavior | All protected policies re-check the account and deny non-Active users immediately. |
 
 ## Delivered
@@ -22,7 +24,7 @@ Scope: Identity, authentication, authorization and account management
 - Idempotent migration of user documents created by the earlier Pascal-case prototype.
 - Repository, identity service, JWT generator and controller layers.
 - `Authenticated`, `ProsumerOnly`, `GridOperatorOnly`, `BackofficeOnly`, and shared staff policies.
-- Public registration and login; profile read/update; password change; staff creation; Backoffice Prosumer creation/update; user list; explicit deactivate/reactivate commands.
+- Public pending registration/resubmission and client-aware login; profile read/update; password change; staff creation; Backoffice Prosumer creation/update; pending review; explicit activation/rejection/deactivation/reactivation commands.
 - Required Prosumer phone number and address fields in registration, profile updates and responses.
 - Active-Prosumer service lookup for reservation ownership validation without exposing credential data.
 - Account lifecycle timestamps and actor identifier audit fields.
@@ -74,7 +76,7 @@ Health endpoints are `/health/live` and `/health/ready`. The readiness endpoint 
 | Backoffice, Grid Operator and Prosumer policies | Authorization tests | Passed |
 | Profile ownership | Controller always derives identity from JWT claim | Implemented |
 | Backoffice Prosumer create/update | Service, DTO and authorization tests | Implemented |
-| Deactivation/reactivation transitions | Service tests | Passed |
+| Activation/rejection/deactivation-request/deactivation/reactivation transitions | Service implementation and structural build | Implemented; focused regression execution pending |
 | Reservation-aware deactivation | Guard/service test | Passed |
 | MongoDB indexes and persistence | Startup initializer | Requires live Atlas verification |
 | HTTP status/response evidence | Postman collection prepared | Requires Collection Runner capture |

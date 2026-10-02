@@ -43,7 +43,7 @@ Recommended fields:
 | `phoneNumber` | string | Yes for Prosumer | Contact details. |
 | `address` | string | Required for Prosumer | Profile details. |
 | `role` | enum | Yes | `Backoffice`, `GridOperator`, `Prosumer`. |
-| `status` | enum | Yes | `Pending`, `Active`, `Deactivated`. |
+| `status` | enum | Yes | `Pending`, `Active`, `Deactivated`, `Rejected`. |
 | `passwordHash` | string | Yes | Never store plaintext passwords. |
 | `createdAtUtc` | datetime | Yes | Server-generated. |
 | `updatedAtUtc` | datetime | Yes | Server-generated. |
@@ -52,6 +52,10 @@ Recommended fields:
 | `createdByIdentifier` | string | Optional | Backoffice email that administratively created an account. |
 | `statusChangedByIdentifier` | string | Optional | Business identifier of the lifecycle actor. |
 | `lastLoginAtUtc` | datetime | Optional | Updated on successful login. |
+| `deactivationRequested` | boolean | Yes | True while an active Prosumer request awaits Backoffice processing. |
+| `deactivationRequestedAtUtc` | datetime | Optional | Timestamp of the pending request. |
+| `rejectionReason` | string | Optional | Safe Backoffice reason for a rejected registration. |
+| `rejectedAtUtc` | datetime | Optional | Set when Backoffice rejects a pending registration. |
 
 Recommended indexes:
 
@@ -73,6 +77,8 @@ Rules:
 
 - A user can never choose their own elevated role during public registration.
 - Prosumer public registration always creates role `Prosumer`.
+- Prosumer public registration enters `Pending`; Backoffice activates or rejects it.
+- Web login permits Backoffice/Grid Operator; Android login permits Prosumer/Grid Operator.
 - Backoffice is the only role allowed to create Backoffice/Grid Operator accounts.
 - Backoffice administrative Prosumer creation always creates role `Prosumer` and records the actor.
 - Only Backoffice may update another Prosumer or reactivate a deactivated account.
@@ -83,7 +89,7 @@ Rules:
 | Deliverable | Details |
 | --- | --- |
 | Models | `User`, `UserRole`, `UserStatus`. |
-| DTOs | Register, login, login response, user response, own-profile update, administrative Prosumer update, password change and staff creation. |
+| DTOs | Register, client-aware login, login response, user response, rejection, own-profile update, administrative Prosumer update, password change and staff creation. |
 | Services | `IdentityService`, `JwtTokenGenerator`, account deactivation guard. |
 | Controllers | `UsersController`. |
 | Middleware | Consistent exception/error response middleware. |
@@ -97,7 +103,7 @@ Rules:
 | Login page | Login form with validation, loading and API error state. |
 | Role-based routing | Redirect Backoffice and Grid Operator to correct dashboards. |
 | User management | Backoffice create/list/update/deactivate/reactivate users. |
-| Prosumer management | Backoffice create, view, update, deactivate and reactivate Prosumer accounts. |
+| Prosumer management | Backoffice review/activate/reject pending registrations and create, view, update, deactivate and reactivate Prosumer accounts. |
 | Auth guard | Prevent unauthenticated web access to protected pages. |
 
 ## 7. Android Deliverables
@@ -107,7 +113,7 @@ Rules:
 | Prosumer registration | Register using NIC, profile details and password. |
 | Login | Authenticate through API and store required local login/reference data. |
 | Profile view/edit | Allow Prosumer to view and update own profile. |
-| Account deactivation request | Allow self-service request/deactivation if implemented by the group. |
+| Account deactivation request | Record a self-service request while the account remains active for Backoffice processing. |
 | Role home routing | Route Prosumer/Grid Operator to the correct home screen after login. |
 
 ## 8. Android SQLite Plan
@@ -146,16 +152,21 @@ Rules:
 
 | Test | Expected Result |
 | --- | --- |
-| Register Prosumer with new NIC/email | User created with role `Prosumer`. |
+| Register Prosumer with new NIC/email | User created with role `Prosumer` and status `Pending`. |
+| Backoffice activates/rejects pending Prosumer | Status changes only from `Pending` to the selected outcome. |
+| Rejected Prosumer resubmits | Existing NIC document returns to `Pending`; no duplicate is created. |
 | Register duplicate NIC | API returns `409 Conflict`. |
 | Register duplicate email | API returns `409 Conflict`. |
 | Login with valid active user | API returns token and user summary. |
 | Login with wrong password | API returns `401 Unauthorized`. |
 | Login with deactivated account | API returns `403 Forbidden`. |
+| Login with pending/rejected account | API returns a state-specific `403 Forbidden`. |
+| Login with disallowed role/client pair | API returns `403 AUTH_CLIENT_ROLE_FORBIDDEN`. |
 | Prosumer updates own profile | API updates allowed fields. |
 | Prosumer updates another profile | API returns `403 Forbidden`. |
 | Grid Operator opens Backoffice user list | API returns `403 Forbidden`. |
 | Backoffice deactivates Prosumer | Status changes to `Deactivated`. |
+| Prosumer requests deactivation | Status remains `Active` and request metadata is recorded. |
 | Backoffice creates Prosumer | Active Prosumer is created and the Backoffice actor is recorded. |
 | Backoffice updates Prosumer | Contact fields change while NIC, role, status and password remain unchanged. |
 | Grid Operator creates or updates Prosumer | API returns `403 Forbidden`. |

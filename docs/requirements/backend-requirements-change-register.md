@@ -11,7 +11,7 @@ This register does not rewrite the assignment brief. The team must confirm any c
 | ID | Original plan/brief position | Implemented or revised behavior | Reason/benefit | Impact and required action | State |
 | --- | --- | --- | --- | --- | --- |
 | CHG-01 | Prosumer profiles use NIC as the primary identity | MongoDB retains `_id`; NIC is unique, required for Prosumers and used as the public business identifier | Preserves MongoDB references while satisfying NIC-based lookup | Clients must never rely on MongoDB `_id`; report must explain business key versus storage key | Accepted in D-06 |
-| CHG-02 | Marking table includes a pending-activation web view | Public and Backoffice-created Prosumers are immediately `Active`; `Pending` is reserved but unused | Simplifies registration and matches the current workflow | Confirm the changed requirement or implement pending registration, a Backoffice queue and activation action | Decision required |
+| CHG-02 | Marking table includes a pending-activation web view | Public registration creates `Pending`; the API exposes a Backoffice queue plus activate/reject actions | Aligns account creation with the required approval workflow | React must add the pending-activation view and actions | Implemented in backend |
 | CHG-03 | Authentication identifier was not fully specified | Login accepts normalized email or Prosumer NIC | Supports staff email login and NIC-oriented Prosumer login through one route | Web/mobile labels and validation must explain accepted identifiers | Implemented |
 | CHG-04 | Rubric mentions create/update/delete for stations and slots; the main scenario specifies deactivation | Accounts/stations use lifecycle status; reservations cancel; no physical delete endpoints | Protects audit history and active references | Explain the soft lifecycle approach and confirm it satisfies the delete wording | Decision required |
 | CHG-05 | PDF describes capacity as `kW/h` | Models/contracts use `CapacityKwh`, `BatteryStorageKwh`, `AvailableEnergyKwh` and `PricePerKwh` | Uses a consistent energy quantity for booking/allocation | Report must state the interpretation and avoid silently mixing units | Accepted in D-15 |
@@ -24,10 +24,10 @@ This register does not rewrite the assignment brief. The team must confirm any c
 | CHG-12 | Four server collections are required | Transaction/audit fields are embedded in `energyReservations`; no fifth transaction collection is used | Keeps the four-collection model and lifecycle together | Database/report diagrams must show embedded transaction fields | Implemented |
 | CHG-13 | Final transfer behavior was high level | Grid Operator verifies, then finalizes with actual energy/note; completion and station battery-storage increment occur in a MongoDB transaction without closing the shared slot | Adds auditability, storage-capacity validation and duplicate prevention | Final Atlas tier must support transactions; rollback test required | Implemented |
 | CHG-14 | SQLite is required for local user management/login/reference data | Current Android database stores one session: token, role, display name and expiry | Provides persistent authentication without duplicating authoritative server data | Confirm whether reference data must also be cached; redact the token in evidence | Partial/decision required |
-| CHG-15 | Mobile app is intended for Prosumers and Grid Operators | Android rejects unsupported roles; Backoffice remains web-oriented | Matches the operational scenario | Confirm Backoffice mobile access is not required | Implemented |
-| CHG-16 | Web app is described mainly for Backoffice/Grid Operators | React also includes a Prosumer home/profile surface | Supports shared account UI and testing | Extra web functionality must not replace required mobile Prosumer workflows | Implemented extra |
+| CHG-15 | Mobile app is intended for Prosumers and Grid Operators | API login requires `clientType`; Android permits Prosumer/Grid Operator and rejects Backoffice | Matches the operational scenario and enforces it at the API boundary | Android must send `clientType: Android` | Implemented in backend; client pending |
+| CHG-16 | Web app is for Backoffice/Grid Operators | API login requires `clientType`; Web permits Backoffice/Grid Operator and rejects Prosumer | Enforces the required client-role matrix | React must send `clientType: Web`; remove or stop routing Prosumer web sessions | Implemented in backend; client pending |
 | CHG-17 | Station deactivation is blocked by active reservations | `Pending`, `Approved`, `QrIssued` and `Verified` reservations block station and relevant slot lifecycle changes | Protects every non-terminal workflow | Keep status lists synchronized across domains and tests | Implemented |
-| CHG-18 | Account deactivation behavior was general | Prosumer deactivation is blocked by the same non-terminal statuses; protected policies deny inactive accounts before JWT expiry | Prevents orphaned workflows and makes deactivation immediate | Keep reservation statuses coordinated; live 409/403 evidence required | Implemented |
+| CHG-18 | Account deactivation behavior was general | Prosumer self-service records a pending request while remaining Active; Backoffice deactivation applies the non-terminal-reservation guard; protected policies deny deactivated accounts before JWT expiry | Separates user intent from administrative lifecycle control without weakening reservation protection | Android must adopt the request endpoint; React must expose request state/processing | Implemented in backend; clients pending |
 
 ## Current State Machine
 
@@ -42,7 +42,7 @@ Terminal states are `Rejected`, `Cancelled`, `Expired` and `Completed`. Physical
 
 ## Confirmation Checklist
 
-- [ ] Stakeholder/team confirms immediate `Active` registration or restores pending activation.
+- [x] Pending public registration and Backoffice activation/rejection restored in the backend.
 - [ ] Team confirms whether Grid Operators may change slot status/availability.
 - [ ] Team confirms that status/deactivation satisfies the rubric's "delete" wording.
 - [ ] Team confirms SQLite session-only persistence is sufficient or defines a reference-cache scope.

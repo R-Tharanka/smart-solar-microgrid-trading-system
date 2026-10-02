@@ -39,7 +39,7 @@ public sealed class RequestValidationTests
                 actionContext,
                 validationState: null,
                 prefix: string.Empty,
-                model: new LoginRequest("admin@smartsolar.com", "Admin@1234"));
+                model: new LoginRequest("admin@smartsolar.com", "Admin@1234", "Web"));
 
             Assert.True(actionContext.ModelState.IsValid);
         }

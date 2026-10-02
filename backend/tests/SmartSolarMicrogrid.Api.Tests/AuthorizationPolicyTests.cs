@@ -70,6 +70,10 @@ public sealed class AuthorizationPolicyTests
         public Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(new List<User> { user });
 
+        public Task<List<User>> GetProsumersByStatusAsync(
+            UserStatus status,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
         // Reflect whether the fixture is an active Backoffice account.
         public Task<long> CountActiveBackofficeAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(user.Role == UserRole.Backoffice && user.Status == UserStatus.Active ? 1L : 0L);
@@ -89,6 +93,12 @@ public sealed class AuthorizationPolicyTests
             UserStatus status,
             string changedByIdentifier,
             DateTime changedAtUtc,
+            CancellationToken cancellationToken = default,
+            string? rejectionReason = null) => throw new NotSupportedException();
+
+        public Task<bool> RequestDeactivationAsync(
+            string nic,
+            DateTime requestedAtUtc,
             CancellationToken cancellationToken = default) => throw new NotSupportedException();
 
         // Reject login-audit writes because authorization tests are read-only.

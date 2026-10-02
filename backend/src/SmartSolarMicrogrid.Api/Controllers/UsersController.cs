@@ -28,7 +28,7 @@ public sealed class UsersController(IIdentityService identityService) : Controll
         var user = await identityService.RegisterProsumerAsync(request, cancellationToken);
         return StatusCode(
             StatusCodes.Status201Created,
-            new ApiEnvelope<UserResponse>(user, "Prosumer registered successfully."));
+            new ApiEnvelope<UserResponse>(user, "Prosumer registration submitted for Backoffice review."));
     }
 
     [HttpPost("prosumers")]
@@ -57,6 +57,40 @@ public sealed class UsersController(IIdentityService identityService) : Controll
         var user = await identityService.UpdateProsumerAsync(
             CurrentIdentifier(), nic, request, cancellationToken);
         return Ok(new ApiEnvelope<UserResponse>(user, "Prosumer account updated successfully."));
+    }
+
+    [HttpGet("prosumers/pending")]
+    [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
+    [ProducesResponseType<ApiEnvelope<IReadOnlyCollection<UserResponse>>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiEnvelope<IReadOnlyCollection<UserResponse>>>> GetPendingProsumers(
+        CancellationToken cancellationToken)
+    {
+        // Return the pending public registrations awaiting Backoffice review.
+        var users = await identityService.GetPendingProsumersAsync(cancellationToken);
+        return Ok(new ApiEnvelope<IReadOnlyCollection<UserResponse>>(users));
+    }
+
+    [HttpPost("prosumers/{nic}/activate")]
+    [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> ActivateProsumer(string nic, CancellationToken cancellationToken)
+    {
+        // Activate the selected pending Prosumer using the authenticated Backoffice actor.
+        await identityService.ActivateProsumerAsync(CurrentIdentifier(), nic, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("prosumers/{nic}/reject")]
+    [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> RejectProsumer(
+        string nic,
+        RejectProsumerRequest request,
+        CancellationToken cancellationToken)
+    {
+        // Reject the selected pending Prosumer and retain the supplied review reason.
+        await identityService.RejectProsumerAsync(CurrentIdentifier(), nic, request, cancellationToken);
+        return NoContent();
     }
 
     [HttpPost("staff")]
@@ -119,13 +153,13 @@ public sealed class UsersController(IIdentityService identityService) : Controll
         return NoContent();
     }
 
-    [HttpPost("me/deactivate")]
+    [HttpPost("me/deactivation-request")]
     [Authorize(Policy = AuthorizationPolicies.ProsumerOnly)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> DeactivateOwnAccount(CancellationToken cancellationToken)
+    public async Task<IActionResult> RequestOwnDeactivation(CancellationToken cancellationToken)
     {
-        // Deactivate the current Prosumer after domain guards approve the transition.
-        await identityService.DeactivateOwnAccountAsync(CurrentIdentifier(), cancellationToken);
+        // Record a request for Backoffice review while leaving the account active.
+        await identityService.RequestOwnDeactivationAsync(CurrentIdentifier(), cancellationToken);
         return NoContent();
     }
 

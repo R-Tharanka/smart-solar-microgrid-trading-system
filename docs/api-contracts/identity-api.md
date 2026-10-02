@@ -10,9 +10,12 @@ This contract supersedes the earlier Phase 1 identity route sketch. User-facing 
 
 - Protected requests use `Authorization: Bearer <accessToken>`.
 - Email is stored lowercase; NIC is stored uppercase.
-- Public Prosumer registration creates an `Active` Prosumer account.
+- Public Prosumer registration creates a `Pending` Prosumer account for Backoffice review.
 - Backoffice may create and update Prosumer accounts through dedicated `BackofficeOnly` endpoints.
 - Only `Active` accounts satisfy protected authorization policies, including when an older JWT has not expired.
+- Account status uses the existing `status` response property with values `Pending`, `Active`, `Deactivated`, or `Rejected`.
+- Login requires `clientType`: Web permits Backoffice and Grid Operator; Android permits Prosumer and Grid Operator.
+- `clientType` is an application-level access rule, not device attestation; it does not prove that a request originated from a particular device.
 - Passwords require 8-128 characters, uppercase, lowercase, number, special character, and no whitespace.
 - NIC accepts the Sri Lankan 12-digit form or 9 digits followed by `V`/`X`.
 - Successful resource responses use `{ "data": ..., "message": ... }`.
@@ -29,7 +32,10 @@ This contract supersedes the earlier Phase 1 identity route sketch. User-facing 
   "phoneNumber": "0771234567",
   "address": "Colombo",
   "role": "Prosumer",
-  "status": "Active"
+  "status": "Active",
+  "deactivationRequested": false,
+  "deactivationRequestedAtUtc": null,
+  "rejectionReason": null
 }
 ```
 
@@ -54,7 +60,7 @@ Authorization: Public
 }
 ```
 
-Returns `201 Created`. Duplicate normalized NIC or email returns `409 Conflict`.
+Returns `201 Created` with status `Pending`. Duplicate normalized NIC or email returns `409 Conflict`. If the NIC belongs to a `Rejected` Prosumer registration, the existing document is updated and returned to `Pending`; a second user document is not created.
 
 ### Create Prosumer as Backoffice
 
@@ -88,11 +94,39 @@ Authorization: Public
 ```json
 {
   "identifier": "200012345678",
-  "password": "StrongPassword123!"
+  "password": "StrongPassword123!",
+  "clientType": "Android"
 }
 ```
 
-`identifier` may be a Prosumer NIC or staff/Prosumer email. Valid credentials for an active account return `200 OK` and a signed JWT. Invalid credentials return `401`; Pending or Deactivated accounts return `403`.
+`identifier` may be a Prosumer NIC or staff/Prosumer email. `clientType` is required and must be `Web` or `Android`. Valid credentials for an allowed active account return `200 OK` and a signed JWT. Web permits Backoffice and Grid Operator; Android permits Prosumer and Grid Operator. A valid but disallowed role/client combination returns `403 AUTH_CLIENT_ROLE_FORBIDDEN`. Invalid credentials return `401`; Pending, Rejected, or Deactivated accounts return distinct `403` errors.
+
+### List Pending Prosumer Registrations
+
+`GET /api/users/prosumers/pending`
+Authorization: `BackofficeOnly`
+
+Returns pending Prosumer profile information needed for registration review.
+
+### Activate Pending Prosumer
+
+`POST /api/users/prosumers/{nic}/activate`
+Authorization: `BackofficeOnly`
+
+Transitions only `Pending -> Active` and returns `204 No Content`.
+
+### Reject Pending Prosumer
+
+`POST /api/users/prosumers/{nic}/reject`
+Authorization: `BackofficeOnly`
+
+```json
+{
+  "reason": "Registration details could not be verified."
+}
+```
+
+Transitions only `Pending -> Rejected`, persists the review reason and audit fields, and returns `204 No Content`.
 
 ### Current Profile
 
@@ -131,12 +165,12 @@ Authorization: `Authenticated`
 
 Returns `204 No Content`. The current password must be correct, the new password must satisfy the shared password rules, and it must differ from the current password.
 
-### Deactivate Own Prosumer Account
+### Request Own Prosumer Deactivation
 
-`POST /api/users/me/deactivate`
+`POST /api/users/me/deactivation-request`
 Authorization: `ProsumerOnly`
 
-Returns `204 No Content`. Deactivation is rejected with `409 USER_ACTIVE_RESERVATIONS` while the Prosumer has a `Pending`, `Approved`, `QrIssued`, or `Verified` reservation.
+Returns `204 No Content`. The account remains `Active`; `deactivationRequested` and `deactivationRequestedAtUtc` are recorded for Backoffice processing. A duplicate pending request returns `409 USER_DEACTIVATION_ALREADY_REQUESTED`. Reservation checks are applied later when Backoffice performs the actual deactivation.
 
 ### Create Staff
 
@@ -174,7 +208,16 @@ Only a `Deactivated` account may transition to `Active`. The endpoint is not ava
 `POST /api/users/{identifier}/deactivate`
 Authorization: `BackofficeOnly`
 
-Only an `Active` account may transition to `Deactivated`. A Backoffice user cannot deactivate their own account or the final active Backoffice account. Prosumer reservation protection also applies. Returns `204 No Content`.
+Only an `Active` account may transition to `Deactivated`. This is the only endpoint that performs the administrative deactivation transition. A Backoffice user cannot deactivate their own account or the final active Backoffice account. Prosumer reservation protection still blocks deactivation while a `Pending`, `Approved`, `QrIssued`, or `Verified` reservation exists. A completed Prosumer deactivation clears its pending request marker. Returns `204 No Content`.
+
+## Account Lifecycle
+
+- Public registration: new or resubmitted rejected Prosumer `-> Pending`.
+- Backoffice approval: `Pending -> Active`.
+- Backoffice rejection: `Pending -> Rejected`.
+- Prosumer deactivation request: `Active -> Active` plus pending-request metadata.
+- Backoffice deactivation: `Active -> Deactivated`, subject to reservation safeguards.
+- Backoffice reactivation: `Deactivated -> Active`.
 
 ## JWT Claims
 
@@ -198,7 +241,11 @@ Backoffice-created accounts record `createdByIdentifier`. Account lifecycle writ
 | Code | Meaning |
 | --- | --- |
 | `AUTH_INVALID_CREDENTIALS` | Identifier or password is invalid. |
-| `AUTH_ACCOUNT_INACTIVE` | Account is Pending or Deactivated. |
+| `AUTH_ACCOUNT_PENDING` | Prosumer registration is awaiting Backoffice activation. |
+| `AUTH_REGISTRATION_REJECTED` | Prosumer registration was rejected and may be resubmitted. |
+| `AUTH_ACCOUNT_DEACTIVATED` | Account was administratively deactivated. |
+| `AUTH_CLIENT_ROLE_FORBIDDEN` | The role is not permitted on the declared Web/Android client. |
+| `AUTH_ACCOUNT_INACTIVE` | Fallback for an unsupported inactive state. |
 | `AUTH_CURRENT_PASSWORD_INVALID` | Current password supplied for a password change is incorrect. |
 | `AUTH_PASSWORD_UNCHANGED` | New password is the same as the current password. |
 | `USER_NIC_EXISTS` | NIC is already registered. |
@@ -207,6 +254,7 @@ Backoffice-created accounts record `createdByIdentifier`. Account lifecycle writ
 | `USER_NOT_FOUND` | Target account does not exist. |
 | `USER_INVALID_STATUS` | Requested state transition is not allowed. |
 | `USER_ACTIVE_RESERVATIONS` | Prosumer has a non-terminal reservation. |
+| `USER_DEACTIVATION_ALREADY_REQUESTED` | Prosumer already has a pending deactivation request. |
 | `USER_SELF_ADMIN_DEACTIVATION` | Backoffice attempted to deactivate itself. |
 | `USER_LAST_ADMIN` | Operation would remove the final active Backoffice account. |
 | `VALIDATION_REQUEST` | Request DTO validation failed. |

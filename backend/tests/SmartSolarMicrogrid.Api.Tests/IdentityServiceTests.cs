@@ -38,7 +38,7 @@ public sealed class IdentityServiceTests
         Assert.Equal("0771234567", saved.PhoneNumber);
         Assert.Equal("Colombo 07", saved.Address);
         Assert.Equal(UserRole.Prosumer, saved.Role);
-        Assert.Equal(UserStatus.Active, saved.Status);
+        Assert.Equal(UserStatus.Pending, saved.Status);
         Assert.True(BCrypt.Net.BCrypt.Verify("Strong@123", saved.PasswordHash));
         Assert.NotEqual("Strong@123", saved.PasswordHash);
         Assert.Equal("person@example.com", response.Email);
@@ -91,6 +91,62 @@ public sealed class IdentityServiceTests
     }
 
     [Fact]
+    public async Task PendingProsumer_CanBeActivatedOrRejectedOnlyByExpectedTransition()
+    {
+        // Verify Backoffice review applies only the required pending-state outcomes.
+        var repository = new FakeUserRepository();
+        var activated = Prosumer();
+        activated.Status = UserStatus.Pending;
+        var rejected = Prosumer();
+        rejected.Nic = "199912345678";
+        rejected.Email = "rejected@example.com";
+        rejected.Status = UserStatus.Pending;
+        repository.Users.AddRange([activated, rejected]);
+        var service = CreateService(repository);
+
+        await service.ActivateProsumerAsync("admin@example.com", activated.Nic!, TestCancellation);
+        await service.RejectProsumerAsync(
+            "admin@example.com",
+            rejected.Nic!,
+            new RejectProsumerRequest("Identity details could not be verified."),
+            TestCancellation);
+
+        Assert.Equal(UserStatus.Active, activated.Status);
+        Assert.Equal(UserStatus.Rejected, rejected.Status);
+        Assert.Equal("Identity details could not be verified.", rejected.RejectionReason);
+        Assert.Equal("admin@example.com", rejected.StatusChangedByIdentifier);
+    }
+
+    [Fact]
+    public async Task RegisterProsumer_ReusesRejectedNicRecordAsPending()
+    {
+        // Verify resubmission updates the rejected NIC document instead of inserting a duplicate.
+        var repository = new FakeUserRepository();
+        var rejected = Prosumer();
+        rejected.Status = UserStatus.Rejected;
+        rejected.RejectionReason = "Old reason";
+        repository.Users.Add(rejected);
+        var service = CreateService(repository);
+
+        var response = await service.RegisterProsumerAsync(
+            new RegisterProsumerRequest(
+                rejected.Nic!,
+                "resubmitted@example.com",
+                "NewStrong@456",
+                "Updated",
+                "Prosumer",
+                "0777654321",
+                "Kandy"),
+            TestCancellation);
+
+        Assert.Single(repository.Users);
+        Assert.Equal(UserStatus.Pending, rejected.Status);
+        Assert.Null(rejected.RejectionReason);
+        Assert.Equal("resubmitted@example.com", response.Email);
+        Assert.True(BCrypt.Net.BCrypt.Verify("NewStrong@456", rejected.PasswordHash));
+    }
+
+    [Fact]
     public async Task Authenticate_WithActiveAccount_ReturnsTokenAndRecordsLogin()
     {
         // Verify successful login issues a token and records login audit metadata.
@@ -99,7 +155,7 @@ public sealed class IdentityServiceTests
         var service = CreateService(repository);
 
         var response = await service.AuthenticateAsync(
-            new LoginRequest(" PROSUMER@EXAMPLE.COM ", "Strong@123"),
+            new LoginRequest(" PROSUMER@EXAMPLE.COM ", "Strong@123", "Android"),
             TestCancellation);
 
         Assert.Equal("test-token", response.AccessToken);
@@ -115,7 +171,7 @@ public sealed class IdentityServiceTests
         var service = CreateService(repository);
 
         var exception = await Assert.ThrowsAsync<IdentityException>(() =>
-            service.AuthenticateAsync(new LoginRequest("prosumer@example.com", "Wrong@123"), TestCancellation));
+            service.AuthenticateAsync(new LoginRequest("prosumer@example.com", "Wrong@123", "Android"), TestCancellation));
 
         Assert.Equal(StatusCodes.Status401Unauthorized, exception.StatusCode);
         Assert.Equal("AUTH_INVALID_CREDENTIALS", exception.ErrorCode);
@@ -129,7 +185,7 @@ public sealed class IdentityServiceTests
 
         var exception = await Assert.ThrowsAsync<IdentityException>(() =>
             service.AuthenticateAsync(
-                new LoginRequest("unknown@example.com", "Strong@123"),
+                new LoginRequest("unknown@example.com", "Strong@123", "Android"),
                 TestCancellation));
 
         Assert.Equal(StatusCodes.Status401Unauthorized, exception.StatusCode);
@@ -139,6 +195,7 @@ public sealed class IdentityServiceTests
     [Theory]
     [InlineData(UserStatus.Pending)]
     [InlineData(UserStatus.Deactivated)]
+    [InlineData(UserStatus.Rejected)]
     public async Task Authenticate_WithInactiveAccount_IsForbidden(UserStatus status)
     {
         // Verify pending and deactivated accounts cannot obtain access tokens.
@@ -149,10 +206,45 @@ public sealed class IdentityServiceTests
         var service = CreateService(repository);
 
         var exception = await Assert.ThrowsAsync<IdentityException>(() =>
-            service.AuthenticateAsync(new LoginRequest(user.Nic!, "Strong@123"), TestCancellation));
+            service.AuthenticateAsync(new LoginRequest(user.Nic!, "Strong@123", "Android"), TestCancellation));
 
         Assert.Equal(StatusCodes.Status403Forbidden, exception.StatusCode);
-        Assert.Equal("AUTH_ACCOUNT_INACTIVE", exception.ErrorCode);
+        Assert.StartsWith("AUTH_", exception.ErrorCode);
+    }
+
+    [Theory]
+    [InlineData(UserRole.Backoffice, "Web", true)]
+    [InlineData(UserRole.Backoffice, "Android", false)]
+    [InlineData(UserRole.GridOperator, "Web", true)]
+    [InlineData(UserRole.GridOperator, "Android", true)]
+    [InlineData(UserRole.Prosumer, "Web", false)]
+    [InlineData(UserRole.Prosumer, "Android", true)]
+    public async Task Authenticate_EnforcesClientRoleMatrix(
+        UserRole role,
+        string clientType,
+        bool allowed)
+    {
+        // Verify every allowed and forbidden Web/Android role combination.
+        var repository = new FakeUserRepository();
+        var user = role == UserRole.Prosumer
+            ? Prosumer()
+            : Staff($"{role.ToString().ToLowerInvariant()}@example.com", role);
+        repository.Users.Add(user);
+        var service = CreateService(repository);
+
+        var operation = () => service.AuthenticateAsync(
+            new LoginRequest(user.Nic ?? user.Email, "Strong@123", clientType),
+            TestCancellation);
+
+        if (allowed)
+        {
+            Assert.Equal("test-token", (await operation()).AccessToken);
+        }
+        else
+        {
+            var exception = await Assert.ThrowsAsync<IdentityException>(operation);
+            Assert.Equal("AUTH_CLIENT_ROLE_FORBIDDEN", exception.ErrorCode);
+        }
     }
 
     [Fact]
@@ -191,35 +283,54 @@ public sealed class IdentityServiceTests
     }
 
     [Fact]
-    public async Task DeactivateOwnAccount_ChangesOnlyActiveProsumer()
+    public async Task RequestOwnDeactivation_KeepsProsumerActive()
     {
-        // Verify Prosumer self-deactivation records status and audit metadata.
+        // Verify Prosumer self-service records a request without changing account status.
         var repository = new FakeUserRepository();
         var user = Prosumer();
         repository.Users.Add(user);
         var service = CreateService(repository);
 
-        await service.DeactivateOwnAccountAsync(user.Nic!, TestCancellation);
+        await service.RequestOwnDeactivationAsync(user.Nic!, TestCancellation);
 
-        Assert.Equal(UserStatus.Deactivated, user.Status);
-        Assert.Equal(user.Nic, user.StatusChangedByIdentifier);
-        Assert.NotNull(user.DeactivatedAtUtc);
+        Assert.Equal(UserStatus.Active, user.Status);
+        Assert.True(user.DeactivationRequested);
+        Assert.NotNull(user.DeactivationRequestedAtUtc);
     }
 
     [Fact]
-    public async Task DeactivateOwnAccount_WithNonTerminalReservation_IsRejected()
+    public async Task RequestOwnDeactivation_RejectsDuplicateRequest()
     {
-        // Verify reservation activity prevents the account status transition.
+        // Verify a Prosumer cannot create multiple pending deactivation requests.
         var repository = new FakeUserRepository();
         var user = Prosumer();
+        user.DeactivationRequested = true;
+        repository.Users.Add(user);
+        var service = CreateService(repository);
+
+        var exception = await Assert.ThrowsAsync<IdentityException>(() =>
+            service.RequestOwnDeactivationAsync(user.Nic!, TestCancellation));
+
+        Assert.Equal("USER_DEACTIVATION_ALREADY_REQUESTED", exception.ErrorCode);
+        Assert.Equal(UserStatus.Active, user.Status);
+    }
+
+    [Fact]
+    public async Task DeactivateUser_WithNonTerminalReservation_IsRejected()
+    {
+        // Verify administrative deactivation retains the existing reservation safeguard.
+        var repository = new FakeUserRepository();
+        var user = Prosumer();
+        user.DeactivationRequested = true;
         repository.Users.Add(user);
         var service = CreateService(repository, new BlockingDeactivationGuard());
 
         var exception = await Assert.ThrowsAsync<IdentityException>(() =>
-            service.DeactivateOwnAccountAsync(user.Nic!, TestCancellation));
+            service.DeactivateUserAsync("admin@example.com", user.Nic!, TestCancellation));
 
         Assert.Equal("USER_ACTIVE_RESERVATIONS", exception.ErrorCode);
         Assert.Equal(UserStatus.Active, user.Status);
+        Assert.True(user.DeactivationRequested);
     }
 
     [Fact]
@@ -525,6 +636,12 @@ public sealed class IdentityServiceTests
         public Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(Users.ToList());
 
+        public Task<List<User>> GetProsumersByStatusAsync(
+            UserStatus status,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(Users.Where(user =>
+                user.Role == UserRole.Prosumer && user.Status == status).ToList());
+
         // Count active Backoffice fixtures for final-admin protection tests.
         public Task<long> CountActiveBackofficeAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult((long)Users.Count(user =>
@@ -548,7 +665,8 @@ public sealed class IdentityServiceTests
             UserStatus status,
             string changedByIdentifier,
             DateTime changedAtUtc,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            string? rejectionReason = null)
         {
             // Simulate an atomic expected-status transition and its audit fields.
             var user = Users.SingleOrDefault(item => item.Email == identifier || item.Nic == identifier);
@@ -563,11 +681,35 @@ public sealed class IdentityServiceTests
             if (status == UserStatus.Deactivated)
             {
                 user.DeactivatedAtUtc = changedAtUtc;
+                user.DeactivationRequested = false;
+                user.DeactivationRequestedAtUtc = null;
             }
-            else
+            else if (status == UserStatus.Active && expectedStatus == UserStatus.Deactivated)
             {
                 user.ReactivatedAtUtc = changedAtUtc;
             }
+            else if (status == UserStatus.Rejected)
+            {
+                user.RejectionReason = rejectionReason;
+                user.RejectedAtUtc = changedAtUtc;
+            }
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> RequestDeactivationAsync(
+            string nic,
+            DateTime requestedAtUtc,
+            CancellationToken cancellationToken = default)
+        {
+            var user = Users.SingleOrDefault(item => item.Nic == nic);
+            if (user is null || user.Role != UserRole.Prosumer ||
+                user.Status != UserStatus.Active || user.DeactivationRequested)
+            {
+                return Task.FromResult(false);
+            }
+
+            user.DeactivationRequested = true;
+            user.DeactivationRequestedAtUtc = requestedAtUtc;
             return Task.FromResult(true);
         }
 

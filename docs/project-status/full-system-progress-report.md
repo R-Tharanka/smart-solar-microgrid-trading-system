@@ -38,7 +38,7 @@ Assignment marking coverage used by this report:
 | UI/UX | 6 group | React and Android identity UI exist; Android domain screens and final screenshots missing |
 | Documentation and deployment | 5 group | Engineering documents exist; IIS evidence and student-authored final package missing |
 | Web features and business rules | 18 individual | Backend/web domains broadly implemented; live workflow evidence pending |
-| Mobile authentication and accounts | 9 individual | Member 1 slice implemented; pending-activation decision and device evidence remain |
+| Mobile authentication and accounts | 9 individual | Corrected backend pending-activation workflow implemented; Android contract/UI update and device evidence remain |
 | Reservation workflow | 9 individual | Server rules implemented; mobile create/update/cancel/action summaries missing |
 | Booking views and dashboards | 10 individual | API/staff web views exist; required mobile history/search/counts missing |
 | Operator verification and maps | 7 individual | Transaction API/web tools exist; Android scanner and Maps missing |
@@ -50,7 +50,7 @@ The full system is **not complete or submission-ready**.
 
 The central API and React staff application are the strongest areas. All four backend domains are present, the current .NET suite passes **113/113 tests**, and the web client includes identity, stations, slots, reservations and Member 4 transaction operations. The web suite passes **12/12 tests**, the production build succeeds, and lint reports no errors and one warning.
 
-A native Android Java/SQLite application now exists, correcting the earlier “not started” assessment. The implemented Member 1 slice includes the shared API/error layer, SQLite session persistence, registration, login, role routing, profile viewing/editing, self-deactivation and basic Prosumer/Grid Operator home screens. Its debug APK builds, **7/7 JVM tests pass**, and Android lint completes with zero errors and 23 warnings. The major remaining client gap is the rest of Android: station discovery and Google Maps, reservation actions and booking views, QR display/camera scanning, and transfer finalization. IIS hosting, a consolidated all-domain Postman collection, full hosted end-to-end execution, final screenshots and the student-authored assignment report also remain pending.
+A native Android Java/SQLite application exists with the earlier Member 1 identity foundation. The corrected API now requires an Android login client indicator, uses pending Prosumer activation, and treats self-service deactivation as a request; corresponding Android contract/UI changes remain pending. The major remaining client gap also includes the rest of Android: station discovery and Google Maps, reservation actions and booking views, QR display/camera scanning, and transfer finalization. IIS hosting, a consolidated all-domain Postman collection, full hosted end-to-end execution, final screenshots and the student-authored assignment report also remain pending.
 
 | Area | Status |
 | --- | --- |
@@ -171,7 +171,7 @@ Repository identity: **Ruchira Tharanka**. This mapping is inferred from the `fe
 - Role-aware `/` redirect and protected routes.
 - Backoffice staff list, creation, filtering and status controls.
 - Prosumer list/details, creation/editing and status controls.
-- Current-user profile, password management and Prosumer self-deactivation.
+- Current-user profile, password management and Prosumer deactivation-request handling.
 - Friendly validation/API errors, confirmation dialogs, loading/empty/success/error states.
 - Shared responsive application shell and identity/account UI.
 
@@ -182,13 +182,13 @@ Repository identity: **Ruchira Tharanka**. This mapping is inferred from the `fe
 - Prosumer registration and login by supported API identifier.
 - Role routing for Prosumer and Grid Operator sessions.
 - SQLite-backed session persistence containing the access token, role, display name and expiry.
-- Profile view/edit, Prosumer self-deactivation, logout and expired-session handling.
+- Profile view/edit, the previous self-deactivation client flow, logout and expired-session handling; Android must adopt the corrected deactivation-request endpoint and response state.
 - Basic Prosumer and Grid Operator home screens.
 - Seven passing JVM tests, a successful debug APK build and Android lint with zero errors.
 
 ### Remaining Member 1 work
 
-- Decide whether public Prosumer registration must enter `Pending`; the current API creates `Active` accounts and no pending-activation queue/view exists.
+- Add the React pending-activation view/actions and update both clients to send the required login `clientType`; the corrected backend workflow is implemented.
 - Confirm whether SQLite session-only persistence satisfies “local user management/reference data”; extend it if reference caching is required.
 - Resolve or justify the 23 Android lint warnings and capture unique mobile screenshots.
 - Run the complete identity Postman collection against the final Atlas/IIS API and retain the runner report.
@@ -352,7 +352,7 @@ Implemented:
 - Central asynchronous `HttpURLConnection` API client using Gson and the configured `API_BASE_URL`.
 - API-envelope parsing, RFC 7807-style error handling, bearer-token injection and session clearing on unauthorized responses.
 - SQLite `session` table storing one access token, role, display name and expiry; expired sessions are removed.
-- Prosumer registration, login, role routing, profile read/edit, self-deactivation and logout.
+- Existing Android registration, login, role routing, profile read/edit, self-deactivation and logout UI; contract updates are required for pending activation, `clientType`, and deactivation requests.
 - Basic Prosumer and Grid Operator home screens.
 - Input validation and loading/error/empty UI states.
 - Debug APK build, 7/7 passing JVM tests and lint completion with zero errors and 23 warnings.
@@ -370,7 +370,7 @@ Not yet implemented or evidenced:
 
 | Owner | Completed mobile responsibility | Mobile responsibility still required |
 | --- | --- | --- |
-| Member 1 | Registration, login, role homes, profile, edit, deactivation and SQLite session | Pending-activation decision, instrumentation/device proof and possible reference cache |
+| Member 1 | Registration, login, role homes, profile, edit, deactivation and SQLite session | Adopt corrected backend login/activation/deactivation-request contracts, instrumentation/device proof and possible reference cache |
 | Member 2 | Shared API/session foundation available | Nearby stations, details, slots and Google Maps markers/interaction |
 | Member 3 | Shared API/session foundation available | Reservation actions, action summaries, current/pending/history/search and dashboard counts |
 | Member 4 | Grid Operator login/home foundation available | QR display coordination, camera scan, verify/finalize/results and operational map |
@@ -477,7 +477,7 @@ Missing or incomplete:
 | --- | --- | --- |
 | Central REST API/FAT Service | Implemented | Final live/E2E evidence |
 | MongoDB and data model | Implemented | Atlas and concurrency evidence |
-| Identity/RBAC/accounts | Backend, web and Android identity slice implemented | Pending-activation decision and final live/device evidence |
+| Identity/RBAC/accounts | Corrected backend lifecycle/RBAC implemented; earlier web/Android identity slices exist | Client contract updates and final live/device evidence |
 | Stations/slots | Backend/web implemented | Android Maps/slots and evidence |
 | Reservations/dashboards | Backend/staff web implemented | Android workflow and E2E evidence |
 | QR/transactions | Backend/web implemented | Android scanner/maps and live evidence |

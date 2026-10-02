@@ -18,4 +18,7 @@ public record UserResponse(
     string? PhoneNumber,
     string? Address,
     string Role,
-    string Status);
+    string Status,
+    bool DeactivationRequested,
+    DateTime? DeactivationRequestedAtUtc,
+    string? RejectionReason);

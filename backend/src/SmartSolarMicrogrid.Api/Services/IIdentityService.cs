@@ -28,8 +28,14 @@ public interface IIdentityService
     Task<UserResponse> UpdateProsumerAsync(string actorIdentifier, string nic, UpdateProsumerRequest request, CancellationToken cancellationToken = default);
     // Verify and replace the current account password.
     Task ChangePasswordAsync(string identifier, ChangePasswordRequest request, CancellationToken cancellationToken = default);
-    // Deactivate the current Prosumer account.
-    Task DeactivateOwnAccountAsync(string identifier, CancellationToken cancellationToken = default);
+    // Record a pending deactivation request for the current active Prosumer.
+    Task RequestOwnDeactivationAsync(string identifier, CancellationToken cancellationToken = default);
+    // Return pending public Prosumer registrations for Backoffice review.
+    Task<List<UserResponse>> GetPendingProsumersAsync(CancellationToken cancellationToken = default);
+    // Activate a pending Prosumer registration through Backoffice administration.
+    Task ActivateProsumerAsync(string actorIdentifier, string nic, CancellationToken cancellationToken = default);
+    // Reject a pending Prosumer registration through Backoffice administration.
+    Task RejectProsumerAsync(string actorIdentifier, string nic, RejectProsumerRequest request, CancellationToken cancellationToken = default);
     // Reactivate an account through Backoffice administration.
     Task ReactivateUserAsync(string actorIdentifier, string identifier, CancellationToken cancellationToken = default);
     // Deactivate another account through Backoffice administration.
