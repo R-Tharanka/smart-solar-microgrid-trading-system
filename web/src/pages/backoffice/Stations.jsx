@@ -12,6 +12,7 @@ import Button from '../../components/ui/Button';
 import FormField from '../../components/ui/FormField';
 import Modal from '../../components/ui/Modal';
 import PageHeader from '../../components/ui/PageHeader';
+import ViewToggle from '../../components/ui/ViewToggle';
 import { EmptyState, LoadingState } from '../../components/ui/PageState';
 import { useToast } from '../../context/ToastContext';
 
@@ -25,6 +26,14 @@ const problemMessage = (error, fallback) => {
   return problem?.detail || problem?.message || fallback;
 };
 
+const StationActions = ({ station, isBackoffice, loadingEditor, onDetails, onManageSlots, onEdit, onStatus }) => (
+  <div className="flex flex-wrap gap-1">
+    <Button variant="secondary" onClick={() => onDetails(station)}>Details</Button>
+    <Button variant="secondary" onClick={() => onManageSlots(station.stationCode)}>Energy slots</Button>
+    {isBackoffice && <><Button variant="ghost" disabled={loadingEditor} onClick={() => onEdit(station)}>Edit</Button><Button variant="ghost" onClick={() => onStatus(station)}>Status</Button></>}
+  </div>
+);
+
 const Stations = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -36,6 +45,7 @@ const Stations = () => {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [viewMode, setViewMode] = useState('grid');
   const [showForm, setShowForm] = useState(false);
   const [editingStation, setEditingStation] = useState(null);
   const [loadingEditor, setLoadingEditor] = useState(false);
@@ -165,10 +175,31 @@ const Stations = () => {
         <p className="pb-3 text-sm text-slate-500">{filteredStations.length} station{filteredStations.length === 1 ? '' : 's'}</p>
       </div>
 
+      <div className="mb-5"><ViewToggle value={viewMode} onChange={setViewMode} label="Stations" /></div>
+
       {error && <Alert className="mb-5" title="Unable to complete station request">{error}</Alert>}
 
       {loading ? <LoadingState label="Connecting to your stations…" /> : filteredStations.length === 0 ? <EmptyState title="No stations found" description="Try another name, location or operating status." /> : (
-        <div className="infrastructure-grid">
+        viewMode === 'list' ? (
+          <section className="app-table-wrap" aria-label="Station list">
+            <div className="overflow-x-auto">
+              <table className="app-table">
+                <thead><tr><th scope="col">Station</th><th scope="col">Location</th><th scope="col">Capacity</th><th scope="col">Storage</th><th scope="col">Operating window</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
+                <tbody>{filteredStations.map((station) => (
+                  <tr key={station.stationCode}>
+                    <td><span className="block font-mono text-xs">{station.stationCode}</span><span className="block min-w-36 font-semibold text-slate-900">{station.name}</span></td>
+                    <td className="min-w-40">{station.address || 'Location not specified'}</td>
+                    <td className="whitespace-nowrap">{station.capacityKwh ?? '—'} kWh</td>
+                    <td className="whitespace-nowrap">{station.batteryStorageKwh ?? '—'} kWh</td>
+                    <td className="whitespace-nowrap">{station.openingTime} – {station.closingTime}</td>
+                    <td><StationStatusBadge status={station.status} /></td>
+                    <td className="min-w-72"><StationActions station={station} isBackoffice={isBackoffice} loadingEditor={loadingEditor} onDetails={openDetails} onManageSlots={manageSlots} onEdit={openEdit} onStatus={openStatusDialog} /></td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          </section>
+        ) : <div className="infrastructure-grid">
           {filteredStations.map((station) => (
             <article key={station.stationCode} className="infrastructure-card">
               <div className="infrastructure-visual" aria-hidden="true"><span /><span /><span /><i /></div>
@@ -178,7 +209,7 @@ const Stations = () => {
                 <p className="asset-location">{station.address || 'Location not specified'}</p>
                 <div className="asset-capacity"><div><span>Station capacity</span><strong>{station.capacityKwh ?? '—'} <small>kWh</small></strong></div><div><span>Battery storage</span><strong>{station.batteryStorageKwh ?? '—'} <small>kWh</small></strong></div></div>
                 <div className="asset-meta"><span>Operating window</span><strong>{station.openingTime} — {station.closingTime}</strong></div>
-                <div className="asset-actions"><Button variant="secondary" onClick={() => openDetails(station)}>Details</Button><Button variant="secondary" onClick={() => manageSlots(station.stationCode)}>Energy slots</Button>{isBackoffice && <><Button variant="ghost" disabled={loadingEditor} onClick={() => openEdit(station)}>Edit</Button><Button variant="ghost" onClick={() => openStatusDialog(station)}>Status</Button></>}</div>
+                <div className="asset-actions"><StationActions station={station} isBackoffice={isBackoffice} loadingEditor={loadingEditor} onDetails={openDetails} onManageSlots={manageSlots} onEdit={openEdit} onStatus={openStatusDialog} /></div>
               </div>
             </article>
           ))}
