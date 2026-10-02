@@ -39,4 +39,29 @@
         android:name="com.smartsolar.microgrid.ui.profile.EditProfileFragment"
         android:label="@string/edit_profile_title" />
 
+    <fragment
+        android:id="@+id/stationsFragment"
+        android:name="com.smartsolar.microgrid.ui.prosumer.StationsFragment"
+        android:label="Browse Stations" />
+
+    <fragment
+        android:id="@+id/slotsFragment"
+        android:name="com.smartsolar.microgrid.ui.prosumer.SlotsFragment"
+        android:label="Station Details" />
+
+    <fragment
+        android:id="@+id/createReservationFragment"
+        android:name="com.smartsolar.microgrid.ui.prosumer.CreateReservationFragment"
+        android:label="Reserve Slot" />
+
+    <fragment
+        android:id="@+id/myBookingsFragment"
+        android:name="com.smartsolar.microgrid.ui.prosumer.MyBookingsFragment"
+        android:label="My Bookings" />
+
+    <fragment
+        android:id="@+id/bookingDetailsFragment"
+        android:name="com.smartsolar.microgrid.ui.prosumer.BookingDetailsFragment"
+        android:label="Booking Details" />
+
 </navigation>

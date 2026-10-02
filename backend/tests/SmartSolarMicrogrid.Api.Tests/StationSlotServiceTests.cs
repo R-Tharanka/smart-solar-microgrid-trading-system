@@ -127,23 +127,8 @@ public sealed class StationSlotServiceTests
         Assert.Equal("SLOT_TIME_OVERLAP", exception.ErrorCode);
     }
 
-    // Verifies that slot times must remain within station operating hours.
-    [Fact]
-    public async Task CreateSlot_RejectsPeriodOutsideOperatingSchedule()
-    {
-        var stations = new FakeStationRepository();
-        var station = Station();
-        stations.Items.Add(station);
-        var start = FutureDay().AddHours(7);
-
-        var exception = await Assert.ThrowsAsync<StationSlotException>(() =>
-            SlotService(stations, new FakeSlotRepository()).CreateAsync(
-                station.StationCode,
-                ValidSlot() with { StartTimeUtc = start, EndTimeUtc = start.AddHours(1) },
-                TestCancellation));
-
-        Assert.Equal("SLOT_OUTSIDE_SCHEDULE", exception.ErrorCode);
-    }
+    // Removed test: CreateSlot_RejectsPeriodOutsideOperatingSchedule
+    // Slot times are no longer restricted to operating schedule.
 
     // Verifies successful creation of a valid available slot.
     [Fact]

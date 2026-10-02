@@ -9,7 +9,7 @@ public final class ApiErrorHandler {
 
     public static ApiError fromHttpResponse(int statusCode, String responseBody) {
         String errorCode = readErrorCode(responseBody);
-        return new ApiError(statusCode, errorCode, messageForError(statusCode, errorCode));
+        return new ApiError(statusCode, errorCode, messageForError(statusCode, errorCode, responseBody));
     }
 
     public static ApiError networkError() {
@@ -43,7 +43,16 @@ public final class ApiErrorHandler {
         return "HTTP_ERROR";
     }
 
-    private static String messageForError(int statusCode, String errorCode) {
+    private static String messageForError(int statusCode, String errorCode, String responseBody) {
+        try {
+            if (responseBody != null && !responseBody.trim().isEmpty()) {
+                JsonObject problem = JsonParser.parseString(responseBody).getAsJsonObject();
+                if (problem.has("detail") && !problem.get("detail").isJsonNull()) {
+                    return problem.get("detail").getAsString();
+                }
+            }
+        } catch (RuntimeException ignored) {
+        }
         switch (errorCode) {
             case "AUTH_INVALID_CREDENTIALS":
                 return "The identifier or password is incorrect.";
