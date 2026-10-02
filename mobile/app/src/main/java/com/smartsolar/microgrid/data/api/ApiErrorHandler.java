@@ -49,6 +49,14 @@ public final class ApiErrorHandler {
                 return "The identifier or password is incorrect.";
             case "AUTH_ACCOUNT_INACTIVE":
                 return "This account is not active. Contact an administrator.";
+            case "AUTH_ACCOUNT_PENDING":
+                return "Your registration is awaiting Backoffice activation. Please try again after it has been approved.";
+            case "AUTH_REGISTRATION_REJECTED":
+                return "Your registration was rejected. You can register again with corrected details for review.";
+            case "AUTH_ACCOUNT_DEACTIVATED":
+                return "Your account has been deactivated. Please contact Backoffice for assistance.";
+            case "AUTH_CLIENT_ROLE_FORBIDDEN":
+                return "Backoffice accounts are accessed through the web application.";
             case "USER_NIC_EXISTS":
                 return "An account already exists with this NIC.";
             case "USER_EMAIL_EXISTS":
