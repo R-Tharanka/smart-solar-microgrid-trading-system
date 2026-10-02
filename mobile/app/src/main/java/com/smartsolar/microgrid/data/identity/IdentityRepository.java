@@ -92,8 +92,8 @@ public final class IdentityRepository {
                 });
     }
 
-    public void deactivateOwnAccount(ApiCallback<Void> callback) {
-        apiClient.post(USERS_PATH + "me/deactivate", null, Void.class, true, callback);
+    public void requestOwnDeactivation(ApiCallback<Void> callback) {
+        apiClient.post(USERS_PATH + "me/deactivation-request", null, Void.class, true, callback);
     }
 
     public void logout() {

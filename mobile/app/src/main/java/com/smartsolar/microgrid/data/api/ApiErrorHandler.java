@@ -65,6 +65,8 @@ public final class ApiErrorHandler {
                 return "An account already exists with these details.";
             case "USER_ACTIVE_RESERVATIONS":
                 return "The account cannot be deactivated while it has active reservations.";
+            case "USER_DEACTIVATION_ALREADY_REQUESTED":
+                return "Your deactivation request is already pending Backoffice review. Your account remains active.";
             default:
                 break;
         }

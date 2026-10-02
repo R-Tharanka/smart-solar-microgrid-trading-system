@@ -28,7 +28,7 @@ export default function Prosumers() {
   const [formState, setFormState] = useState(null);
   const [pendingStatus, setPendingStatus] = useState(null);
   const [changingStatus, setChangingStatus] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState(() => params.get('status') === 'DeactivationRequested' ? 'DeactivationRequested' : 'All');
   const [search, setSearch] = useState('');
 
   const loadProsumers = useCallback(async () => {
