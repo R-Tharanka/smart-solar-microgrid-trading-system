@@ -14,7 +14,7 @@ All four account statuses are supported. Deactivation requests appear as a separ
 
 Contract limitations: registration dates and pending duration are not supplied by the user DTO and are therefore omitted. Protected authorization can return an undifferentiated 403; the existing API interceptor performs one shared `/users/me` check after an ambiguous denial, preserving valid sessions on ordinary role denial. It never polls. Backend code is unchanged.
 
-Verification: edited JavaScript/JSX receives targeted lint and a production build; no browser automation or visual evidence is produced. Live API and keyboard/responsive acceptance remain manual follow-up. Android still needs its separate clientType, lifecycle, and deactivation-request integration.
+Verification: edited JavaScript/JSX received targeted lint and a production build; current live API and keyboard/responsive acceptance remain manual follow-up. Android source now sends its client type and uses the deactivation-request endpoint with pending feedback, but device/hosted evidence remains.
 
 ## Public Home and Route Behavior
 
@@ -37,7 +37,7 @@ The Home/Index page introduces the real system through a generated project-owned
 - Consistent 6px controls and 8px panels/dialogs, restrained shadows and thin borders.
 - `Segoe UI Variable` with local system fallbacks; no remote font dependency.
 - Shared `Button`, `IconButton`, `FormField`, `StatusBadge`, `Panel`, `MetricCard`, `Modal`, `ConfirmDialog`, `Alert`, `Toast`, `PageHeader`, `SectionHeader`, loading, empty and error states.
-- Tables share one high-contrast header and row treatment. Staff, Prosumer, station, slot and reservation lists switch to card/list views on small screens.
+- Tables share one high-contrast header and row treatment. Station and slot pages offer an explicit Cards/List toggle with cards as default in both Backoffice and Grid Operator routes; other management views use their existing responsive table/card patterns.
 
 ## Application Shell
 
@@ -56,7 +56,7 @@ Motion is limited to page entrance, energy-path movement, loading indicators, di
 
 ## Full-Web Visual Alignment
 
-The same visual system is applied to login, Backoffice and Grid Operator dashboards, Prosumer home, staff and Prosumer management, stations, energy slots, reservations, transactions, profile, password security, access denied and not found. Existing endpoint calls and business workflows were retained. Member 4's transaction routes and components now use the shared shell and design system; their functional details are recorded in `docs/web/member-4-react-web.md`.
+The same visual system is applied to login, Backoffice and Grid Operator dashboards, staff and Prosumer management, stations, energy slots, reservations, transactions, profile, password security, access denied and not found. A legacy Prosumer Web home source remains but is not an active route. Member 4's transaction routes and components use the shared shell; details are recorded in `docs/web/member-4-react-web.md`.
 
 ## Responsive Strategy
 
@@ -70,20 +70,20 @@ The same visual system is applied to login, Backoffice and Grid Operator dashboa
 
 ## Scope Completed
 
-- Login using staff email or Prosumer NIC/email.
+- Web login using a staff email and `clientType: Web`; Prosumer accounts are directed to Android.
 - Centralized JWT/session persistence with server-provided expiry.
 - Startup profile refresh through `GET /api/users/me`.
 - Global expired/invalid-session handling.
-- Backoffice, Grid Operator and Prosumer role destinations.
+- Backoffice and Grid Operator role destinations; legacy Prosumer Web sessions are cleared.
 - Protected routes and an explicit access-denied page.
 - Responsive role-aware navigation and logout.
 - Backoffice staff list, search, role/status filters and empty/error/loading states.
-- Backoffice and Grid Operator staff creation with contract-aligned validation.
+- Backoffice creation of Backoffice and Grid Operator staff accounts with contract-aligned validation.
 - Staff deactivation/reactivation with confirmation and immediate local updates.
 - Prosumer list/details/search/status filters, Backoffice creation/editing, and status management.
 - Friendly `USER_ACTIVE_RESERVATIONS` and other identity error messages.
 - Current-user profile display/update for all roles.
-- Prosumer phone/address editing and self-deactivation.
+- Backoffice pending-activation review and administrative Prosumer deactivation/reactivation; Prosumer self-deactivation is not a Web action.
 - Password change with confirmation, visibility controls and validation.
 - Shared buttons, fields, alerts, loaders, empty/error states, status badges, modals, confirmation dialogs, page headers and toast notifications.
 
@@ -94,9 +94,9 @@ The same visual system is applied to login, Backoffice and Grid Operator dashboa
 | `/login` | Public only | Authenticate by business identifier |
 | `/backoffice/staff` | Backoffice | Manage staff accounts |
 | `/backoffice/prosumers` | Backoffice | Manage Prosumer accounts |
-| `/account/profile` | All authenticated roles | View/update current profile |
-| `/account/security` | All authenticated roles | Change current password |
-| `/prosumer` | Prosumer | Prosumer account home |
+| `/account/profile` | Backoffice, Grid Operator | View/update current profile |
+| `/account/security` | Backoffice, Grid Operator | Change current password |
+| `/prosumer/*` | None | Redirect legacy Prosumer Web URLs to login |
 | `/access-denied` | Authenticated | Wrong-role route feedback |
 
 Existing Member 2 and Member 3 station, slot and reservation routes remain unchanged.
@@ -113,9 +113,11 @@ Existing Member 2 and Member 3 station, slot and reservation routes remain uncha
 | `POST /api/users/staff` | Create Backoffice/Grid Operator |
 | `POST /api/users/prosumers` | Backoffice creates a Prosumer |
 | `PUT /api/users/prosumers/{nic}` | Backoffice updates a Prosumer profile |
+| `GET /api/users/prosumers/pending` | Backoffice activation queue |
+| `POST /api/users/prosumers/{nic}/activate` | Activate pending Prosumer |
+| `POST /api/users/prosumers/{nic}/reject` | Reject pending Prosumer with reason |
 | `POST /api/users/{identifier}/deactivate` | Staff/Prosumer deactivation |
 | `POST /api/users/{identifier}/reactivate` | Staff/Prosumer reactivation |
-| `POST /api/users/me/deactivate` | Prosumer self-deactivation |
 
 All responses follow the existing API envelope and RFC 7807 Problem Details contracts. The API remains the authorization and business-rule boundary.
 
@@ -161,7 +163,9 @@ Use redacted test accounts and capture:
 - [ ] Login page at desktop and mobile widths.
 - [ ] Successful Backoffice login and automatic dashboard routing.
 - [ ] Successful Grid Operator login and automatic dashboard routing.
-- [ ] Successful Prosumer login and automatic account-home routing.
+- [ ] Prosumer Web login is denied with mobile-app guidance.
+- [ ] Pending Prosumer activation/rejection and rejected resubmission are reflected in the Backoffice queue.
+- [ ] Deactivation-request indicator appears separately from Active status and is removed after administrative processing.
 - [ ] Invalid credentials response.
 - [ ] Inactive account response.
 - [ ] Protected route redirect after clearing the session.

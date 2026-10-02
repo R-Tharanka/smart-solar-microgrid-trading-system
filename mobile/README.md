@@ -1,6 +1,6 @@
 # Smart Solar Microgrid Android Application
 
-This folder contains the native Android client foundation. It uses Java, XML layouts, AndroidX Navigation, and Material Components. The application ID is `com.smartsolar.microgrid`.
+This folder contains the native Android client. It uses Java, XML layouts, AndroidX Navigation, and Material Components. The application ID is `com.smartsolar.microgrid`. Identity/account, station/slot list, and basic Prosumer reservation screens are present. Google Maps, booking dashboard/search, approved-booking QR display, and Grid Operator camera scanning/finalization are not yet implemented or device-verified.
 
 ## Shared mobile infrastructure
 
@@ -8,6 +8,8 @@ This folder contains the native Android client foundation. It uses Java, XML lay
 - `data/api/ApiErrorHandler.java` converts HTTP and network failures into safe UI messages.
 - `data/session/SessionManager.java` stores one local authenticated session using SQLite.
 - `navigation/RoleNavigator.java` routes supported sessions to the Prosumer or Grid Operator foundation.
+- `data/identity/` sends `clientType: Android`; Prosumer deactivation calls the request-only API and displays pending state without logging out.
+- `data/station/`, `data/reservation/`, and `ui/prosumer/` contain station/slot browsing and basic booking actions. Verify these flows against the same deployed API and MongoDB before treating them as complete.
 
 The local SQLite database stores only the access token, role, display name, and token expiry. Server-authoritative account, reservation, station, transaction, and QR state must remain on the API.
 

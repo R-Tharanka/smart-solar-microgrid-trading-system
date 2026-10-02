@@ -20,20 +20,20 @@ Current implementation and evidence status is audited in `docs/project-status/fu
 | REQ-04 | Use MongoDB as the server-side NoSQL database. | All | All API contracts | `users`, `solarStationInfo`, `energyBookingSlots`, `energyReservations` | None direct | None direct | MongoDB records |
 | REQ-05 | Use React.js with Tailwind CSS or permitted equivalent for web. | All | Web consumes API | None direct | All web pages | Not applicable | Web screenshots |
 | REQ-06 | Use native Android Java, not a cross-platform framework. | All | Android consumes API | SQLite local cache | Not applicable | Java/XML project; identity slice implemented | APK/build evidence; remaining domain screens |
-| REQ-07 | Use SQLite for Android local persistence. | Member 1, Member 3 support | Auth/reference APIs | SQLite `session` table | Not applicable | Token, role, display name and expiry persisted | Device/SQLite proof; confirm reference-cache scope |
-| REQ-08 | Authenticate Backoffice, Grid Operator and Prosumer users. | Member 1 | `identity-api.md` | `users` | Login, role routing | Prosumer/Grid Operator login and role homes | Login success/failure and device tests |
-| REQ-09 | Register Prosumer profile using NIC as primary identity. | Member 1 | `POST /api/users/prosumer/register` | `users` | Prosumer management | Registration | Duplicate NIC test |
-| REQ-10 | Let Backoffice create, update, deactivate and reactivate Prosumer accounts; only Backoffice may reactivate. | Member 1 | `identity-api.md` | `users` | Prosumer management forms and status controls | Own-profile/deactivation only | Administrative CRUD and authorization tests |
+| REQ-07 | Use SQLite for Android local persistence. | Member 1, Member 3 support | Auth/reference APIs | SQLite `session` table | Not applicable | Token, role, display name and expiry persisted; no reference cache yet | Device/SQLite proof; settle reference-cache scope |
+| REQ-08 | Authenticate Backoffice, Grid Operator and Prosumer users with the intended client-role matrix. | Member 1 | `identity-api.md` | `users` | `clientType: Web`, Backoffice/Grid Operator routing | `clientType: Android`, Prosumer/Grid Operator role homes | Allowed/denied login and device/browser tests |
+| REQ-09 | Register Prosumer with NIC and require Backoffice activation; permit rejected resubmission without duplicate NIC. | Member 1 | `POST /api/users/prosumer/register` and pending/activate/reject endpoints | `users` | Pending activation review | Registration and pending/rejected feedback | Activation/rejection/resubmission and duplicate-NIC tests |
+| REQ-10 | Let Backoffice create, update, deactivate and reactivate Prosumers; Prosumer self-service only requests deactivation. | Member 1 | `identity-api.md` | `users` | Prosumer management, request indicator and processing | Own profile/deactivation request and pending feedback | Administrative lifecycle, active-reservation guard and authorization tests |
 | REQ-11 | Enforce role-based authorization. | Member 1 | All protected endpoints | `users` | Auth guard | Auth guard | 401/403 tests |
-| REQ-12 | Create and manage solar grid nodes/stations. | Member 2 | `station-slot-api.md` | `solarStationInfo` | Station dashboard/forms | Nearby station list/map | Station CRUD evidence |
-| REQ-13 | Store station GPS/location details. | Member 2 | `station-slot-api.md` | `solarStationInfo` | Station form/table | Map markers/details | Map and DB evidence |
+| REQ-12 | Create and manage solar grid nodes/stations. | Member 2 | `station-slot-api.md` | `solarStationInfo` | Station cards/table/forms | Basic station list; no nearby map | Station CRUD and device evidence |
+| REQ-13 | Store station GPS/location details. | Member 2 | `station-slot-api.md` | `solarStationInfo` | Station form/cards/table | Map markers/details not implemented | Map and DB evidence |
 | REQ-14 | Store capacity specifications and battery/slot availability. | Member 2 | `station-slot-api.md` | `solarStationInfo`, `energyBookingSlots` | Capacity/slot screens | Slot details | Capacity and slot records |
 | REQ-15 | Deactivate station only when no active reservations exist. | Member 2 | `PATCH /api/stations/{id}/status` | `solarStationInfo`, `energyReservations` | Deactivate action/error | Station status display | Rejection test |
-| REQ-16 | Create energy booking slots. | Member 2 | `POST /api/stations/{stationId}/slots` | `energyBookingSlots` | Slot management | Slot selection | Slot record evidence |
+| REQ-16 | Create energy booking slots. | Member 2 | `POST /api/stations/{stationCode}/slots` | `energyBookingSlots` | Slot cards/table/management | Slot list and selection | Slot record and role evidence |
 | REQ-17 | Let Prosumers create reservations. | Member 3 | `reservation-dashboard-api.md` | `energyReservations`, `energyBookingSlots` | Booking management view | Reservation form | Reservation creation test |
 | REQ-18 | Enforce 7-day reservation scheduling rule. | Member 3 | `reservation-dashboard-api.md` | `energyReservations` | Error display | Error display | Beyond-window rejection test |
 | REQ-19 | Enforce 12-hour update/cancellation notice rule. | Member 3 | `reservation-dashboard-api.md` | `energyReservations` | Error display | Error display | Insufficient-notice test |
-| REQ-20 | Provide booking history, pending bookings and summary views. | Member 3 | `reservation-dashboard-api.md` | `energyReservations` | Dashboard/history | History/pending screens | Dashboard screenshots |
+| REQ-20 | Provide booking history, pending bookings, search and live summary counts. | Member 3 | `reservation-dashboard-api.md` | `energyReservations` | Dashboard/history | Basic My Bookings list; filtered views/counts pending | Dashboard and device screenshots |
 | REQ-21 | Approve or reject reservations where required by operator/backoffice workflow. | Member 3/4 | `reservation-dashboard-api.md` | `energyReservations` | Operational bookings | Status view | Status transition test |
 | REQ-22 | Generate secure transaction QR for approved reservation. | Member 4 | `operator-transaction-api.md` | `energyReservations` | QR/reference view if used | QR display | QR generation evidence |
 | REQ-23 | Scan and verify QR transaction by Grid Operator. | Member 4 | `operator-transaction-api.md` | `energyReservations` | Operator dashboard | QR scanner | Valid/invalid QR test |
@@ -60,19 +60,19 @@ Current implementation and evidence status is audited in `docs/project-status/fu
 
 ## Current Implementation Summary
 
-Audit date: 2026-09-30
+Audit date: 2026-10-02
 
 | Requirement group | Current status | Main gap |
 | --- | --- | --- |
 | Central API and FAT Service architecture | Implemented | Complete all-domain HTTP/MongoDB and IIS evidence |
 | MongoDB collections and indexes | Implemented | Current Atlas screenshots and concurrency/transaction evidence |
-| Identity and authorization | Backend/web plus Android identity/account slice implemented | Pending-activation decision, device tests and final Postman/Atlas evidence |
-| Stations and slots | Backend/web implemented | Android Maps/slots and final live evidence |
-| Reservations and dashboards | Backend/staff web implemented | Android workflow, concurrency and end-to-end evidence |
+| Identity and authorization | Backend/Web/Android source supports client-role matrix, pending activation and deactivation requests | Device/browser lifecycle, SQLite scope and final Postman/Atlas evidence |
+| Stations and slots | Backend/Web plus Android station/slot lists implemented | Google Maps, Grid Operator availability decision and live evidence |
+| Reservations and dashboards | Backend/staff web plus basic Android booking actions implemented | Android search/history/counts, concurrency and end-to-end evidence |
 | QR verification and finalization | Backend/web implemented; DTO validation tested | Android camera scanner/maps and final live evidence |
 | React web client | Broadly implemented; automated checks pass | Full authenticated browser matrix and final screenshots |
-| Native Android Java and SQLite | Partial; identity/account/session foundation builds and tests pass | Stations/Maps, reservations/views, QR/scanner/finalization and device evidence |
+| Native Android Java and SQLite | Partial; identity, station/slot and basic booking source plus session persistence | Maps, complete booking views/counts, QR/scanner/finalization and device evidence |
 | IIS deployment | Not started | Publish, configure, test and document |
 | Final testing/report evidence | Partial | Full Postman/E2E/screenshots/contributions/report |
 
-Verification on 2026-09-30: backend 113 passed; web 12 passed; web production build passed; ESLint reported 0 errors and 1 warning; Android 7 JVM tests, debug APK and lint tasks passed, with 23 lint warnings. These automated checks do not replace HTTP, Atlas, browser, Android device or IIS verification.
+The full-suite totals (backend 113, web 12, Android 7 JVM; web lint one warning and Android lint 23 warnings) are from 2026-09-30 and were not rerun for this audit. Recent targeted Android/Web builds passed, but those checks do not replace HTTP, Atlas, browser, Android device or IIS verification. See the dated record in the full-system progress report.
