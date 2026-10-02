@@ -35,8 +35,4 @@ export const navigationByRole = {
     { name: 'Transactions', path: '/grid-operator/transactions', icon: QrCodeIcon },
     ...accountItems,
   ],
-  Prosumer: [
-    { name: 'Account Home', path: '/prosumer', icon: Squares2X2Icon, end: true },
-    ...accountItems,
-  ],
 };

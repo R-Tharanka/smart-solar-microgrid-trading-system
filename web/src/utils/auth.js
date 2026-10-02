@@ -7,12 +7,15 @@ export const AUTH_STORAGE_KEYS = {
 export const ROLE_HOME_PATHS = {
   Backoffice: '/backoffice',
   GridOperator: '/grid-operator',
-  Prosumer: '/prosumer',
 };
 
 export function homePathForRole(role) {
-  return ROLE_HOME_PATHS[role] || '/access-denied';
+  return ROLE_HOME_PATHS[role] || '/login';
 }
+
+export const MOBILE_NOTICE = 'Prosumer accounts are accessed through the Smart Solar mobile application. Please use the mobile app to sign in.';
+export const INACTIVE_NOTICE = 'Your account is no longer active. Please contact a Backoffice administrator if you need assistance.';
+export const isWebUser = (user) => ['Backoffice', 'GridOperator'].includes(user?.role) && user?.status === 'Active';
 
 export function normalizeUser(user) {
   if (!user) return null;
@@ -26,6 +29,9 @@ export function normalizeUser(user) {
     address: user.address || null,
     role: user.role || '',
     status: user.status || '',
+    deactivationRequested: user.deactivationRequested === true,
+    deactivationRequestedAtUtc: user.deactivationRequestedAtUtc || null,
+    rejectionReason: user.rejectionReason || null,
     id: user.nic || user.email || '',
     name: [user.firstName, user.lastName].filter(Boolean).join(' '),
   };

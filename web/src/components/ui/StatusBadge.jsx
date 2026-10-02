@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 
 const styles = {
+  DeactivationRequested: 'border-orange-200 bg-orange-50 text-orange-800',
   Active: 'border-emerald-200 bg-emerald-50 text-emerald-700',
   Deactivated: 'border-slate-300 bg-slate-100 text-slate-600',
   Pending: 'border-amber-200 bg-amber-50 text-amber-700',
@@ -24,7 +25,7 @@ const styles = {
 export default function StatusBadge({ value }) {
   return (
     <span className={clsx('energy-badge inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold', styles[value] || 'border-slate-200 bg-white text-slate-600')}>
-      {{ QrIssued: 'QR issued', GridOperator: 'Grid operator', FullyBooked: 'Fully booked' }[value] || value}
+      {{ DeactivationRequested: 'Deactivation requested', QrIssued: 'QR issued', GridOperator: 'Grid operator', FullyBooked: 'Fully booked' }[value] || value}
     </span>
   );
 }

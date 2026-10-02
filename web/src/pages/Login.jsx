@@ -6,7 +6,7 @@ import {
   SignalIcon,
   SunIcon,
 } from '@heroicons/react/24/outline';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import EnergyNetwork from '../components/EnergyNetwork';
 import BrandMark from '../components/BrandMark';
@@ -14,7 +14,7 @@ import Alert from '../components/ui/Alert';
 import Button from '../components/ui/Button';
 import FormField from '../components/ui/FormField';
 import { AuthContext } from '../context/AuthContext';
-import { getApiError } from '../utils/apiError';
+import { firstValidationMessage, getApiError } from '../utils/apiError';
 import { homePathForRole } from '../utils/auth';
 
 export default function Login() {
@@ -27,11 +27,9 @@ export default function Login() {
   const { login, sessionNotice, clearSessionNotice } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  useEffect(() => () => clearSessionNotice(), [clearSessionNotice]);
-
   const validate = () => {
     const next = {};
-    if (identifier.trim().length < 3) next.identifier = 'Enter your email address or Prosumer NIC.';
+    if (identifier.trim().length < 3) next.identifier = 'Enter your staff email address.';
     if (!password) next.password = 'Enter your password.';
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -39,6 +37,7 @@ export default function Login() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    clearSessionNotice();
     setSubmitError('');
     if (!validate()) return;
 
@@ -47,7 +46,9 @@ export default function Login() {
       const authenticatedUser = await login(identifier, password);
       navigate(homePathForRole(authenticatedUser.role), { replace: true });
     } catch (error) {
-      setSubmitError(getApiError(error, 'Sign in failed.').message);
+      const feedback = getApiError(error, 'Sign in could not be completed.');
+      setSubmitError(feedback);
+      setErrors({ identifier: firstValidationMessage(feedback.validationErrors, 'Identifier'), password: firstValidationMessage(feedback.validationErrors, 'Password') });
     } finally {
       setIsLoading(false);
     }
@@ -78,7 +79,7 @@ export default function Login() {
           <div className="mb-6 flex items-center justify-between gap-4">
             <div>
               <h2 id="login-heading" className="text-xl font-semibold text-slate-950">Sign in</h2>
-              <p className="mt-1 text-sm text-slate-500">Use staff email or Prosumer NIC/email.</p>
+              <p className="mt-1 text-sm text-slate-500">For Backoffice and Grid Operator accounts.</p>
             </div>
             <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
               <LockClosedIcon className="h-4 w-4" aria-hidden="true" /> Secure
@@ -86,15 +87,15 @@ export default function Login() {
           </div>
 
           {sessionNotice ? <Alert type="info" className="mb-5">{sessionNotice}</Alert> : null}
-          {submitError ? <Alert className="mb-5" title="Sign in unsuccessful">{submitError}</Alert> : null}
+          {submitError ? <Alert className="mb-5" type={submitError.errorCode === 'AUTH_CLIENT_ROLE_FORBIDDEN' ? 'info' : 'error'} title={submitError.title || 'Unable to sign in'}>{submitError.message}</Alert> : null}
 
           <form className="space-y-5" onSubmit={handleSubmit} noValidate>
             <FormField
               id="identifier"
-              label="Email or NIC"
+              label="Staff email address"
               type="text"
               autoComplete="username"
-              placeholder="Your email address or NIC"
+              placeholder="Your staff email address"
               value={identifier}
               onChange={(event) => {
                 setIdentifier(event.target.value);
@@ -136,6 +137,7 @@ export default function Login() {
               {isLoading ? 'Authenticating...' : 'Sign in to workspace'}
             </Button>
           </form>
+          <p className="mt-5 text-sm text-slate-600">Prosumer? Please sign in through the Smart Solar mobile application.</p>
         </section>
 
         <div className="mt-6 grid grid-cols-3 gap-2 text-center text-xs text-slate-500" aria-hidden="true">

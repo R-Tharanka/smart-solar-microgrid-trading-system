@@ -21,8 +21,8 @@ function memoryStorage() {
 test('maps every supported role to its workspace', () => {
   assert.equal(homePathForRole('Backoffice'), '/backoffice');
   assert.equal(homePathForRole('GridOperator'), '/grid-operator');
-  assert.equal(homePathForRole('Prosumer'), '/prosumer');
-  assert.equal(homePathForRole('Unknown'), '/access-denied');
+  assert.equal(homePathForRole('Prosumer'), '/login');
+  assert.equal(homePathForRole('Unknown'), '/login');
 });
 
 test('normalizes the API user without internal identifiers', () => {

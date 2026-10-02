@@ -1,4 +1,10 @@
 const FRIENDLY_MESSAGES = {
+  AUTH_CLIENT_ROLE_FORBIDDEN: 'Prosumer accounts are accessed through the Smart Solar mobile application. Please use the mobile app to sign in.',
+  AUTH_ACCOUNT_PENDING: 'Your registration is waiting for Backoffice activation.',
+  AUTH_REGISTRATION_REJECTED: 'Your registration was rejected. You can submit it again through the mobile application for review.',
+  AUTH_ACCOUNT_DEACTIVATED: 'Your account has been deactivated. Contact a Backoffice administrator for assistance.',
+  USER_DEACTIVATION_ALREADY_REQUESTED: 'A deactivation request is already awaiting Backoffice review. The account remains active.',
+  VALIDATION_IDENTITY: 'Review the submitted information and try again.',
   AUTH_INVALID_CREDENTIALS: 'The identifier or password is incorrect.',
   AUTH_ACCOUNT_INACTIVE: 'This account is not active. Contact a Backoffice administrator.',
   AUTH_CURRENT_PASSWORD_INVALID: 'The current password is incorrect.',
@@ -54,6 +60,7 @@ export function getApiError(error, fallback = 'The request could not be complete
   return {
     status,
     errorCode,
+    title: ({ AUTH_CLIENT_ROLE_FORBIDDEN: 'Mobile application required', AUTH_ACCOUNT_PENDING: 'Awaiting activation', AUTH_REGISTRATION_REJECTED: 'Registration not approved', AUTH_ACCOUNT_DEACTIVATED: 'Account deactivated', AUTH_INVALID_CREDENTIALS: 'Check your sign-in details' })[errorCode],
     message: FRIENDLY_MESSAGES[errorCode] || safeDetail || statusMessage || fallback,
     validationErrors: problem?.errors || {},
   };

@@ -6,6 +6,7 @@ import {
   normalizeUser,
   readAuthSession,
   writeAuthSession,
+  isWebUser, MOBILE_NOTICE, INACTIVE_NOTICE,
 } from '../utils/auth';
 
 export const AuthContext = createContext(null);
@@ -27,7 +28,11 @@ export const AuthProvider = ({ children }) => {
 
     window.addEventListener('auth:session-ended', handleSessionEnded);
 
-    if (!stored) {
+    if (!stored || !isWebUser(stored.user)) {
+      if (stored) {
+        clearAuthSession();
+        setSessionNotice(stored.user.role === 'Prosumer' ? MOBILE_NOTICE : INACTIVE_NOTICE);
+      }
       setLoading(false);
       return () => {
         active = false;
@@ -38,8 +43,14 @@ export const AuthProvider = ({ children }) => {
     setUser(stored.user);
     apiClient.get('/users/me')
       .then((response) => {
-        if (!active) return;
+        if (!active || localStorage.getItem('token') !== stored.token) return;
         const currentUser = normalizeUser(response.data.data);
+        if (!isWebUser(currentUser)) {
+          clearAuthSession();
+          setUser(null);
+          setSessionNotice(currentUser?.role === 'Prosumer' ? MOBILE_NOTICE : INACTIVE_NOTICE);
+          return;
+        }
         setUser(currentUser);
         writeAuthSession({ token: stored.token, user: currentUser, expiresAtUtc: stored.expiresAtUtc });
       })
@@ -48,7 +59,7 @@ export const AuthProvider = ({ children }) => {
         if (error.response?.status === 403) {
           clearAuthSession();
           setUser(null);
-          setSessionNotice('This account is no longer active.');
+          setSessionNotice(INACTIVE_NOTICE);
         }
       })
       .finally(() => {
@@ -64,11 +75,16 @@ export const AuthProvider = ({ children }) => {
   const login = useCallback(async (identifier, password) => {
     const response = await apiClient.post(
       '/users/login',
-      { identifier: identifier.trim(), password },
+      { identifier: identifier.trim(), password, clientType: 'Web' },
       { skipAuthHandling: true },
     );
     const { accessToken, expiresAtUtc, user: backendUser } = response.data.data;
     const userData = normalizeUser(backendUser);
+    if (!isWebUser(userData)) {
+      clearAuthSession();
+      setUser(null);
+      throw { response: { status: 403, data: { errorCode: userData?.role === 'Prosumer' ? 'AUTH_CLIENT_ROLE_FORBIDDEN' : 'AUTH_ACCOUNT_INACTIVE' } } };
+    }
 
     writeAuthSession({ token: accessToken, user: userData, expiresAtUtc });
     setSessionNotice('');
@@ -85,13 +101,17 @@ export const AuthProvider = ({ children }) => {
   const refreshUser = useCallback(async () => {
     const response = await apiClient.get('/users/me');
     const currentUser = normalizeUser(response.data.data);
+    if (!isWebUser(currentUser)) {
+      logout(currentUser?.role === 'Prosumer' ? MOBILE_NOTICE : INACTIVE_NOTICE);
+      return null;
+    }
     const stored = readAuthSession();
     if (stored) {
       writeAuthSession({ ...stored, user: currentUser });
     }
     setUser(currentUser);
     return currentUser;
-  }, []);
+  }, [logout]);
 
   const clearSessionNotice = useCallback(() => setSessionNotice(''), []);
 

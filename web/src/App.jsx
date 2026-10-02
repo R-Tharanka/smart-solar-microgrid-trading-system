@@ -2,6 +2,7 @@ import { useContext } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { FullPageLoading } from './components/ui/PageState';
 import { AuthContext } from './context/AuthContext';
+import { MOBILE_NOTICE } from './utils/auth';
 import AccessDenied from './pages/AccessDenied';
 import NotFound from './pages/NotFound';
 import Login from './pages/Login';
@@ -16,14 +17,14 @@ import Staff from './pages/backoffice/Staff';
 import Stations from './pages/backoffice/Stations';
 import GridOperatorDashboard from './pages/gridoperator/Dashboard';
 import Transactions from './pages/gridoperator/Transactions';
-import ProsumerHome from './pages/prosumer/Home';
 import ProtectedRoute, { PublicOnlyRoute } from './routes/ProtectedRoute';
 
-const allRoles = ['Backoffice', 'GridOperator', 'Prosumer'];
+const allRoles = ['Backoffice', 'GridOperator'];
 
 function WorkspaceRedirect() {
-  const { user, loading, homePath } = useContext(AuthContext);
+  const { user, loading, homePath, sessionNotice } = useContext(AuthContext);
   if (loading) return <FullPageLoading />;
+  if (!user && sessionNotice === MOBILE_NOTICE) return <Navigate to="/login" replace />;
   return user ? <Navigate to={homePath} replace /> : <Home />;
 }
 
@@ -47,7 +48,7 @@ function App() {
         <Route path="/grid-operator/reservations" element={<ProtectedRoute allowedRoles={['GridOperator']}><Reservations /></ProtectedRoute>} />
         <Route path="/grid-operator/transactions" element={<ProtectedRoute allowedRoles={['GridOperator']}><Transactions /></ProtectedRoute>} />
 
-        <Route path="/prosumer" element={<ProtectedRoute allowedRoles={['Prosumer']}><ProsumerHome /></ProtectedRoute>} />
+        <Route path="/prosumer/*" element={<Navigate to="/login" replace />} />
         <Route path="/account/profile" element={<ProtectedRoute allowedRoles={allRoles}><Profile /></ProtectedRoute>} />
         <Route path="/account/security" element={<ProtectedRoute allowedRoles={allRoles}><Security /></ProtectedRoute>} />
         <Route path="/access-denied" element={<ProtectedRoute allowedRoles={allRoles}><AccessDenied /></ProtectedRoute>} />
