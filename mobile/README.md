@@ -299,4 +299,20 @@ On Windows, use `./gradlew.bat clean`. The next build will recreate the required
 - **The AVD list is empty:** Create an emulator in Android Studio under **Tools > Device Manager > Add a new device**.
 - **`adb devices` has an empty list:** No device is connected. Start an AVD or connect a physical device with USB debugging enabled, then run the command again.
 - **Gradle cannot download dependencies:** Check the internet connection and Android Studio's Gradle offline-mode setting.
-- **Wrong Java version:** Configure Android Studio's Gradle JDK to its bundled JDK, or set `JAVA_HOME` to JDK 17 or newer.
+- **Missing `jlink.exe` / `JdkImageTransform` failure:** Gradle needs a complete JDK 21 for this Android build. VS Code's Red Hat Java extension may expose a Java 21 runtime that has `java.exe` but no `jlink.exe`; do not use it as Gradle's JDK. In a new PowerShell terminal, point `JAVA_HOME` at an installed full JDK (for example, the Microsoft JDK shown below), verify both executables, then build. The project intentionally does not pin a machine-specific JDK path or use generated daemon-JVM criteria that could select the incomplete VS Code runtime.
+
+  ```powershell
+  $env:JAVA_HOME = 'C:\Program Files\Microsoft\jdk-21.0.11.10-hotspot'
+  Test-Path "$env:JAVA_HOME\bin\java.exe"
+  Test-Path "$env:JAVA_HOME\bin\jlink.exe"
+  ./gradlew.bat --version
+  ./gradlew.bat assembleDebug
+  if ($LASTEXITCODE -ne 0) { throw 'Android build failed; do not install an old APK.' }
+  ./gradlew.bat installDebug
+  if ($LASTEXITCODE -ne 0) { throw 'Android installation failed.' }
+  $androidSdk = Join-Path $env:LOCALAPPDATA 'Android\Sdk'
+  & "$androidSdk\platform-tools\adb.exe" shell am force-stop com.smartsolar.microgrid
+  & "$androidSdk\platform-tools\adb.exe" shell am start -n com.smartsolar.microgrid/.MainActivity
+  ```
+
+  Both `Test-Path` checks must print `True`. Substitute your own complete JDK 21 path if different. In Android Studio, select that full JDK or the bundled JBR as the Gradle JDK. This PowerShell assignment changes only the current terminal; set your user-level `JAVA_HOME` separately if you want it to persist. A failed build followed by `adb shell am start` can merely reopen an older installed APK.
