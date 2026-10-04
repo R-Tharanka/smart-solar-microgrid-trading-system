@@ -22,6 +22,7 @@ import com.smartsolar.microgrid.data.identity.UtcTimestampParser;
 import com.smartsolar.microgrid.data.reservation.CreateReservationRequest;
 import com.smartsolar.microgrid.data.reservation.ReservationRepository;
 import com.smartsolar.microgrid.data.reservation.ReservationResponse;
+import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -114,6 +115,8 @@ public class CreateReservationFragment extends Fragment {
             @Override
             public void onError(ApiError error) {
                 showLoading(false);
+                if (AuthenticationNavigator.handleExpiredSession(
+                        CreateReservationFragment.this, error)) return;
                 Toast.makeText(requireContext(), error.getUserMessage(), Toast.LENGTH_LONG).show();
             }
         });

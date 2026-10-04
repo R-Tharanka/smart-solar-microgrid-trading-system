@@ -551,6 +551,24 @@ public sealed class ReservationServiceTests
         Assert.Equal(3, result.TotalCount);
     }
 
+    [Fact]
+    public async Task GetProsumerDashboard_ReturnsPendingAndOnlyFutureApprovedCounts()
+    {
+        var repo = new FakeReservationRepository(
+            PendingReservation(status: ReservationStatus.Pending),
+            PendingReservation(status: ReservationStatus.Approved, start: Now.AddHours(-2)),
+            PendingReservation(status: ReservationStatus.Approved, start: Now.AddHours(2)),
+            PendingReservation("other-prosumer", ReservationStatus.Approved, Now.AddHours(3)));
+
+        var result = await Service(repo).GetProsumerDashboardAsync(
+            "200012345678", TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, result.PendingCount);
+        Assert.Equal(2, result.ApprovedCount);
+        Assert.Equal(1, result.ApprovedFutureCount);
+        Assert.Equal(3, result.TotalCount);
+    }
+
     // -------------------------------------------------------------------------
     // Issue 1 — Update modifies ONLY requested energy
     // -------------------------------------------------------------------------
@@ -785,6 +803,16 @@ public sealed class ReservationServiceTests
                 .Where(r => r.ProsumerNic == prosumerNic)
                 .GroupBy(r => r.Status)
                 .ToDictionary(g => g.Key, g => (long)g.Count()));
+
+        public Task<long> CountProsumerReservationsStartingAfterAsync(
+            string prosumerNic,
+            ReservationStatus status,
+            DateTime scheduledStartAfterUtc,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult((long)_items.Count(r =>
+                r.ProsumerNic == prosumerNic &&
+                r.Status == status &&
+                r.ScheduledStartTimeUtc > scheduledStartAfterUtc));
     }
 
     private sealed class FakeStationRepository(SolarStation? station) : ISolarStationRepository

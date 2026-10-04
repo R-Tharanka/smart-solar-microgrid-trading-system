@@ -42,6 +42,7 @@ public sealed record DashboardSummaryResponse(
 public sealed record ProsumerDashboardResponse(
     long PendingCount,
     long ApprovedCount,
+    long ApprovedFutureCount,
     long CompletedCount,
     long CancelledCount,
     long TotalCount);

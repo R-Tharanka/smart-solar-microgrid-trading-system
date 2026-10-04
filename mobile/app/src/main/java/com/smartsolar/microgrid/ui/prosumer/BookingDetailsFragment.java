@@ -25,6 +25,7 @@ import com.smartsolar.microgrid.data.reservation.CancelReservationRequest;
 import com.smartsolar.microgrid.data.reservation.ReservationRepository;
 import com.smartsolar.microgrid.data.reservation.ReservationResponse;
 import com.smartsolar.microgrid.data.reservation.UpdateReservationRequest;
+import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -96,6 +97,8 @@ public class BookingDetailsFragment extends Fragment {
             @Override
             public void onError(ApiError error) {
                 showLoading(false);
+                if (AuthenticationNavigator.handleExpiredSession(
+                        BookingDetailsFragment.this, error)) return;
                 Toast.makeText(requireContext(), error.getUserMessage(), Toast.LENGTH_LONG).show();
             }
         });
@@ -167,14 +170,16 @@ public class BookingDetailsFragment extends Fragment {
             @Override
             public void onSuccess(ReservationResponse data, String message) {
                 showLoading(false);
-                Toast.makeText(requireContext(), "Reservation updated.", Toast.LENGTH_SHORT).show();
                 currentReservation = data;
                 populateUI();
+                showActionSummary(R.string.reservation_updated_title, data);
             }
 
             @Override
             public void onError(ApiError error) {
                 showLoading(false);
+                if (AuthenticationNavigator.handleExpiredSession(
+                        BookingDetailsFragment.this, error)) return;
                 showErrorDialog("Update Failed", error.getUserMessage());
             }
         });
@@ -196,17 +201,34 @@ public class BookingDetailsFragment extends Fragment {
             @Override
             public void onSuccess(ReservationResponse data, String message) {
                 showLoading(false);
-                Toast.makeText(requireContext(), "Reservation cancelled.", Toast.LENGTH_SHORT).show();
                 currentReservation = data;
                 populateUI();
+                showActionSummary(R.string.reservation_cancelled_title, data);
             }
 
             @Override
             public void onError(ApiError error) {
                 showLoading(false);
+                if (AuthenticationNavigator.handleExpiredSession(
+                        BookingDetailsFragment.this, error)) return;
                 showErrorDialog("Cancel Failed", error.getUserMessage());
             }
         });
+    }
+
+    private void showActionSummary(int titleResource, ReservationResponse reservation) {
+        String scheduledTime = formatTime(reservation.getScheduledStartTimeUtc())
+                + " - " + formatTime(reservation.getScheduledEndTimeUtc());
+        String summary = getString(R.string.reservation_action_summary,
+                reservation.getReservationCode(),
+                reservation.getStatus(),
+                scheduledTime,
+                reservation.getRequestedEnergyKwh());
+        new AlertDialog.Builder(requireContext())
+                .setTitle(titleResource)
+                .setMessage(summary)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
     }
 
     private void showErrorDialog(String title, String message) {

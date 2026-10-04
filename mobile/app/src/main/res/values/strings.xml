@@ -68,4 +68,16 @@
     <string name="station_selected_details">%1$s (%2$s)\n%3$s\nCapacity: %4$.1f kWh · Battery storage: %5$.1f kWh\nOperating hours: %6$s–%7$s · %8$s</string>
     <string name="role_label">Role</string>
     <string name="session_expired">Your session has expired. Please sign in again.</string>
+    <string name="reservation_summary_title">Reservation summary</string>
+    <string name="pending_reservations_label">Pending</string>
+    <string name="approved_upcoming_label">Approved upcoming</string>
+    <string name="reservation_summary_unavailable">Reservation counts are temporarily unavailable.</string>
+    <string name="search_bookings_hint">Search by booking code or status</string>
+    <string name="bookings_all_filter">All</string>
+    <string name="bookings_pending_filter">Pending</string>
+    <string name="bookings_upcoming_filter">Current / Upcoming</string>
+    <string name="bookings_history_filter">History</string>
+    <string name="reservation_updated_title">Reservation updated</string>
+    <string name="reservation_cancelled_title">Reservation cancelled</string>
+    <string name="reservation_action_summary">Booking code: %1$s\nStatus: %2$s\nScheduled time: %3$s\nRequested energy: %4$.1f kWh</string>
 </resources>

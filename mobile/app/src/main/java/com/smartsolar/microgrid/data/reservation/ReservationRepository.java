@@ -22,6 +22,10 @@ public class ReservationRepository {
         apiClient.get(RESERVATIONS_PATH + "/me", listType, true, callback);
     }
 
+    public void getProsumerDashboard(ApiCallback<ProsumerDashboardResponse> callback) {
+        apiClient.get("api/dashboard/me", ProsumerDashboardResponse.class, true, callback);
+    }
+
     public void getReservationDetails(String id, ApiCallback<ReservationResponse> callback) {
         apiClient.get(RESERVATIONS_PATH + "/" + id, ReservationResponse.class, true, callback);
     }

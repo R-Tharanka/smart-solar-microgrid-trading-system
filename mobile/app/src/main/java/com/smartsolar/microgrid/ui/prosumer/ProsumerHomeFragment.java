@@ -14,11 +14,15 @@ import com.smartsolar.microgrid.data.api.ApiCallback;
 import com.smartsolar.microgrid.data.api.ApiError;
 import com.smartsolar.microgrid.data.identity.IdentityRepository;
 import com.smartsolar.microgrid.data.identity.UserResponse;
+import com.smartsolar.microgrid.data.reservation.ProsumerDashboardResponse;
+import com.smartsolar.microgrid.data.reservation.ReservationRepository;
 import com.smartsolar.microgrid.data.session.Session;
 import com.smartsolar.microgrid.data.session.SessionManager;
 import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
 
 public class ProsumerHomeFragment extends Fragment {
+    private ReservationRepository reservationRepository;
+
     public ProsumerHomeFragment() {
         super(R.layout.fragment_prosumer_home);
     }
@@ -32,6 +36,8 @@ public class ProsumerHomeFragment extends Fragment {
             return;
         }
 
+        reservationRepository = new ReservationRepository(requireContext());
+
         TextView welcome = view.findViewById(R.id.prosumer_welcome);
         welcome.setText(getString(R.string.welcome_user, session.getDisplayName()));
         view.findViewById(R.id.browse_stations_button).setOnClickListener(button ->
@@ -42,6 +48,8 @@ public class ProsumerHomeFragment extends Fragment {
                 NavHostFragment.findNavController(this).navigate(R.id.profileFragment));
         view.findViewById(R.id.logout_button).setOnClickListener(button ->
                 AuthenticationNavigator.logout(this));
+        view.findViewById(R.id.reservation_summary_retry).setOnClickListener(button ->
+                loadReservationSummary());
 
         new IdentityRepository(requireContext()).getProfile(new ApiCallback<UserResponse>() {
             @Override
@@ -57,5 +65,57 @@ public class ProsumerHomeFragment extends Fragment {
                 AuthenticationNavigator.handleExpiredSession(ProsumerHomeFragment.this, error);
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (reservationRepository != null) {
+            loadReservationSummary();
+        }
+    }
+
+    private void loadReservationSummary() {
+        View view = getView();
+        if (view == null) return;
+
+        view.findViewById(R.id.reservation_summary_loading).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.reservation_summary_content).setVisibility(View.GONE);
+        view.findViewById(R.id.reservation_summary_error).setVisibility(View.GONE);
+        view.findViewById(R.id.reservation_summary_retry).setVisibility(View.GONE);
+
+        reservationRepository.getProsumerDashboard(new ApiCallback<ProsumerDashboardResponse>() {
+            @Override
+            public void onSuccess(ProsumerDashboardResponse summary, String message) {
+                if (getView() != view) return;
+                view.findViewById(R.id.reservation_summary_loading).setVisibility(View.GONE);
+                if (summary == null) {
+                    showReservationSummaryError(view);
+                    return;
+                }
+
+                ((TextView) view.findViewById(R.id.pending_reservation_count))
+                        .setText(String.valueOf(summary.getPendingCount()));
+                ((TextView) view.findViewById(R.id.approved_future_reservation_count))
+                        .setText(String.valueOf(summary.getApprovedFutureCount()));
+                view.findViewById(R.id.reservation_summary_content).setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onError(ApiError error) {
+                if (getView() != view) return;
+                if (AuthenticationNavigator.handleExpiredSession(ProsumerHomeFragment.this, error)) {
+                    return;
+                }
+                showReservationSummaryError(view);
+            }
+        });
+    }
+
+    private void showReservationSummaryError(View view) {
+        view.findViewById(R.id.reservation_summary_loading).setVisibility(View.GONE);
+        view.findViewById(R.id.reservation_summary_content).setVisibility(View.GONE);
+        view.findViewById(R.id.reservation_summary_error).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.reservation_summary_retry).setVisibility(View.VISIBLE);
     }
 }
