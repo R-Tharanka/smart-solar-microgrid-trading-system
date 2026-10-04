@@ -23,22 +23,24 @@ Status terms used here: **implemented** means source exists; **build-checked** m
 | Service architecture/API | 8 group | Central API and service/repository separation exist; IIS-hosted reachability unproved |
 | Database design/model | 4 group | Four MongoDB collection models and indexes exist; final sample/Atlas evidence absent |
 | Client build/architecture | 12 group | Web and native Android exist; Android domain coverage and hosted integration incomplete |
-| UI/UX | 6 group | Web is broad; Android has account, browsing and booking screens, but Maps/QR and final screenshot coverage are absent |
+| UI/UX | 6 group | Web is broad; Android has account, map/list station discovery and booking screens, but QR/operator screens and final screenshot coverage are absent |
 | Documentation/deployment | 5 group | Engineering docs exist; IIS and student-authored assessment package incomplete |
 | Web features/business rules | 18 individual | Four domains have API/web surfaces; complete hosted/browser demonstration remains |
 | Mobile authentication/accounts | 9 individual | Registration, login, profile, pending activation and deactivation-request code exist; device proof remains |
 | Reservation workflow | 9 individual | API and Android create/update/cancel screens exist; live action-summary/boundary proof remains |
 | Booking views/dashboards | 10 individual | API/staff web and a basic Android bookings list exist; mobile search, pending/history views and counts remain |
-| Operator verification/maps | 7 individual | Transaction API/web tools exist; Android scanner and Google Maps remain |
-| Integration/SQLite/device | 12 individual | API clients plus SQLite session and bounded user-profile cache exist; IIS, Maps, QR and device evidence remain |
+| Operator verification/maps | 7 individual | Nearby Google Maps/marker source exists; Android scanner/finalization and Maps runtime proof remain |
+| Integration/SQLite/device | 12 individual | API clients, Maps/location source and SQLite session/profile/station-reference persistence exist; IIS, QR and device evidence remain |
 
 ## 2. Executive Conclusion
 
-The project has a substantial central API and React implementation and a growing native Android client, but **the full assignment is not complete or independently demonstrated**. The strongest code coverage is backend plus web. Android now goes beyond identity: Prosumer station/slot browsing, reservation creation, booking list/detail, update and cancel screens are present. Nevertheless, Google Maps, booking dashboard/search/history presentation, approved-booking QR display, operator camera scanning/verification/finalization, and final hosted/device verification remain material gaps.
+The project has a substantial central API and React implementation and a growing native Android client, but **the full assignment is not complete or independently demonstrated**. The strongest code coverage is backend plus web. Android now goes beyond identity: Prosumer Google Maps/list station discovery, station details, live slot selection, reservation creation, booking list/detail, update and cancel screens are present. Nevertheless, booking dashboard/search/history presentation, approved-booking QR display, operator camera scanning/verification/finalization, a production-capable Maps key/runtime demonstration, and final hosted/device verification remain material gaps.
 
 Post-plan Member 1 changes are implemented in source: Web and Android pass a login `clientType`; public Prosumer registration is `Pending`; Backoffice can activate/reject; a rejected NIC may resubmit into the same record; Prosumer self-service records a deactivation **request** while status stays `Active`; Backoffice alone administratively deactivates/reactivates. The React activation and deactivation-request views and Android request feedback are now present. The old report's statements that the clients still need these contracts were stale.
 
-The latest Member 1 Android change also resolves the previously open SQLite reference-data question for the authenticated profile. Database version 2 retains the original `session` table and adds a single-account `user_profile` cache populated from login, successful `/api/users/me` reads and successful profile updates. The Profile screen remains server-first and falls back to timestamped cached data only for network, invalid-response or server-availability failures. Logout, expiry and unauthorized-session clearing remove both rows, preventing the next local account from seeing the previous profile. Passwords, duplicate JWTs and server-only fields are not cached. This is bounded display/reference caching, not offline authorization or offline writes.
+Member 1's Android persistence is implemented: database version 2 retained the original `session` table and added a single-account `user_profile` cache populated from login, successful `/api/users/me` reads and successful profile updates. The Profile screen remains server-first and falls back to timestamped cached data only for availability failures. Offline profile edits are not queued or falsely saved. Passwords, duplicate JWTs and server-only fields are not cached.
+
+Member 2 subsequently advanced the same shared database to version 3 through a non-destructive v2-to-v3 migration and added `grid_node_reference`. Successful active-station responses are upserted with a local synchronization timestamp; location-based responses do not delete unrelated cached rows. On network/transport or 5xx station failures, the existing map and list can display cached references with an explicit offline/last-synchronized notice. Normal 4xx/authentication errors retain the normal error/session path. Cached station data is never used for slot availability or reservations: selecting a cached station still opens the live slot API flow. Logout, expiry and unauthorized-session clearing remove the session, profile and station-reference rows. These caches are bounded display/reference stores, not offline business authority.
 
 The assignment's operational scenario says Grid Operators update battery-slot availability. The current dedicated slot-status API/UI remains Backoffice-only, although Grid Operators can edit general slot details. This is an unresolved requirement/authorization decision, not a completed operator capability.
 
@@ -47,8 +49,8 @@ The assignment's operational scenario says Grid Operators update battery-slot av
 | Requirements/architecture | Documented; team sign-off and current diagrams/evidence review still needed |
 | Backend | Four domains implemented; final live MongoDB, concurrency, rollback and security proof missing |
 | React web | Broad role-based experience, including activation queue and station/slot card-list toggles; hosted/browser matrix missing |
-| Native Android | Identity plus basic station/slot and booking flows; Maps, complete dashboards and QR/operator mode missing |
-| MongoDB/SQLite | Four server collections plus Android `session` and API-derived `user_profile` tables; device/inspection evidence remains |
+| Native Android | Identity, Maps/location station discovery, cached station fallback and basic booking flows; complete dashboards and QR/operator mode missing |
+| MongoDB/SQLite | Four server collections plus Android `session`, `user_profile` and `grid_node_reference` tables; migration/device inspection evidence remains |
 | IIS | No demonstrated IIS-hosted API or both-client integration |
 | Assessment package | Final screenshots, all-domain Postman run, video, verified contributions and final report missing |
 
@@ -63,8 +65,8 @@ The repository has React/Router/Axios/Tailwind on web; native Java/XML, AndroidX
 | Reservation/dashboard API | Reservation and dashboard controllers/services, capacity/status rules | Source-verified; real MongoDB concurrency proof missing |
 | QR/transaction API | Verify/finalize endpoints, token/hash and transaction code | Source-verified; actual scanner/transaction rollback proof missing |
 | React | Role routes; account, station, slot, reservation and transaction pages | Source-verified; current browser matrix not run |
-| Android | Login/profile, station/slot lists, reservation create/list/detail/update/cancel | Source-verified; map, QR and operator actions absent |
-| SQLite | `SessionDatabaseHelper`, `SessionManager`, `UserProfileCache` | Session and API-derived profile cache implemented; migration/device inspection not yet demonstrated |
+| Android | Login/profile, location-aware station map/list/details, slot selection, reservation create/list/detail/update/cancel | Source/build-verified; Maps credentials/runtime, QR and operator actions remain unproved/absent |
+| SQLite | Shared `SessionDatabaseHelper`, `SessionManager`, `UserProfileCache`, `GridNodeReferenceCache` | Session plus API-derived profile/station caches implemented; v1-v2-v3 migration/device inspection not yet demonstrated |
 | Postman | Identity collection only | All-domain suite absent |
 | Deployment | Docker files, `.env.example`, emulator development URL | IIS hosting not evidenced |
 
@@ -75,10 +77,10 @@ Recorded earlier verification (2026-09-30): backend 113/113 tests; web 12/12 tes
 | Planned phase | Completed in repository | Still pending |
 | --- | --- | --- |
 | Phase 1: requirements/foundation | Roles, ownership, use cases, diagrams, collection design, UI/evidence checklist and traceability | Four-member review/sign-off; update final artifacts to actual implementation and PDF wording |
-| Phase 2: architecture/contracts | Central API, MongoDB, JWT/error conventions, four domain contracts and change register | Confirm disputed role rules and soft-delete interpretation; document final SQLite cache behavior |
+| Phase 2: architecture/contracts | Central API, MongoDB, JWT/error conventions, four domain contracts, change register and bounded Android profile/station caching | Confirm disputed role rules and soft-delete interpretation; reconcile final docs with actual contracts |
 | Phase 3: backend core | Identity, infrastructure, reservation/dashboard and transaction domains | Hosted HTTP matrix, real MongoDB concurrency/transaction evidence, current full-suite rerun |
 | React web | Public home, role workspaces, account/activation, station/slot, reservation and transaction UI | Final role/browser/responsive/hosted verification and screenshots |
-| Native Android | Shared API/session, cached profile fallback, identity, station/slot browsing and basic Prosumer reservations | Maps, complete booking views/counts, QR display, operator scan/finalization and device proof |
+| Native Android | Shared API/session, cached profile and station-reference fallback, identity, Maps/location station discovery, slot browsing and basic Prosumer reservations | Valid Maps-key/device proof, complete booking views/counts, QR display, operator scan/finalization and device proof |
 | Deployment | Docker/local setup and health endpoints | Secure IIS/HTTPS/Atlas deployment and both-client connectivity |
 | Testing/report | Unit/helper tests and identity Postman | All-domain Postman, E2E/device/Atlas/IIS evidence, final student-authored report and video |
 
@@ -102,7 +104,7 @@ Important post-plan decisions and divergences:
 | Allocation/approval | Pending reservation does not consume slot energy; staff approval conditionally allocates | Live competing-approval test needed |
 | Slot authority | General edit is staff-accessible; create/status endpoint is Backoffice-only | Resolve conflict with Grid Operator scenario |
 | QR/finalization | Opaque expiring QR token, stored hash, verify then transactional completion/storage increment | Real Atlas transaction and replay/rollback proof needed |
-| Android local data | SQLite v2 stores one session and one API-derived authenticated profile with `lastSyncedAt`; server remains authoritative | Inspect migration/offline/account-switch behavior on a real emulator/device; Member 2 still owns any future station reference cache |
+| Android local data | SQLite v3 stores one session, one API-derived authenticated profile and API-derived grid-node references with local sync timestamps; server remains authoritative | Inspect v1-to-v2-to-v3 migration, offline/no-cache behavior and clearing on a real emulator/device |
 
 See the change register for the decision IDs and client impact. Do not describe a deactivation request as a deactivated account or a `Pending` registration.
 
@@ -129,7 +131,7 @@ Own user model/collection, staff roles, Prosumer NIC registration, login, author
 - Pending activation review with activate/reject; separate deactivation-request indicator/filter, processing action and dashboard notice.
 - Shared responsive shell, dialogs, alerts, toasts, loading/empty/error states.
 
-**Completed Android work:** native registration/login sends `clientType: Android`; Prosumer/Grid Operator role homes; SQLite session restoration; online profile read/edit; request-only deactivation endpoint; pending-request feedback on profile/home; duplicate-request message; logout and network/Problem Details handling. SQLite database version 2 adds `user_profile` (`nic`, display/first/last names, email, phone, address, account status, deactivation-request flag and last-sync epoch). Login and every successful profile fetch/update replace the cache with the authoritative response. Profile opening still performs one normal API request; on connection/server failure it displays the latest cache with a localized offline/last-synchronized notice, or a friendly reconnect message if no cache exists. Offline editing is not queued or falsely saved. Explicit logout, expired sessions and unauthorized responses clear both session and profile cache. The Grid Operator home is a foundation, not the completed operator workflow.
+**Completed Android work:** native registration/login sends `clientType: Android`; Prosumer/Grid Operator role homes; SQLite session restoration; online profile read/edit; request-only deactivation endpoint; pending-request feedback on profile/home; duplicate-request message; logout and network/Problem Details handling. Member 1's database version 2 migration added `user_profile` (`nic`, display/first/last names, email, phone, address, account status, deactivation-request flag and last-sync epoch); the shared helper is now version 3 after Member 2's independent station-reference addition. Login and every successful profile fetch/update replace the profile cache with the authoritative response. Profile opening still performs one normal API request; on connection/server failure it displays the latest cache with a localized offline/last-synchronized notice, or a friendly reconnect message if no cache exists. Offline editing is not queued or falsely saved. Explicit logout, expired sessions and unauthorized responses clear the session and protected caches. The Grid Operator home is a foundation, not the completed operator workflow.
 
 ### Remaining Member 1 work
 
@@ -157,16 +159,19 @@ Own station and booking-slot models/collections, GPS/capacity/schedules/status, 
 - Backoffice station/slot create, edit, detail and status controls; Grid Operator shared station/slot read and permitted edit views.
 - Location picker, filters, error feedback, responsive cards **and newly added table/list toggles** on both shared pages. Cards remain default for both roles.
 
-**Completed Android work:** API-backed station list, station selection, slot list, adapters and navigation into reservation creation. This is a basic discovery/selection path, not a Maps implementation. It is not independently device-tested in this audit.
+**Completed Android work:** the station screen preserves the existing list and adds a `SupportMapFragment`, Google Maps SDK and Play Services location dependency, manifest permissions and a local/property/environment API-key placeholder. `DeviceLocationProvider` performs one current-location request rather than continuous tracking. Permission denied/permanently denied, disabled services, unavailable location and unavailable Google Play Services have non-blocking fallbacks. With a usable location, Android calls `GET /api/stations?status=Active&nearLat=...&nearLng=...`; otherwise it calls `GET /api/stations?status=Active`. Markers use validated latitude/longitude, retain a safe station ID/code mapping and open API-derived station details before reusing the existing station-to-slots navigation. `SlotsFragment` displays the selected station context and continues using the existing live slot API and reservation contract.
+
+SQLite database version 3 adds `grid_node_reference` to the existing shared helper through a non-destructive migration. It stores station ID/code, display/location/capacity/schedule/status fields and a local `lastSyncedAt` epoch. Successful station responses are upserted transactionally without deleting unrelated cached stations. Network/transport and 5xx failures may display cached active references through the same list and map with an offline/last-sync notice; 4xx/authentication errors do not masquerade as offline. No slot data is cached, and cached station selection still requires live slot retrieval. Session clearing also clears the protected station cache. Java compilation, `assembleDebug` and `git diff --check` passed after this phase, but Maps rendering, location branches, SQLite migration and offline behavior were not exercised on a device in this audit.
 
 ### Remaining Member 2 work
 
-- Implement and verify Google Maps API integration, nearby nodes using real coordinates/location, markers and station details on selection. Source currently has no Maps SDK integration.
+- Configure a production-capable Android Maps key locally and verify actual rendering, markers, camera framing, real/coarse location and every permission/services fallback on an emulator and physical device. A no-billing Maps Demo Key does not establish native Android Maps runtime readiness.
+- Verify SQLite v2-to-v3 migration preserves `session` and `user_profile`; inspect cache upserts, subset preservation, offline/no-cache UI, timestamp formatting and logout/expiry clearing with redacted device evidence.
 - Confirm with the team/lecturer whether Grid Operators must change slot availability status. Current API is Backoffice-only for the dedicated status endpoint, despite the PDF scenario.
 - Run station/slot hosted HTTP, overlap, reservation guard, location and actual device-selection scenarios; provide Atlas, browser and map screenshots.
 - Add domain requests to the consolidated Postman collection and verify station/slot mobile DTOs against deployed responses.
 
-**Member 2 conclusion:** API/Web and basic Android lists exist; Maps, role decision and live evidence remain.
+**Member 2 conclusion:** API/Web, Android nearby map/list discovery and bounded station-reference caching exist in source; Maps/device/database runtime proof, the slot-authority decision and hosted evidence remain.
 
 ## 8. Member 3 - Reservation Workflow and Booking Dashboards
 
@@ -217,7 +222,7 @@ Own secure QR issuance/validation, Grid Operator verification, final transfer/au
 
 - Build Prosumer approved-booking QR display/dispatch coordinated with Member 3, including expiry/renewal messaging.
 - Build native Grid Operator camera scanning, server verification, transfer confirmation/finalization and success/failure screens; current Android operator home is only a landing page.
-- Coordinate required operational Google Maps behavior with Member 2; no Android Maps implementation is present.
+- Reuse/coordinate with Member 2's implemented nearby-station map where the operator workflow needs station context; do not duplicate its location or marker layer.
 - Prove valid/invalid/expired/replay/duplicate/unauthorized cases and actual MongoDB transaction/rollback on final Atlas/IIS setup; collect scanner and audit evidence.
 
 **Member 4 conclusion:** server/Web transaction work exists; core mobile scanner/operator workflow and hosted transactional proof remain.
@@ -232,26 +237,26 @@ Still required: authenticated cross-role browser matrix; tested API success/erro
 
 ## 11. Android, SQLite, Maps and QR Status
 
-Implemented native Java/XML, AndroidX Navigation, central asynchronous `HttpURLConnection` client, Gson envelopes/errors, bearer tokens and SQLite database version 2. SQLite retains the session table and adds a bounded authenticated-profile reference cache. Login explicitly identifies Android. The identity UI supports registration, online profile updates, offline read-only profile fallback, account status and deactivation-request feedback; Prosumer pages now include stations, slots, create booking, My Bookings, details, update and cancel. The Grid Operator has a login/home foundation only. The app is configured to `http://10.0.2.2:5080/` for an emulator, **not** a hosted IIS URL or a physical-device host.
+Implemented native Java/XML, AndroidX Navigation, a central asynchronous `HttpURLConnection` client, Gson envelopes/errors, bearer tokens, Google Maps/Play Services location integration and SQLite database version 3. SQLite retains the session and bounded authenticated-profile cache and adds bounded grid-node reference caching. Login explicitly identifies Android. The identity UI supports registration, online profile updates, offline read-only profile fallback, account status and deactivation-request feedback; Prosumer pages include map/list station discovery, station details, live slots, create booking, My Bookings, details, update and cancel. The Grid Operator has a login/home foundation only. The app is configured to `http://10.0.2.2:5080/` for an emulator, **not** a hosted IIS URL or a physical-device host. Maps key injection is safely configurable, but no production-capable key is committed or runtime-verified.
 
 | Mobile requirement | Current state | Gap |
 | --- | --- | --- |
 | Login/role routing | Source implemented | Live device/hosted matrix and generic-login-error investigation |
 | Prosumer registration/profile | Source implemented | Activation/rejection/resubmission device demonstration |
 | Deactivation request | Correct endpoint and pending feedback in source | Confirm saved request and Backoffice visibility against same database |
-| SQLite | Session token/role/name/expiry plus API-derived user profile and last-sync time; safe v1-to-v2 migration | Emulator/device migration, offline and redacted inspection evidence |
+| SQLite | Session token/role/name/expiry plus API-derived user profile and grid-node references with sync times; incremental v1-v2-v3 creation/migration | Emulator/device migration, offline/no-cache/clearing and redacted inspection evidence |
 | Offline profile | Server-first fetch, cache refresh on success, read-only cache fallback on availability failures | Runtime airplane-mode/API-outage and no-cache screenshots |
-| Station/slot discovery | API-backed list/selection source | Google Maps, nearby filter, detail/map evidence |
+| Station/slot discovery | Google map plus retained list, single location request, nearby query, markers/details, cached-reference fallback and existing slot selection | Real Maps key/device rendering, permission/location branches and offline runtime evidence |
 | Reservation actions | Create/update/cancel and details source | Hosted action/boundary tests and consistent summaries |
 | Booking views | Basic My Bookings list | Current/pending/history/search and dashboard counts |
 | Prosumer QR | Absent | Secure approved-booking QR display |
 | Operator mode | Basic role home | Scanner, verify/finalize/results and map |
 
-The October 3 targeted Android debug build and final Java compile passed after profile caching was added. The JVM suite ran 9 tests with 8 passing and one pre-existing `ApiErrorHandlerTest` failure: the current handler exposes a server `detail` string while the test expects it to be hidden. That discrepancy was not introduced by profile caching and remains a security/error-contract issue to resolve. The historical 23 lint warnings predate newer station/booking/profile-cache code and must not be reported as current coverage. Instrumentation/device tests, camera/Maps credentials, SQLite evidence and hosted API tests remain.
+The October 3 targeted Android debug build and final Java compile passed after profile caching was added. The JVM suite ran 9 tests with 8 passing and one pre-existing `ApiErrorHandlerTest` failure: the current handler exposes a server `detail` string while the test expects it to be hidden. That discrepancy was not introduced by profile caching and remains a security/error-contract issue to resolve. On October 4, focused Java compilation and `assembleDebug` passed after the Maps/location and grid-node-cache work; `git diff --check` also passed. These checks do not prove Maps authorization/rendering, GPS permission behavior, SQLite migration/fallback, or API/device integration. The historical 23 lint warnings predate newer station/booking/profile/cache/map code and must not be reported as current coverage. Instrumentation/device tests, camera/Maps credentials, SQLite evidence and hosted API tests remain.
 
 ## 12. Database Status
 
-The four server collection models, repositories and named indexes exist. NIC/email, station/slot codes, geospatial station coordinates, reservation references and QR hash are represented in source. Transaction/audit fields remain in reservations to maintain four collections. Android SQLite stores one authenticated session and one cached profile. The profile row is display/reference data only; it never authorizes access and does not replace server authority for account status, availability, bookings, QR validity or transaction state. No password or duplicate access token is stored in the profile table.
+The four server collection models, repositories and named indexes exist. NIC/email, station/slot codes, GeoJSON station coordinates, reservation references and QR hash are represented in source. A `2dsphere` station index exists, although the current nearby endpoint loads status-filtered stations and applies approximate squared-coordinate sorting in the service rather than a radius-limited MongoDB query. Transaction/audit fields remain in reservations to maintain four collections. Android SQLite stores one authenticated session, one cached profile and cached grid-node references. Profile/station rows are display/reference data only; they never authorize access or replace server authority for account status, station activity, slot availability, bookings, QR validity or transaction state. No password or duplicate access token is stored outside the session table, and no slot/reservation data is cached.
 
 Pending: verify final Atlas documents/indexes with redacted examples; check uniqueness/geo behavior; prove competing allocation and multi-document transaction rollback on the chosen Atlas tier; configure least-privilege credentials/allow-list and rotate demonstration secrets. The report should never include passwords, full JWTs or raw QR tokens.
 
@@ -267,7 +272,9 @@ Pending: verify final Atlas documents/indexes with redacted examples; check uniq
 | 2026-10-02 station/slot UI change | Targeted ESLint and Vite build | Passed; no browser interaction proof |
 | 2026-10-04 report refresh | Web tests/lint/build | 12/12 tests passed; production build passed; lint reported 0 errors and the existing `Reservations.jsx` hook-dependency warning |
 | 2026-10-04 report refresh | Backend test attempt | Could not run in the restricted environment because MSBuild could not write a temporary `obj` file; this is not a product test failure |
-| 2026-10-04 report refresh | Android test/build attempt | Restricted run could not download Gradle; use the successful October 3 elevated build record, but rerun before submission |
+| 2026-10-04 report refresh | Initial restricted Android build attempt | Could not download Gradle inside the restricted environment; later focused reruns with dependency access passed as recorded below |
+| 2026-10-04 Member 2 Maps/location | Focused Android Java compilation and `assembleDebug` | Passed; no real Maps key, emulator/device, GPS or marker interaction proof |
+| 2026-10-04 Member 2 station cache | Focused Android Java compilation, `assembleDebug`, `git diff --check` | Passed; migration, SQLite contents, offline fallback and clearing require runtime inspection |
 
 Evidence still required: all-domain Postman and negative/auth/role cases; complete register→activate→book→approve→QR→scan→finalize lifecycle; exact boundary/timezone, reservation deactivation and concurrent allocation tests; actual Android emulator/physical device, browser, SQLite and Atlas records; IIS-hosted smoke and both-client calls. Record dates, environment, versions and redacted results so “tested” has a reproducible meaning.
 
@@ -279,7 +286,7 @@ Required sequence: publish API for Windows; configure Hosting Bundle, IIS site/a
 
 ## 15. Documentation and Evidence Status
 
-Present: requirements/decision logs, architecture/use-case/DFD diagrams, MongoDB design, API contracts, traceability/change register, Member 1/2 backend notes, Member 1/4 Web notes, Android setup README and an identity-only Postman collection. This progress report records the current source-level assessment; it is not the final assessed report.
+Present: requirements/decision logs, architecture/use-case/DFD diagrams, MongoDB design, API contracts, traceability/change register, Member 1/2 backend notes, Member 1/4 Web notes, Android setup guidance and an identity-only Postman collection. The Android documentation now also records Maps key/location setup and shared SQLite v3 reference caching. This progress report records the current source-level assessment; it is not the final assessed report.
 
 Missing or needing review: Member 3/4 backend notes; all-domain Postman; current Android feature/setup notes; IIS runbook/evidence; unique screenshots of all UIs; source-code excerpts as **text**; exact references; Git history mapped to verified students; authentic individual contributions/challenges; README video link (maximum five minutes); submission screenshot/ZIP naming. Check the PDF page-4 code-comment gate: a header block on each `.cs` file and inline comment at the beginning of each method. This audit has not certified every C# file. Page-6 AI-use restrictions require truthful disclosure and independent student-authored implementation/report work; no evidence or personal reflection should be fabricated.
 
@@ -290,11 +297,11 @@ Missing or needing review: Member 3/4 backend notes; all-domain Postman; current
 | Central API/FAT Service | Code implemented | IIS/hosted proof and complete authorization matrix |
 | MongoDB/four collections | Models/indexes implemented | Atlas/sample data, concurrency and rollback proof |
 | Identity/account lifecycle | Backend/Web/Android source substantially aligned; SQLite profile cache implemented | Live device/backend/database and cache-isolation demonstration |
-| Stations/slots | Backend/Web/basic Android list | Google Maps and Grid Operator status-authority decision |
+| Stations/slots | Backend/Web plus Android map/list/details, nearby ordering and station-reference fallback | Maps/device/cache runtime evidence and Grid Operator status-authority decision |
 | Reservations | Backend/Web/basic Android actions | Full mobile views/counts, action summaries and boundary/E2E proof |
 | QR/transactions | Backend/Web | Prosumer QR, Android scanner/finalization and transaction proof |
 | Web UX | Broad, buildable; card/list options | Browser/accessibility/hosted matrix and screenshots |
-| Native Android/SQLite | Partial; session and profile persistence implemented | Maps, scanner, complete dashboards and device/cache evidence |
+| Native Android/SQLite | Partial; session/profile/station-reference persistence and Maps/location source implemented | Scanner, complete dashboards, real Maps-key rendering and device/cache evidence |
 | IIS | Not evidenced | Deployment and two-client reachability |
 | Final assessment | Partial engineering docs | Student-authored report, screenshots, video, code comments and verified contributions |
 
@@ -305,7 +312,7 @@ Missing or needing review: Member 3/4 backend notes; all-domain Postman; current
 The Android app is **already started**; retain the original heading for continuity but finish the missing assessed scope:
 
 1. Reproduce Member 1 identity/activation/request lifecycle against the same deployed API/DB on a device; validate SQLite migration, offline fallback and account isolation.
-2. Complete Member 2 Google Maps, nearby station details and real location behavior.
+2. Runtime-verify Member 2 Maps/nearby station details/location fallbacks with a valid local key, plus SQLite v2-to-v3 migration and offline station-cache behavior.
 3. Complete Member 3 pending/current/history/search/dashboard counts and action summaries; verify create/update/cancel against server boundaries.
 4. Complete Member 4 approved QR display and operator camera scan→verify→finalize/results.
 5. Integrate all mobile work with secure hosted API configuration; avoid local business rules that contradict the server.
@@ -333,4 +340,4 @@ The Android app is **already started**; retain the original heading for continui
 
 ## 18. Final Readiness Decision
 
-**Not submission-ready on repository evidence.** The API and Web implementation are broad, and Android now includes meaningful identity, offline profile reference caching, station/slot and reservation code. Member 1's remaining SQLite implementation gap has moved from source design to runtime evidence, but the original plan's four cross-layer ownership areas are still unfinished because Maps, complete booking dashboards, QR/device operator processing, IIS deployment and reproducible final evidence are missing. Historical test counts and source inspection should not be converted into claims of complete live workflows. The four students must validate the final implementation and author their own assessed contribution/report material under the PDF's AI Planning Level 2 rules.
+**Not submission-ready on repository evidence.** The API and Web implementation are broad, and Android now includes meaningful identity, offline profile and station-reference caching, location-aware map/list station discovery, live slot selection and reservation code. Member 1 and Member 2 persistence/map gaps have moved from source implementation to runtime evidence, but the original plan's four cross-layer ownership areas remain incomplete because booking dashboards/search/history, approved QR display, device operator scanning/finalization, a verified Maps runtime, IIS deployment and reproducible final evidence are missing. Historical test counts and source/build inspection must not be converted into claims of complete live workflows. The four students must validate the final implementation and author their own assessed contribution/report material under the PDF's AI Planning Level 2 rules.

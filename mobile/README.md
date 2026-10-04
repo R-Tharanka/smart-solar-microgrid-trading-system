@@ -1,17 +1,30 @@
 # Smart Solar Microgrid Android Application
 
-This folder contains the native Android client. It uses Java, XML layouts, AndroidX Navigation, and Material Components. The application ID is `com.smartsolar.microgrid`. Identity/account, station/slot list, and basic Prosumer reservation screens are present. Google Maps, booking dashboard/search, approved-booking QR display, and Grid Operator camera scanning/finalization are not yet implemented or device-verified.
+This folder contains the native Android client. It uses Java, XML layouts, AndroidX Navigation, Material Components, Google Maps/Play Services location and SQLite. The application ID is `com.smartsolar.microgrid`. Identity/account, map/list station discovery, station details, slot selection, bounded profile/station reference caching and basic Prosumer reservation screens are present. Maps authorization/rendering, location/cache behavior, booking dashboard/search, approved-booking QR display and Grid Operator camera scanning/finalization still require device verification or implementation as applicable.
 
 ## Shared mobile infrastructure
 
 - `data/api/ApiClient.java` is the centralized asynchronous JSON API client.
 - `data/api/ApiErrorHandler.java` converts HTTP and network failures into safe UI messages.
 - `data/session/SessionManager.java` stores one local authenticated session using SQLite.
+- `data/identity/UserProfileCache.java` stores the latest authoritative authenticated profile for read-only offline display.
+- `data/station/GridNodeReferenceCache.java` stores API-derived station marker/list/detail references; it never stores slots or reservation authority.
+- `data/location/DeviceLocationProvider.java` performs one current-location lookup for optional nearby ordering.
 - `navigation/RoleNavigator.java` routes supported sessions to the Prosumer or Grid Operator foundation.
 - `data/identity/` sends `clientType: Android`; Prosumer deactivation calls the request-only API and displays pending state without logging out.
 - `data/station/`, `data/reservation/`, and `ui/prosumer/` contain station/slot browsing and basic booking actions. Verify these flows against the same deployed API and MongoDB before treating them as complete.
 
-The local SQLite database stores only the access token, role, display name, and token expiry. Server-authoritative account, reservation, station, transaction, and QR state must remain on the API.
+The shared local SQLite database is version 3 and contains `session`, `user_profile` and `grid_node_reference`. Profile and station rows are bounded read-only caches with local synchronization timestamps. Passwords, duplicate tokens, slots and reservations are not cached. Server-authoritative account, station activity, live slot availability, reservation, transaction and QR state remain on the API. Logout, expiry and unauthorized-session clearing remove authenticated cached data.
+
+## Google Maps local key
+
+The key is injected into `com.google.android.geo.API_KEY` through a manifest placeholder. Add a real Android Maps SDK key to the ignored `local.properties` file:
+
+```properties
+MAPS_API_KEY=YOUR_REAL_GOOGLE_MAPS_ANDROID_KEY
+```
+
+The build also accepts a Gradle property or `MAPS_API_KEY` environment variable. Do not commit a real key. Restrict it to the Maps SDK for Android, package `com.smartsolar.microgrid`, and the applicable debug/release SHA-1 fingerprints. A Google Maps Demo Key does not provide native Maps SDK for Android production/runtime coverage; billing-enabled or institution-provided Android Maps credentials are still required for final device evidence.
 
 The API base URL is configured once as `API_BASE_URL` in `app/build.gradle.kts`. Its development value is:
 
