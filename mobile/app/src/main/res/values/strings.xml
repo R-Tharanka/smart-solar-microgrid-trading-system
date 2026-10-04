@@ -48,6 +48,8 @@
     <string name="save_action">Save changes</string>
     <string name="profile_updated">Profile updated successfully.</string>
     <string name="profile_empty">No profile information was returned.</string>
+    <string name="profile_unavailable_offline">Profile information is unavailable offline because it has not been synchronized on this device. Reconnect to the internet and try again.</string>
+    <string name="profile_offline_last_synced">Offline — showing profile information last synchronized %1$s.</string>
     <string name="not_provided">Not provided</string>
     <string name="status_label">Status</string>
     <string name="role_label">Role</string>

@@ -7,14 +7,14 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.smartsolar.microgrid.R;
 import com.smartsolar.microgrid.data.api.ApiError;
-import com.smartsolar.microgrid.data.session.SessionManager;
+import com.smartsolar.microgrid.data.identity.IdentityRepository;
 
 public final class AuthenticationNavigator {
     private AuthenticationNavigator() {
     }
 
     public static void logout(Fragment fragment) {
-        SessionManager.getInstance(fragment.requireContext()).clearSession();
+        new IdentityRepository(fragment.requireContext()).clearLocalIdentity();
         RoleNavigator.navigateToLogin(NavHostFragment.findNavController(fragment));
     }
 

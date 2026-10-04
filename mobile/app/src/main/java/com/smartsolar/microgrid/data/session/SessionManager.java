@@ -94,10 +94,12 @@ public final class SessionManager {
     }
 
     public synchronized void clearSession() {
-        databaseHelper.getWritableDatabase().delete(
+        SQLiteDatabase database = databaseHelper.getWritableDatabase();
+        database.delete(
                 SessionDatabaseHelper.TABLE_SESSION,
                 SessionDatabaseHelper.COLUMN_ID + " = ?",
                 new String[]{String.valueOf(SESSION_ROW_ID)}
         );
+        database.delete(SessionDatabaseHelper.TABLE_USER_PROFILE, null, null);
     }
 }

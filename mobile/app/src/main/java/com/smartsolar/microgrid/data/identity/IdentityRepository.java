@@ -16,10 +16,12 @@ public final class IdentityRepository {
 
     private final ApiClient apiClient;
     private final SessionManager sessionManager;
+    private final UserProfileCache profileCache;
 
     public IdentityRepository(Context context) {
         apiClient = ApiClient.getInstance(context);
         sessionManager = SessionManager.getInstance(context);
+        profileCache = new UserProfileCache(context);
     }
 
     public void login(String identifier, String password, ApiCallback<Session> callback) {
@@ -46,7 +48,9 @@ public final class IdentityRepository {
                                     response.getUser().getDisplayName(),
                                     UtcTimestampParser.parseEpochMillis(response.getExpiresAtUtc())
                             );
+                            profileCache.clear();
                             sessionManager.saveSession(session);
+                            profileCache.save(response.getUser());
                             callback.onSuccess(session, message);
                         } catch (ParseException | IllegalArgumentException exception) {
                             callback.onError(invalidLoginResponse());
@@ -67,7 +71,12 @@ public final class IdentityRepository {
     }
 
     public void getProfile(ApiCallback<UserResponse> callback) {
-        apiClient.get(USERS_PATH + "me", UserResponse.class, true, callback);
+        apiClient.get(USERS_PATH + "me", UserResponse.class, true,
+                cachingCallback(callback));
+    }
+
+    public CachedUserProfile getCachedProfile() {
+        return sessionManager.loadSession() == null ? null : profileCache.load();
     }
 
     public void updateProfile(UpdateProfileRequest request,
@@ -81,6 +90,7 @@ public final class IdentityRepository {
                             sessionManager.saveSession(new Session(
                                     current.getAccessToken(), current.getUserRole(),
                                     user.getDisplayName(), current.getExpiresAtEpochMillis()));
+                            profileCache.save(user);
                         }
                         callback.onSuccess(user, message);
                     }
@@ -97,7 +107,28 @@ public final class IdentityRepository {
     }
 
     public void logout() {
+        profileCache.clear();
         sessionManager.clearSession();
+    }
+
+    public void clearLocalIdentity() {
+        profileCache.clear();
+        sessionManager.clearSession();
+    }
+
+    private ApiCallback<UserResponse> cachingCallback(ApiCallback<UserResponse> callback) {
+        return new ApiCallback<UserResponse>() {
+            @Override
+            public void onSuccess(UserResponse user, String message) {
+                if (user != null) profileCache.save(user);
+                callback.onSuccess(user, message);
+            }
+
+            @Override
+            public void onError(ApiError error) {
+                callback.onError(error);
+            }
+        };
     }
 
     private ApiError invalidLoginResponse() {
