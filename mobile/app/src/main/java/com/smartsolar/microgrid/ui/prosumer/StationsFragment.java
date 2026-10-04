@@ -30,10 +30,14 @@ import com.smartsolar.microgrid.R;
 import com.smartsolar.microgrid.data.api.ApiCallback;
 import com.smartsolar.microgrid.data.api.ApiError;
 import com.smartsolar.microgrid.data.location.DeviceLocationProvider;
+import com.smartsolar.microgrid.data.station.CachedStationReferences;
 import com.smartsolar.microgrid.data.station.StationRepository;
 import com.smartsolar.microgrid.data.station.StationResponse;
+import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class StationsFragment extends Fragment {
@@ -46,6 +50,7 @@ public class StationsFragment extends Fragment {
     private TextView errorMessage;
     private View emptyStateText;
     private TextView locationNotice;
+    private TextView cacheNotice;
     private MaterialButton locationAction;
     private final List<StationResponse> currentStations = new ArrayList<>();
     private StationMapController mapController;
@@ -91,6 +96,7 @@ public class StationsFragment extends Fragment {
         errorMessage = view.findViewById(R.id.error_message);
         emptyStateText = view.findViewById(R.id.empty_state_text);
         locationNotice = view.findViewById(R.id.station_location_notice);
+        cacheNotice = view.findViewById(R.id.station_cache_notice);
         locationAction = view.findViewById(R.id.station_location_action);
 
         adapter = new StationAdapter(this::openStationSlots);
@@ -205,10 +211,8 @@ public class StationsFragment extends Fragment {
                             }
                         }
 
-                        currentStations.clear();
-                        currentStations.addAll(activeStations);
-                        adapter.setStations(activeStations);
-                        mapController.showStations(currentStations);
+                        displayStations(activeStations);
+                        hideCacheNotice();
                         if (activeStations.isEmpty()) {
                             showEmpty();
                         } else {
@@ -219,12 +223,61 @@ public class StationsFragment extends Fragment {
                     @Override
                     public void onError(ApiError error) {
                         if (!isAdded() || getView() == null) return;
-                        currentStations.clear();
-                        adapter.setStations(currentStations);
-                        mapController.showStations(currentStations);
-                        showError(error.getUserMessage());
+                        if (AuthenticationNavigator.handleExpiredSession(
+                                StationsFragment.this, error)) return;
+                        if (!canUseCachedFallback(error)) {
+                            clearStations();
+                            showError(error.getUserMessage());
+                            return;
+                        }
+
+                        CachedStationReferences cached = repository.getCachedStations();
+                        List<StationResponse> cachedActiveStations = new ArrayList<>();
+                        for (StationResponse station : cached.getStations()) {
+                            if (station != null
+                                    && "Active".equalsIgnoreCase(station.getStatus())) {
+                                cachedActiveStations.add(station);
+                            }
+                        }
+                        if (cachedActiveStations.isEmpty()) {
+                            clearStations();
+                            hideCacheNotice();
+                            showError(getString(R.string.stations_unavailable_offline));
+                            return;
+                        }
+
+                        displayStations(cachedActiveStations);
+                        showCacheNotice(cached.getLastSyncedAtEpochMillis());
+                        showContent();
                     }
                 });
+    }
+
+    private boolean canUseCachedFallback(ApiError error) {
+        return "NETWORK_ERROR".equals(error.getErrorCode())
+                || error.getStatusCode() >= 500;
+    }
+
+    private void displayStations(List<StationResponse> stations) {
+        currentStations.clear();
+        currentStations.addAll(stations);
+        adapter.setStations(currentStations);
+        mapController.showStations(currentStations);
+    }
+
+    private void clearStations() {
+        displayStations(new ArrayList<>());
+    }
+
+    private void showCacheNotice(long lastSyncedAt) {
+        String formatted = DateFormat.getDateTimeInstance(
+                DateFormat.MEDIUM, DateFormat.SHORT).format(new Date(lastSyncedAt));
+        cacheNotice.setText(getString(R.string.station_offline_last_synced, formatted));
+        cacheNotice.setVisibility(View.VISIBLE);
+    }
+
+    private void hideCacheNotice() {
+        cacheNotice.setVisibility(View.GONE);
     }
 
     private void showMarkerStation(StationResponse station) {
@@ -304,6 +357,7 @@ public class StationsFragment extends Fragment {
         recyclerView.setVisibility(View.GONE);
         errorContainer.setVisibility(View.GONE);
         emptyStateText.setVisibility(View.GONE);
+        hideCacheNotice();
     }
 
     private void showContent() {

@@ -37,6 +37,15 @@
             android:visibility="gone" />
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/station_cache_notice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="8dp"
+        android:textColor="@color/text_primary"
+        android:visibility="gone" />
+
     <FrameLayout
         android:id="@+id/station_map_container"
         android:layout_width="match_parent"

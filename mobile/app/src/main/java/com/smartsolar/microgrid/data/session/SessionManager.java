@@ -101,5 +101,6 @@ public final class SessionManager {
                 new String[]{String.valueOf(SESSION_ROW_ID)}
         );
         database.delete(SessionDatabaseHelper.TABLE_USER_PROFILE, null, null);
+        database.delete(SessionDatabaseHelper.TABLE_GRID_NODE_REFERENCE, null, null);
     }
 }

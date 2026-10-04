@@ -62,6 +62,8 @@
     <string name="station_location_services_disabled">Device location is turned off. Stations are shown without nearby ordering.</string>
     <string name="station_location_temporarily_unavailable">Your current location is temporarily unavailable. Stations are shown without nearby ordering.</string>
     <string name="station_map_unavailable">Google Play services is unavailable. You can continue using the station list.</string>
+    <string name="station_offline_last_synced">Offline &#8212; showing cached stations. Last synchronized: %1$s</string>
+    <string name="stations_unavailable_offline">Station information is unavailable offline because it has not been synchronized on this device. Reconnect to the internet and try again.</string>
     <string name="station_marker_details">Code: %1$s\nAddress: %2$s\nCapacity: %3$.1f kWh\nBattery storage: %4$.1f kWh\nEmpty space: %5$.1f kWh\nOperating hours: %6$s–%7$s\nStatus: %8$s</string>
     <string name="station_selected_details">%1$s (%2$s)\n%3$s\nCapacity: %4$.1f kWh · Battery storage: %5$.1f kWh\nOperating hours: %6$s–%7$s · %8$s</string>
     <string name="role_label">Role</string>

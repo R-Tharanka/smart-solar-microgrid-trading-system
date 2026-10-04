@@ -26,7 +26,22 @@ public final class SessionDatabaseHelper extends SQLiteOpenHelper {
     public static final String PROFILE_COLUMN_DEACTIVATION_REQUESTED = "deactivation_requested";
     public static final String PROFILE_COLUMN_LAST_SYNCED_AT = "last_synced_at_epoch_ms";
 
-    private static final int DATABASE_VERSION = 2;
+    public static final String TABLE_GRID_NODE_REFERENCE = "grid_node_reference";
+    public static final String GRID_NODE_COLUMN_STATION_ID = "station_id";
+    public static final String GRID_NODE_COLUMN_STATION_CODE = "station_code";
+    public static final String GRID_NODE_COLUMN_NAME = "name";
+    public static final String GRID_NODE_COLUMN_DESCRIPTION = "description";
+    public static final String GRID_NODE_COLUMN_LATITUDE = "latitude";
+    public static final String GRID_NODE_COLUMN_LONGITUDE = "longitude";
+    public static final String GRID_NODE_COLUMN_ADDRESS = "address";
+    public static final String GRID_NODE_COLUMN_CAPACITY_KWH = "capacity_kwh";
+    public static final String GRID_NODE_COLUMN_BATTERY_STORAGE_KWH = "battery_storage_kwh";
+    public static final String GRID_NODE_COLUMN_OPENING_TIME = "opening_time";
+    public static final String GRID_NODE_COLUMN_CLOSING_TIME = "closing_time";
+    public static final String GRID_NODE_COLUMN_STATUS = "status";
+    public static final String GRID_NODE_COLUMN_LAST_SYNCED_AT = "last_synced_at_epoch_ms";
+
+    private static final int DATABASE_VERSION = 3;
 
     public SessionDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -43,12 +58,16 @@ public final class SessionDatabaseHelper extends SQLiteOpenHelper {
                         COLUMN_EXPIRES_AT + " INTEGER NOT NULL)"
         );
         createUserProfileTable(database);
+        createGridNodeReferenceTable(database);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
         if (oldVersion < 2) {
             createUserProfileTable(database);
+        }
+        if (oldVersion < 3) {
+            createGridNodeReferenceTable(database);
         }
     }
 
@@ -65,6 +84,24 @@ public final class SessionDatabaseHelper extends SQLiteOpenHelper {
                 PROFILE_COLUMN_ACCOUNT_STATUS + " TEXT, " +
                 PROFILE_COLUMN_DEACTIVATION_REQUESTED + " INTEGER NOT NULL DEFAULT 0, " +
                 PROFILE_COLUMN_LAST_SYNCED_AT + " INTEGER NOT NULL)"
+        );
+    }
+
+    private void createGridNodeReferenceTable(SQLiteDatabase database) {
+        database.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_GRID_NODE_REFERENCE + " (" +
+                GRID_NODE_COLUMN_STATION_ID + " TEXT PRIMARY KEY NOT NULL, " +
+                GRID_NODE_COLUMN_STATION_CODE + " TEXT NOT NULL UNIQUE, " +
+                GRID_NODE_COLUMN_NAME + " TEXT NOT NULL, " +
+                GRID_NODE_COLUMN_DESCRIPTION + " TEXT, " +
+                GRID_NODE_COLUMN_LATITUDE + " REAL NOT NULL, " +
+                GRID_NODE_COLUMN_LONGITUDE + " REAL NOT NULL, " +
+                GRID_NODE_COLUMN_ADDRESS + " TEXT, " +
+                GRID_NODE_COLUMN_CAPACITY_KWH + " REAL NOT NULL, " +
+                GRID_NODE_COLUMN_BATTERY_STORAGE_KWH + " REAL NOT NULL, " +
+                GRID_NODE_COLUMN_OPENING_TIME + " TEXT, " +
+                GRID_NODE_COLUMN_CLOSING_TIME + " TEXT, " +
+                GRID_NODE_COLUMN_STATUS + " TEXT NOT NULL, " +
+                GRID_NODE_COLUMN_LAST_SYNCED_AT + " INTEGER NOT NULL)"
         );
     }
 }
