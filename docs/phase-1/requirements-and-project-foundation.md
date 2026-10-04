@@ -221,7 +221,7 @@ Detailed endpoint contracts are maintained in:
 | Users | `GET /api/users`, `POST /api/users/staff`, `POST /api/users/{identifier}/deactivate`, `POST /api/users/{identifier}/reactivate` | Member 1 |
 | Prosumers | `POST /api/users/prosumer/register`, `POST /api/users/prosumers`, `PUT /api/users/prosumers/{nic}`, `GET /api/users/me`, `PUT /api/users/me` | Member 1 |
 | Stations | `POST /api/stations`, `GET /api/stations`, `PUT /api/stations/{id}` | Member 2 |
-| Slots | `POST /api/stations/{stationId}/slots`, `GET /api/stations/{stationId}/slots` | Member 2 |
+| Slots | `POST /api/stations/{stationCode}/slots`, `GET /api/stations/{stationCode}/slots` | Member 2 |
 | Reservations | `POST /api/reservations`, `GET /api/reservations/me`, `PUT /api/reservations/{id}` | Member 3 |
 | Dashboards | `GET /api/dashboard/bookings`, `GET /api/dashboard/summary` | Member 3 |
 | Transactions | `POST /api/reservations/{id}/qr`, `POST /api/transactions/verify`, `POST /api/transactions/finalize` | Member 4 |

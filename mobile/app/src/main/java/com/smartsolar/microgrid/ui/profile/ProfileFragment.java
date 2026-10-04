@@ -16,8 +16,12 @@ import com.smartsolar.microgrid.R;
 import com.smartsolar.microgrid.data.api.ApiCallback;
 import com.smartsolar.microgrid.data.api.ApiError;
 import com.smartsolar.microgrid.data.identity.IdentityRepository;
+import com.smartsolar.microgrid.data.identity.CachedUserProfile;
 import com.smartsolar.microgrid.data.identity.UserResponse;
 import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
+
+import java.text.DateFormat;
+import java.util.Date;
 
 public class ProfileFragment extends Fragment {
     private ProgressBar progressBar;
@@ -68,6 +72,7 @@ public class ProfileFragment extends Fragment {
                     return;
                 }
                 bindProfile(getView(), user);
+                showOnlineState(getView());
                 showOnly(content);
             }
 
@@ -76,10 +81,28 @@ public class ProfileFragment extends Fragment {
                 requestRunning = false;
                 if (!isAdded() || getView() == null) return;
                 if (AuthenticationNavigator.handleExpiredSession(ProfileFragment.this, error)) return;
-                errorView.setText(error.getUserMessage());
-                showOnly(errorState);
+                if (!canUseCachedFallback(error)) {
+                    errorView.setText(error.getUserMessage());
+                    showOnly(errorState);
+                    return;
+                }
+                CachedUserProfile cached = repository.getCachedProfile();
+                if (cached == null) {
+                    errorView.setText(R.string.profile_unavailable_offline);
+                    showOnly(errorState);
+                    return;
+                }
+                bindCachedProfile(getView(), cached);
+                showOfflineState(getView(), cached.getLastSyncedAtEpochMillis());
+                showOnly(content);
             }
         });
+    }
+
+    private boolean canUseCachedFallback(ApiError error) {
+        return "NETWORK_ERROR".equals(error.getErrorCode())
+                || "INVALID_RESPONSE".equals(error.getErrorCode())
+                || error.getStatusCode() >= 500;
     }
 
     private void bindProfile(View view, UserResponse user) {
@@ -91,6 +114,32 @@ public class ProfileFragment extends Fragment {
         setText(view, R.id.profile_address, user.getAddress());
         setText(view, R.id.profile_status, user.getStatus());
         showDeactivationRequestState(view, user.isDeactivationRequested());
+    }
+
+    private void bindCachedProfile(View view, CachedUserProfile user) {
+        setText(view, R.id.profile_first_name, user.getFirstName());
+        setText(view, R.id.profile_last_name, user.getLastName());
+        setText(view, R.id.profile_email, user.getEmail());
+        setText(view, R.id.profile_nic, user.getNic());
+        setText(view, R.id.profile_phone, user.getPhone());
+        setText(view, R.id.profile_address, user.getAddress());
+        setText(view, R.id.profile_status, user.getAccountStatus());
+        showDeactivationRequestState(view, user.isDeactivationRequested());
+    }
+
+    private void showOnlineState(View view) {
+        view.findViewById(R.id.profile_offline_notice).setVisibility(View.GONE);
+        view.findViewById(R.id.edit_profile_button).setEnabled(true);
+    }
+
+    private void showOfflineState(View view, long lastSyncedAt) {
+        TextView notice = view.findViewById(R.id.profile_offline_notice);
+        String formatted = DateFormat.getDateTimeInstance(
+                DateFormat.MEDIUM, DateFormat.SHORT).format(new Date(lastSyncedAt));
+        notice.setText(getString(R.string.profile_offline_last_synced, formatted));
+        notice.setVisibility(View.VISIBLE);
+        view.findViewById(R.id.edit_profile_button).setEnabled(false);
+        view.findViewById(R.id.deactivate_button).setEnabled(false);
     }
 
     private void showDeactivationRequestState(View view, boolean requested) {

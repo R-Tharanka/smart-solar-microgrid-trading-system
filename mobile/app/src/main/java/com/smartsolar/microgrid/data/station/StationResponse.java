@@ -14,6 +14,28 @@ public class StationResponse {
     private String closingTime;
     private String status;
 
+    public StationResponse() {
+        // Used by Gson when reading the server response.
+    }
+
+    public StationResponse(String id, String stationCode, String name, String description,
+                           double latitude, double longitude, String address,
+                           double capacityKwh, double batteryStorageKwh, String openingTime,
+                           String closingTime, String status) {
+        this.id = id;
+        this.stationCode = stationCode;
+        this.name = name;
+        this.description = description;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.address = address;
+        this.capacityKwh = capacityKwh;
+        this.batteryStorageKwh = batteryStorageKwh;
+        this.openingTime = openingTime;
+        this.closingTime = closingTime;
+        this.status = status;
+    }
+
     public String getId() { return id; }
     public String getStationCode() { return stationCode; }
     public String getName() { return name; }

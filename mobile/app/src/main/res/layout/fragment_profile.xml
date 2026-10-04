@@ -51,6 +51,14 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="24dp">
+            <TextView
+                android:id="@+id/profile_offline_notice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:padding="12dp"
+                android:textColor="@color/text_primary"
+                android:visibility="gone" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/first_name_label" android:textStyle="bold" />
             <TextView android:id="@+id/profile_first_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:textSize="18sp" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/last_name_label" android:textStyle="bold" />

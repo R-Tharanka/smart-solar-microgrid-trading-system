@@ -1,6 +1,20 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
 }
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+
+val mapsApiKey = localProperties.getProperty("MAPS_API_KEY")
+    ?: providers.gradleProperty("MAPS_API_KEY").orNull
+    ?: System.getenv("MAPS_API_KEY")
+    ?: ""
 
 android {
     namespace = "com.smartsolar.microgrid"
@@ -21,6 +35,7 @@ android {
 
         // Change only this value when the API moves from the emulator host to IIS.
         buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:5080/\"")
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     buildTypes {
@@ -50,6 +65,8 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation(libs.core.splashscreen)
     implementation(libs.gson)
+    implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

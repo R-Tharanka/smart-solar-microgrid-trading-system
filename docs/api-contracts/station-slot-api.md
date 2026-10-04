@@ -38,7 +38,9 @@ Request:
   "longitude": 79.8612,
   "address": "Colombo",
   "capacityKwh": 120.5,
-  "batteryStorageKwh": 80.0
+  "batteryStorageKwh": 80.0,
+  "openingTime": "06:00:00",
+  "closingTime": "20:00:00"
 }
 ```
 
@@ -46,7 +48,8 @@ Validation:
 
 - Station code, name, latitude, longitude, capacity and battery storage are required.
 - Station code must be unique.
-- Capacity and battery values must be greater than or equal to zero.
+- Capacity must be greater than zero; battery storage must be greater than or equal to zero.
+- Opening time must be before closing time.
 
 Success: `201 Created`
 
@@ -66,6 +69,13 @@ Use:
 - Android nearby station list.
 - Android map markers.
 
+Query behavior:
+
+- `status` is optional and must match a station status.
+- `nearLat` and `nearLng` are optional but must be supplied together.
+- Coordinates are validated as latitude `-90..90` and longitude `-180..180`.
+- When coordinates are supplied, the current service returns the status-filtered set in approximate nearest-first order. This is not a radius-limited query.
+
 Success: `200 OK`
 
 ```json
@@ -74,24 +84,28 @@ Success: `200 OK`
   "message": "Stations loaded.",
   "data": [
     {
-      "stationId": "66f100000000000000000001",
+      "id": "66f100000000000000000001",
       "stationCode": "STN-CMB-001",
       "name": "Colombo Solar Hub",
+      "description": "Main solar microgrid node",
       "latitude": 6.9271,
       "longitude": 79.8612,
+      "address": "Colombo",
       "capacityKwh": 120.5,
       "batteryStorageKwh": 80.0,
+      "openingTime": "06:00:00",
+      "closingTime": "20:00:00",
       "status": "Active"
     }
   ]
 }
 ```
 
-Errors: `401`, `403`
+Errors: `400`, `401`, `403`
 
 ### Get Station Details
 
-`GET /api/stations/{stationId}`
+`GET /api/stations/{stationCode}`
 
 Authorization: Authenticated user
 
@@ -103,7 +117,7 @@ Errors: `401`, `403`, `404`
 
 ### Update Station
 
-`PUT /api/stations/{stationId}`
+`PUT /api/stations/{stationCode}`
 
 Authorization: Backoffice
 
@@ -119,7 +133,9 @@ Request:
   "longitude": 79.8612,
   "address": "Colombo",
   "capacityKwh": 130.0,
-  "batteryStorageKwh": 90.0
+  "batteryStorageKwh": 90.0,
+  "openingTime": "06:00:00",
+  "closingTime": "20:00:00"
 }
 ```
 
@@ -134,7 +150,7 @@ Errors: `400`, `401`, `403`, `404`
 
 ### Change Station Status
 
-`PATCH /api/stations/{stationId}/status`
+`PATCH /api/stations/{stationCode}/status`
 
 Authorization: Backoffice
 
@@ -161,7 +177,7 @@ Errors: `400`, `401`, `403`, `404`, `409`
 
 ### Create Slot
 
-`POST /api/stations/{stationId}/slots`
+`POST /api/stations/{stationCode}/slots`
 
 Authorization: Backoffice
 
@@ -171,6 +187,7 @@ Request:
 
 ```json
 {
+  "slotCode": "SLT-CMB-001",
   "startTimeUtc": "2026-09-24T04:30:00Z",
   "endTimeUtc": "2026-09-24T05:30:00Z",
   "availableEnergyKwh": 15.0,
@@ -191,7 +208,7 @@ Errors: `400`, `401`, `403`, `404`, `409`
 
 ### List Station Slots
 
-`GET /api/stations/{stationId}/slots?fromUtc=2026-09-23T00:00:00Z&toUtc=2026-09-30T00:00:00Z&status=Available`
+`GET /api/stations/{stationCode}/slots?fromUtc=2026-09-23T00:00:00Z&toUtc=2026-09-30T00:00:00Z&status=Available`
 
 Authorization: Authenticated user
 
@@ -208,9 +225,9 @@ Errors: `400`, `401`, `403`, `404`
 
 ### Update Slot
 
-`PUT /api/slots/{slotId}`
+`PUT /api/slots/{slotCode}`
 
-Authorization: Backoffice
+Authorization: Backoffice or Grid Operator (`Staff` policy)
 
 Related collections: `energyBookingSlots`, `energyReservations`
 
@@ -225,7 +242,7 @@ Errors: `400`, `401`, `403`, `404`, `409`
 
 ### Change Slot Status
 
-`PATCH /api/slots/{slotId}/status`
+`PATCH /api/slots/{slotCode}/status`
 
 Authorization: Backoffice
 
@@ -249,4 +266,3 @@ Validation:
 Success: `200 OK`
 
 Errors: `400`, `401`, `403`, `404`, `409`
-

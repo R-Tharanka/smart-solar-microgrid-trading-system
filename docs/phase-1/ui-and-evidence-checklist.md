@@ -28,9 +28,9 @@ Member 1 React implementation status and the final live evidence procedure are d
 | Login | Member 1 | Identity | Store session/reference data | Login screenshot and SQLite evidence |
 | Prosumer home | Member 1/3 | Identity, Dashboard | Cached session | Dashboard screenshot |
 | Profile view/edit | Member 1 | Identity | Cached user summary | Profile screenshot |
-| Nearby station map | Member 2/4 | Station/Slot | Optional station cache | Map screenshot |
-| Station details | Member 2 | Station/Slot | Optional station cache | Details screenshot |
-| Slot selection | Member 2/3 | Station/Slot, Reservation | Optional reference cache | Slot screenshot |
+| Nearby station map | Member 2/4 | Station/Slot | `grid_node_reference` fallback | Map, marker and permission-fallback screenshots |
+| Station details | Member 2 | Station/Slot | `grid_node_reference` fallback | Live and cached-details screenshots |
+| Slot selection | Member 2/3 | Station/Slot, Reservation | Station reference only; slots remain API-only | Slot/reconnect screenshot |
 | Reservation form | Member 3 | Reservation | Session data | Create reservation screenshot |
 | Booking history | Member 3 | Reservation/Dashboard | Optional cached references | History screenshot |
 | Pending bookings | Member 3 | Reservation/Dashboard | Optional cached references | Pending screenshot |
