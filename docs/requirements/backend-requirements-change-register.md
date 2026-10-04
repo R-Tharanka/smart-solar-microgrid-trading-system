@@ -1,6 +1,6 @@
 # Backend Requirements Change and Alignment Register
 
-Date reconciled: 2026-10-02
+Date reconciled: 2026-10-04
 
 Purpose: record backend decisions and requirement changes made after the original project plan, together with their client and documentation impact.
 
@@ -23,7 +23,7 @@ This register does not rewrite the assignment brief. The team must confirm any c
 | CHG-11 | Secure QR was required, but payload/storage design was unspecified | API issues an opaque expiring token; a SHA-256 hash is stored in the reservation | Avoids predictable reservation-ID QR values and raw-token storage | Mobile must render/scan the issued payload and prove expiry/replay behavior | Accepted in D-13/D-14 |
 | CHG-12 | Four server collections are required | Transaction/audit fields are embedded in `energyReservations`; no fifth transaction collection is used | Keeps the four-collection model and lifecycle together | Database/report diagrams must show embedded transaction fields | Implemented |
 | CHG-13 | Final transfer behavior was high level | Grid Operator verifies, then finalizes with actual energy/note; completion and station battery-storage increment occur in a MongoDB transaction without closing the shared slot | Adds auditability, storage-capacity validation and duplicate prevention | Final Atlas tier must support transactions; rollback test required | Implemented |
-| CHG-14 | SQLite is required for local user management/login/reference data | Current Android database stores one session: token, role, display name and expiry | Provides persistent authentication without duplicating authoritative server data | Confirm whether reference data must also be cached; redact the token in evidence | Partial/decision required |
+| CHG-14 | SQLite is required for local user management/login/reference data | Android database v2 retains session token/role/display name/expiry and adds a single-account API-derived profile cache with NIC, contact/display fields, status/request display fields and `lastSyncedAt` | Supports session restoration and offline read-only profile display without moving authentication, authorization or account authority into SQLite | Validate migration/offline/no-cache/logout/account-switch behavior on device; redact tokens and personal data in evidence. Member 2 owns any future station/grid-node reference cache | Implemented in source; device evidence pending |
 | CHG-15 | Mobile app is intended for Prosumers and Grid Operators | API login requires `clientType`; Android sends `Android`, permits Prosumer/Grid Operator and rejects Backoffice | Matches the operational scenario and enforces it at the API boundary | Verify role combinations on an installed device against the hosted API | Implemented in source; device evidence pending |
 | CHG-16 | Web app is for Backoffice/Grid Operators | API login requires `clientType`; Web sends `Web`, permits Backoffice/Grid Operator and rejects Prosumer | Enforces the required client-role matrix | Verify role combinations and legacy-session handling in a browser | Implemented in source; browser evidence pending |
 | CHG-17 | Station deactivation is blocked by active reservations | `Pending`, `Approved`, `QrIssued` and `Verified` reservations block station and relevant slot lifecycle changes | Protects every non-terminal workflow | Keep status lists synchronized across domains and tests | Implemented |
@@ -69,7 +69,7 @@ Terminal states are `Rejected`, `Cancelled`, `Expired` and `Completed`. Physical
 - [x] Web and Android source send their client type and use the corrected activation/deactivation-request contracts.
 - [ ] Team confirms whether Grid Operators may change slot status/availability.
 - [ ] Team confirms that status/deactivation satisfies the rubric's "delete" wording.
-- [ ] Team confirms SQLite session-only persistence is sufficient or defines a reference-cache scope.
+- [x] Member 1 SQLite scope includes session persistence and bounded authenticated-profile reference caching; server remains authoritative and offline writes are excluded.
 - [ ] API contracts, web/mobile labels, diagrams and final report use the same decisions.
 - [ ] All four members sign the Phase 2 contract/handoff record.
 

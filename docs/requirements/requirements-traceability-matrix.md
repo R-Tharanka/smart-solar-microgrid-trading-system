@@ -20,7 +20,7 @@ Current implementation and evidence status is audited in `docs/project-status/fu
 | REQ-04 | Use MongoDB as the server-side NoSQL database. | All | All API contracts | `users`, `solarStationInfo`, `energyBookingSlots`, `energyReservations` | None direct | None direct | MongoDB records |
 | REQ-05 | Use React.js with Tailwind CSS or permitted equivalent for web. | All | Web consumes API | None direct | All web pages | Not applicable | Web screenshots |
 | REQ-06 | Use native Android Java, not a cross-platform framework. | All | Android consumes API | SQLite local cache | Not applicable | Java/XML project; identity slice implemented | APK/build evidence; remaining domain screens |
-| REQ-07 | Use SQLite for Android local persistence. | Member 1, Member 3 support | Auth/reference APIs | SQLite `session` table | Not applicable | Token, role, display name and expiry persisted; no reference cache yet | Device/SQLite proof; settle reference-cache scope |
+| REQ-07 | Use SQLite for Android local persistence. | Member 1, Member 3 support | Auth/reference APIs | SQLite `session` and `user_profile` tables | Not applicable | Token, role, display name and expiry persisted; authoritative API profile cached with last-sync time for offline read-only display | Migration, offline fallback, logout/account-switch and redacted SQLite device proof |
 | REQ-08 | Authenticate Backoffice, Grid Operator and Prosumer users with the intended client-role matrix. | Member 1 | `identity-api.md` | `users` | `clientType: Web`, Backoffice/Grid Operator routing | `clientType: Android`, Prosumer/Grid Operator role homes | Allowed/denied login and device/browser tests |
 | REQ-09 | Register Prosumer with NIC and require Backoffice activation; permit rejected resubmission without duplicate NIC. | Member 1 | `POST /api/users/prosumer/register` and pending/activate/reject endpoints | `users` | Pending activation review | Registration and pending/rejected feedback | Activation/rejection/resubmission and duplicate-NIC tests |
 | REQ-10 | Let Backoffice create, update, deactivate and reactivate Prosumers; Prosumer self-service only requests deactivation. | Member 1 | `identity-api.md` | `users` | Prosumer management, request indicator and processing | Own profile/deactivation request and pending feedback | Administrative lifecycle, active-reservation guard and authorization tests |
@@ -60,18 +60,18 @@ Current implementation and evidence status is audited in `docs/project-status/fu
 
 ## Current Implementation Summary
 
-Audit date: 2026-10-02
+Audit date: 2026-10-04
 
 | Requirement group | Current status | Main gap |
 | --- | --- | --- |
 | Central API and FAT Service architecture | Implemented | Complete all-domain HTTP/MongoDB and IIS evidence |
 | MongoDB collections and indexes | Implemented | Current Atlas screenshots and concurrency/transaction evidence |
-| Identity and authorization | Backend/Web/Android source supports client-role matrix, pending activation and deactivation requests | Device/browser lifecycle, SQLite scope and final Postman/Atlas evidence |
+| Identity and authorization | Backend/Web/Android source supports client-role matrix, pending activation/deactivation requests and SQLite profile fallback | Device/browser lifecycle, SQLite runtime isolation and final Postman/Atlas evidence |
 | Stations and slots | Backend/Web plus Android station/slot lists implemented | Google Maps, Grid Operator availability decision and live evidence |
 | Reservations and dashboards | Backend/staff web plus basic Android booking actions implemented | Android search/history/counts, concurrency and end-to-end evidence |
 | QR verification and finalization | Backend/web implemented; DTO validation tested | Android camera scanner/maps and final live evidence |
 | React web client | Broadly implemented; automated checks pass | Full authenticated browser matrix and final screenshots |
-| Native Android Java and SQLite | Partial; identity, station/slot and basic booking source plus session persistence | Maps, complete booking views/counts, QR/scanner/finalization and device evidence |
+| Native Android Java and SQLite | Partial; identity, station/slot and basic booking source plus session/profile persistence | Maps, complete booking views/counts, QR/scanner/finalization and device evidence |
 | IIS deployment | Not started | Publish, configure, test and document |
 | Final testing/report evidence | Partial | Full Postman/E2E/screenshots/contributions/report |
 
