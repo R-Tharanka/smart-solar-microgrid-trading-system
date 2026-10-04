@@ -33,7 +33,7 @@ Current implementation and evidence status is audited in `docs/project-status/fu
 | REQ-17 | Let Prosumers create reservations. | Member 3 | `reservation-dashboard-api.md` | `energyReservations`, `energyBookingSlots` | Booking management view | Reservation form | Reservation creation test |
 | REQ-18 | Enforce 7-day reservation scheduling rule. | Member 3 | `reservation-dashboard-api.md` | `energyReservations` | Error display | Error display | Beyond-window rejection test |
 | REQ-19 | Enforce 12-hour update/cancellation notice rule. | Member 3 | `reservation-dashboard-api.md` | `energyReservations` | Error display | Error display | Insufficient-notice test |
-| REQ-20 | Provide booking history, pending bookings, search and live summary counts. | Member 3 | `reservation-dashboard-api.md` | `energyReservations` | Dashboard/history | Basic My Bookings list; filtered views/counts pending | Dashboard and device screenshots |
+| REQ-20 | Provide booking history, pending bookings, search and live summary counts. | Member 3 | `reservation-dashboard-api.md` | `energyReservations` | Dashboard/history | Search plus current/pending/history categories and live pending/approved-upcoming counts implemented | Dashboard/device screenshots and live API proof |
 | REQ-21 | Approve or reject reservations where required by operator/backoffice workflow. | Member 3/4 | `reservation-dashboard-api.md` | `energyReservations` | Operational bookings | Status view | Status transition test |
 | REQ-22 | Generate secure transaction QR for approved reservation. | Member 4 | `operator-transaction-api.md` | `energyReservations` | QR/reference view if used | QR display | QR generation evidence |
 | REQ-23 | Scan and verify QR transaction by Grid Operator. | Member 4 | `operator-transaction-api.md` | `energyReservations` | Operator dashboard | QR scanner | Valid/invalid QR test |
@@ -68,11 +68,11 @@ Audit date: 2026-10-04
 | MongoDB collections and indexes | Implemented | Current Atlas screenshots and concurrency/transaction evidence |
 | Identity and authorization | Backend/Web/Android source supports client-role matrix, pending activation/deactivation requests and SQLite profile fallback | Device/browser lifecycle, SQLite runtime isolation and final Postman/Atlas evidence |
 | Stations and slots | Backend/Web plus Android map/list/details, nearby ordering, slot selection and station-reference cache implemented | Real Maps-key/device/cache evidence and Grid Operator availability decision |
-| Reservations and dashboards | Backend/staff web plus basic Android booking actions implemented | Android search/history/counts, concurrency and end-to-end evidence |
+| Reservations and dashboards | Backend/staff web plus Android booking actions, search/categories and live counts implemented | Post-action UX, concurrency, device and end-to-end evidence |
 | QR verification and finalization | Backend/web implemented; DTO validation tested | Android camera scanner/finalization and final live evidence |
 | React web client | Broadly implemented; automated checks pass | Full authenticated browser matrix and final screenshots |
-| Native Android Java and SQLite | Partial; identity, map/list station discovery, station/slot and basic booking source plus session/profile/grid-node persistence | Real Maps runtime, complete booking views/counts, QR/scanner/finalization and device evidence |
+| Native Android Java and SQLite | Partial; identity, map/list station discovery, station/slot, booking search/categories/counts and session/profile/grid-node persistence | Real Maps runtime, QR/scanner/finalization, one failing unit test and device evidence |
 | IIS deployment | Not started | Publish, configure, test and document |
 | Final testing/report evidence | Partial | Full Postman/E2E/screenshots/contributions/report |
 
-The full-suite totals (backend 113, web 12, Android 7 JVM; web lint one warning and Android lint 23 warnings) are from 2026-09-30 and were not rerun for this audit. Recent targeted Android/Web builds passed, but those checks do not replace HTTP, Atlas, browser, Android device or IIS verification. See the dated record in the full-system progress report.
+Current 2026-10-04 checks: backend 123/123 passed; Web 12/12 and production build passed with 0 lint errors/1 warning; Android debug APK assembled but its JVM suite passed 8/9 because the API error handler exposes server detail contrary to its sanitization test. These checks do not replace HTTP, Atlas, browser, Android device or IIS verification. See the dated record in the full-system progress report.

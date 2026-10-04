@@ -1,6 +1,6 @@
 # Smart Solar Microgrid Android Application
 
-This folder contains the native Android client. It uses Java, XML layouts, AndroidX Navigation, Material Components, Google Maps/Play Services location and SQLite. The application ID is `com.smartsolar.microgrid`. Identity/account, map/list station discovery, station details, slot selection, bounded profile/station reference caching and basic Prosumer reservation screens are present. Maps authorization/rendering, location/cache behavior, booking dashboard/search, approved-booking QR display and Grid Operator camera scanning/finalization still require device verification or implementation as applicable.
+This folder contains the native Android client. It uses Java, XML layouts, AndroidX Navigation, Material Components, Google Maps/Play Services location and SQLite. The application ID is `com.smartsolar.microgrid`. Identity/account, map/list station discovery, station details, slot selection, bounded profile/station reference caching, Prosumer reservation actions, booking search/current-pending-history categories and live dashboard counts are present. Maps authorization/rendering, location/cache behavior, approved-booking QR display and Grid Operator camera scanning/finalization still require device verification or implementation as applicable.
 
 ## Shared mobile infrastructure
 

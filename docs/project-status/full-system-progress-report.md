@@ -28,13 +28,13 @@ Status terms used here: **implemented** means source exists; **build-checked** m
 | Web features/business rules | 18 individual | Four domains have API/web surfaces; complete hosted/browser demonstration remains |
 | Mobile authentication/accounts | 9 individual | Registration, login, profile, pending activation and deactivation-request code exist; device proof remains |
 | Reservation workflow | 9 individual | API and Android create/update/cancel screens exist; live action-summary/boundary proof remains |
-| Booking views/dashboards | 10 individual | API/staff web and a basic Android bookings list exist; mobile search, pending/history views and counts remain |
+| Booking views/dashboards | 10 individual | API/staff web plus Android booking search, current/pending/history categories and live pending/approved-upcoming counts exist; device evidence remains |
 | Operator verification/maps | 7 individual | Nearby Google Maps/marker source exists; Android scanner/finalization and Maps runtime proof remain |
 | Integration/SQLite/device | 12 individual | API clients, Maps/location source and SQLite session/profile/station-reference persistence exist; IIS, QR and device evidence remain |
 
 ## 2. Executive Conclusion
 
-The project has a substantial central API and React implementation and a growing native Android client, but **the full assignment is not complete or independently demonstrated**. The strongest code coverage is backend plus web. Android now goes beyond identity: Prosumer Google Maps/list station discovery, station details, live slot selection, reservation creation, booking list/detail, update and cancel screens are present. Nevertheless, booking dashboard/search/history presentation, approved-booking QR display, operator camera scanning/verification/finalization, a production-capable Maps key/runtime demonstration, and final hosted/device verification remain material gaps.
+The project has a substantial central API and React implementation and a growing native Android client, but **the full assignment is not complete or independently demonstrated**. The strongest code coverage is backend plus web. Android now goes beyond identity: Prosumer Google Maps/list station discovery, station details, live slot selection, reservation creation, searchable current/pending/history booking views, live dashboard counts, booking detail, update and cancel screens are present. Nevertheless, approved-booking QR display, operator camera scanning/verification/finalization, a production-capable Maps key/runtime demonstration, and final hosted/device verification remain material gaps.
 
 Post-plan Member 1 changes are implemented in source: Web and Android pass a login `clientType`; public Prosumer registration is `Pending`; Backoffice can activate/reject; a rejected NIC may resubmit into the same record; Prosumer self-service records a deactivation **request** while status stays `Active`; Backoffice alone administratively deactivates/reactivates. The React activation and deactivation-request views and Android request feedback are now present. The old report's statements that the clients still need these contracts were stale.
 
@@ -49,7 +49,7 @@ The assignment's operational scenario says Grid Operators update battery-slot av
 | Requirements/architecture | Documented; team sign-off and current diagrams/evidence review still needed |
 | Backend | Four domains implemented; final live MongoDB, concurrency, rollback and security proof missing |
 | React web | Broad role-based experience, including activation queue and station/slot card-list toggles; hosted/browser matrix missing |
-| Native Android | Identity, Maps/location station discovery, cached station fallback and basic booking flows; complete dashboards and QR/operator mode missing |
+| Native Android | Identity, Maps/location station discovery, cached station fallback, booking search/categories and dashboard counts; QR/operator mode and runtime proof missing |
 | MongoDB/SQLite | Four server collections plus Android `session`, `user_profile` and `grid_node_reference` tables; migration/device inspection evidence remains |
 | IIS | No demonstrated IIS-hosted API or both-client integration |
 | Assessment package | Final screenshots, all-domain Postman run, video, verified contributions and final report missing |
@@ -65,12 +65,12 @@ The repository has React/Router/Axios/Tailwind on web; native Java/XML, AndroidX
 | Reservation/dashboard API | Reservation and dashboard controllers/services, capacity/status rules | Source-verified; real MongoDB concurrency proof missing |
 | QR/transaction API | Verify/finalize endpoints, token/hash and transaction code | Source-verified; actual scanner/transaction rollback proof missing |
 | React | Role routes; account, station, slot, reservation and transaction pages | Source-verified; current browser matrix not run |
-| Android | Login/profile, location-aware station map/list/details, slot selection, reservation create/list/detail/update/cancel | Source/build-verified; Maps credentials/runtime, QR and operator actions remain unproved/absent |
+| Android | Login/profile, location-aware station map/list/details, slot selection, reservation create/search/category/list/detail/update/cancel and dashboard counts | Source/build-verified; Maps credentials/runtime, QR and operator actions remain unproved/absent |
 | SQLite | Shared `SessionDatabaseHelper`, `SessionManager`, `UserProfileCache`, `GridNodeReferenceCache` | Session plus API-derived profile/station caches implemented; v1-v2-v3 migration/device inspection not yet demonstrated |
 | Postman | Identity collection only | All-domain suite absent |
 | Deployment | Docker files, `.env.example`, emulator development URL | IIS hosting not evidenced |
 
-Recorded earlier verification (2026-09-30): backend 113/113 tests; web 12/12 tests, build, lint with one warning; Android 7 JVM tests, debug build and lint with 23 warnings. These are historical records, **not rerun totals for today's source**. Targeted later checks include a successful Android debug build/Java compile after the identity request correction and a successful web build plus lint on the station/slot card-list edits. No full-suite or live-system verification was performed for this report.
+Current verification on 2026-10-04: backend 123/123 tests passed; Web 12/12 tests and production build passed, with zero lint errors and one existing hooks-dependency warning; Android assembled successfully but its 9-test JVM suite has 8 passing and one failing API error-sanitization test. These automated checks do not establish live MongoDB, browser, Maps, camera, emulator/device or IIS behavior.
 
 ## 4. Progress by Planned Phase
 
@@ -78,9 +78,9 @@ Recorded earlier verification (2026-09-30): backend 113/113 tests; web 12/12 tes
 | --- | --- | --- |
 | Phase 1: requirements/foundation | Roles, ownership, use cases, diagrams, collection design, UI/evidence checklist and traceability | Four-member review/sign-off; update final artifacts to actual implementation and PDF wording |
 | Phase 2: architecture/contracts | Central API, MongoDB, JWT/error conventions, four domain contracts, change register and bounded Android profile/station caching | Confirm disputed role rules and soft-delete interpretation; reconcile final docs with actual contracts |
-| Phase 3: backend core | Identity, infrastructure, reservation/dashboard and transaction domains | Hosted HTTP matrix, real MongoDB concurrency/transaction evidence, current full-suite rerun |
+| Phase 3: backend core | Identity, infrastructure, reservation/dashboard and transaction domains; current 123-test backend suite passes | Hosted HTTP matrix and real MongoDB concurrency/transaction evidence |
 | React web | Public home, role workspaces, account/activation, station/slot, reservation and transaction UI | Final role/browser/responsive/hosted verification and screenshots |
-| Native Android | Shared API/session, cached profile and station-reference fallback, identity, Maps/location station discovery, slot browsing and basic Prosumer reservations | Valid Maps-key/device proof, complete booking views/counts, QR display, operator scan/finalization and device proof |
+| Native Android | Shared API/session, cached profile/station fallback, identity, Maps/location discovery, slot browsing, booking search/categories, dashboard counts and Prosumer reservation actions | Valid Maps-key/device proof, QR display, operator scan/finalization, post-action UX verification and device proof |
 | Deployment | Docker/local setup and health endpoints | Secure IIS/HTTPS/Atlas deployment and both-client connectivity |
 | Testing/report | Unit/helper tests and identity Postman | All-domain Postman, E2E/device/Atlas/IIS evidence, final student-authored report and video |
 
@@ -192,14 +192,15 @@ Own reservation create/update/cancel, seven-day/twelve-hour rules, availability 
 
 **Completed Android work:** station/slot selection leads to a create-reservation form and confirmation dialog; My Bookings list, detail, requested-energy update and cancellation are coded through the central API. This is more than the old identity-only assessment, but there is no independent successful device/API workflow evidence here.
 
+The October 4 revision adds case-insensitive booking search, current/pending/history category views, empty-result feedback, and live Prosumer-home counts for pending and future approved reservations. The backend summary contract now calculates `approvedFutureCount` using a repository-side future-start predicate instead of treating every approved record as upcoming. The current backend suite includes coverage for this distinction.
+
 ### Remaining Member 3 work
 
-- Build explicit current/pending/history and search/filter views plus live pending and approved-future counts on the Prosumer dashboard; the current My Bookings screen is a basic unfiltered list and home does not show those counts.
 - Provide robust summary feedback after **each** action, including update/cancel, not only create; validate client response parsing and stale-state refresh on device.
 - Run exact seven-day/twelve-hour boundaries, ownership/status conflicts, capacity competition and full booking lifecycle against final MongoDB/API.
 - Capture Android/Web/dashboard screenshots, Postman cases and member-specific test/challenge evidence.
 
-**Member 3 conclusion:** server/Web and basic Android booking actions exist; rubric-complete mobile views, live proof and evidence remain.
+**Member 3 conclusion:** server/Web and the planned Android booking/search/category/count surfaces exist in source; action feedback consistency, live workflow proof and assessment evidence remain.
 
 ## 9. Member 4 - Operator Verification and Transactions
 
@@ -231,7 +232,7 @@ Own secure QR issuance/validation, Grid Operator verification, final transfer/au
 
 Implemented: public home/login; Backoffice and Grid Operator dashboards; protected role routes; staff/Prosumer management; pending activation queue; deactivation-request dashboard/list/detail feedback; stations/slots with card-default/list-table toggle; reservations; transaction verification/finalization; profile/security; shared Tailwind visual system, controls, responsive shell and reduced-motion styling. The Web login sends `clientType: Web` and Prosumer Web access is blocked rather than routed to a Prosumer dashboard. Some legacy Prosumer page source may remain, but is not an intended current Web route.
 
-Recent targeted lint on the edited station/slot/toggle files and a production build passed (2026-10-02). The 2026-09-30 full web record was 12 passing tests and one lint warning; a current full web test/lint run was **not** performed for this audit. `Reservations.jsx` previously had a hooks-dependency warning, which should be rechecked rather than assumed resolved.
+The full Web checks were rerun on 2026-10-04: 12/12 tests passed, the production build passed, and lint completed with zero errors and one warning. The warning is the existing missing `fetchReservations` dependency in `Reservations.jsx`; it remains technical debt rather than a clean-lint result.
 
 Still required: authenticated cross-role browser matrix; tested API success/error paths; desktop/tablet/mobile-Web overflow and accessibility checks; confirm energy-flow animation behavior in Edge/Opera and reduced-motion settings; final unique screenshots. A passing Vite build does not demonstrate those outcomes.
 
@@ -248,11 +249,11 @@ Implemented native Java/XML, AndroidX Navigation, a central asynchronous `HttpUR
 | Offline profile | Server-first fetch, cache refresh on success, read-only cache fallback on availability failures | Runtime airplane-mode/API-outage and no-cache screenshots |
 | Station/slot discovery | Google map plus retained list, single location request, nearby query, markers/details, cached-reference fallback and existing slot selection | Real Maps key/device rendering, permission/location branches and offline runtime evidence |
 | Reservation actions | Create/update/cancel and details source | Hosted action/boundary tests and consistent summaries |
-| Booking views | Basic My Bookings list | Current/pending/history/search and dashboard counts |
+| Booking views | Search, current/pending/history categories, empty results and live pending/approved-upcoming dashboard counts in source | Device/API proof and UX verification after mutations |
 | Prosumer QR | Absent | Secure approved-booking QR display |
 | Operator mode | Basic role home | Scanner, verify/finalize/results and map |
 
-The October 3 targeted Android debug build and final Java compile passed after profile caching was added. The JVM suite ran 9 tests with 8 passing and one pre-existing `ApiErrorHandlerTest` failure: the current handler exposes a server `detail` string while the test expects it to be hidden. That discrepancy was not introduced by profile caching and remains a security/error-contract issue to resolve. On October 4, focused Java compilation and `assembleDebug` passed after the Maps/location and grid-node-cache work; `git diff --check` also passed. These checks do not prove Maps authorization/rendering, GPS permission behavior, SQLite migration/fallback, or API/device integration. The historical 23 lint warnings predate newer station/booking/profile/cache/map code and must not be reported as current coverage. Instrumentation/device tests, camera/Maps credentials, SQLite evidence and hosted API tests remain.
+On October 4 the current debug APK assembled successfully. The JVM suite ran 9 tests with 8 passing and one `ApiErrorHandlerTest` failure: the handler exposes a server `detail` string while the test expects it to be hidden. This remains a security/error-contract issue. No current lint run, instrumentation test, emulator/device test, Maps authorization/rendering test, GPS branch test, SQLite migration/fallback inspection, camera test or hosted-API test was completed.
 
 ## 12. Database Status
 
@@ -275,6 +276,9 @@ Pending: verify final Atlas documents/indexes with redacted examples; check uniq
 | 2026-10-04 report refresh | Initial restricted Android build attempt | Could not download Gradle inside the restricted environment; later focused reruns with dependency access passed as recorded below |
 | 2026-10-04 Member 2 Maps/location | Focused Android Java compilation and `assembleDebug` | Passed; no real Maps key, emulator/device, GPS or marker interaction proof |
 | 2026-10-04 Member 2 station cache | Focused Android Java compilation, `assembleDebug`, `git diff --check` | Passed; migration, SQLite contents, offline fallback and clearing require runtime inspection |
+| 2026-10-04 current repository audit | Backend full suite | 123/123 passed; unit/controller/service evidence only, not live MongoDB or hosted HTTP proof |
+| 2026-10-04 current repository audit | Web tests/lint/build | 12/12 passed; production build passed; lint 0 errors/1 existing hooks-dependency warning |
+| 2026-10-04 current repository audit | Android unit tests and debug APK | APK assembled; 8/9 JVM tests passed; `ApiErrorHandlerTest` failed because raw server detail is exposed |
 
 Evidence still required: all-domain Postman and negative/auth/role cases; complete register→activate→book→approve→QR→scan→finalize lifecycle; exact boundary/timezone, reservation deactivation and concurrent allocation tests; actual Android emulator/physical device, browser, SQLite and Atlas records; IIS-hosted smoke and both-client calls. Record dates, environment, versions and redacted results so “tested” has a reproducible meaning.
 
@@ -298,10 +302,10 @@ Missing or needing review: Member 3/4 backend notes; all-domain Postman; current
 | MongoDB/four collections | Models/indexes implemented | Atlas/sample data, concurrency and rollback proof |
 | Identity/account lifecycle | Backend/Web/Android source substantially aligned; SQLite profile cache implemented | Live device/backend/database and cache-isolation demonstration |
 | Stations/slots | Backend/Web plus Android map/list/details, nearby ordering and station-reference fallback | Maps/device/cache runtime evidence and Grid Operator status-authority decision |
-| Reservations | Backend/Web/basic Android actions | Full mobile views/counts, action summaries and boundary/E2E proof |
+| Reservations | Backend/Web plus Android actions, search/categories and live dashboard counts | Post-action summaries and boundary/E2E/device proof |
 | QR/transactions | Backend/Web | Prosumer QR, Android scanner/finalization and transaction proof |
 | Web UX | Broad, buildable; card/list options | Browser/accessibility/hosted matrix and screenshots |
-| Native Android/SQLite | Partial; session/profile/station-reference persistence and Maps/location source implemented | Scanner, complete dashboards, real Maps-key rendering and device/cache evidence |
+| Native Android/SQLite | Partial; session/profile/station-reference persistence, Maps/location and booking dashboard/search source implemented | QR/scanner/operator flow, real Maps-key rendering and device/cache evidence |
 | IIS | Not evidenced | Deployment and two-client reachability |
 | Final assessment | Partial engineering docs | Student-authored report, screenshots, video, code comments and verified contributions |
 
@@ -313,7 +317,7 @@ The Android app is **already started**; retain the original heading for continui
 
 1. Reproduce Member 1 identity/activation/request lifecycle against the same deployed API/DB on a device; validate SQLite migration, offline fallback and account isolation.
 2. Runtime-verify Member 2 Maps/nearby station details/location fallbacks with a valid local key, plus SQLite v2-to-v3 migration and offline station-cache behavior.
-3. Complete Member 3 pending/current/history/search/dashboard counts and action summaries; verify create/update/cancel against server boundaries.
+3. Verify Member 3 pending/current/history/search/dashboard counts on device, complete consistent post-action summaries, and test create/update/cancel against server boundaries.
 4. Complete Member 4 approved QR display and operator camera scan→verify→finalize/results.
 5. Integrate all mobile work with secure hosted API configuration; avoid local business rules that contradict the server.
 
@@ -340,4 +344,4 @@ The Android app is **already started**; retain the original heading for continui
 
 ## 18. Final Readiness Decision
 
-**Not submission-ready on repository evidence.** The API and Web implementation are broad, and Android now includes meaningful identity, offline profile and station-reference caching, location-aware map/list station discovery, live slot selection and reservation code. Member 1 and Member 2 persistence/map gaps have moved from source implementation to runtime evidence, but the original plan's four cross-layer ownership areas remain incomplete because booking dashboards/search/history, approved QR display, device operator scanning/finalization, a verified Maps runtime, IIS deployment and reproducible final evidence are missing. Historical test counts and source/build inspection must not be converted into claims of complete live workflows. The four students must validate the final implementation and author their own assessed contribution/report material under the PDF's AI Planning Level 2 rules.
+**Not submission-ready on repository evidence.** The API and Web implementation are broad, and Android now includes identity, offline profile/station-reference caching, location-aware map/list station discovery, live slot selection, reservation actions, booking search/categories and live dashboard counts. Member 1, Member 2 and much of Member 3 have moved from source gaps to runtime-evidence gaps, but approved QR display, Android operator scanning/finalization, a verified Maps runtime, IIS deployment and reproducible final evidence remain missing. The current backend and Web checks pass, while Android still has one failing unit test. Automated/source evidence must not be converted into claims of complete live workflows. The four students must validate the final implementation and author their own assessed contribution/report material under the PDF's AI Planning Level 2 rules.
