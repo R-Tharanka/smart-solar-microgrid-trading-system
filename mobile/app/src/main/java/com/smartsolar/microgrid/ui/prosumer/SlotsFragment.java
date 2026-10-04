@@ -50,6 +50,7 @@ public class SlotsFragment extends Fragment {
             if (stationName != null) {
                 title.setText(stationName + " Slots");
             }
+            bindStationDetails(view, getArguments(), stationName);
         }
 
         recyclerView = view.findViewById(R.id.slots_recycler_view);
@@ -79,6 +80,31 @@ public class SlotsFragment extends Fragment {
         } else {
             showError("Invalid station selection");
         }
+    }
+
+    private void bindStationDetails(View view, Bundle arguments, String stationName) {
+        TextView details = view.findViewById(R.id.station_selected_details);
+        if (stationName == null || stationCode == null
+                || !arguments.containsKey("stationCapacity")) {
+            details.setVisibility(View.GONE);
+            return;
+        }
+
+        String address = value(arguments.getString("stationAddress"));
+        String openingTime = value(arguments.getString("stationOpeningTime"));
+        String closingTime = value(arguments.getString("stationClosingTime"));
+        String status = value(arguments.getString("stationStatus"));
+        details.setText(getString(R.string.station_selected_details,
+                stationName, stationCode, address,
+                arguments.getDouble("stationCapacity"),
+                arguments.getDouble("stationBatteryStorage"),
+                openingTime, closingTime, status));
+        details.setVisibility(View.VISIBLE);
+    }
+
+    private String value(String value) {
+        return value == null || value.trim().isEmpty()
+                ? getString(R.string.not_provided) : value;
     }
 
     private void loadSlots() {

@@ -52,6 +52,18 @@
     <string name="profile_offline_last_synced">Offline — showing profile information last synchronized %1$s.</string>
     <string name="not_provided">Not provided</string>
     <string name="status_label">Status</string>
+    <string name="view_slots_action">View slots</string>
+    <string name="allow_location_action">Allow location</string>
+    <string name="open_settings_action">Open settings</string>
+    <string name="open_location_settings_action">Location settings</string>
+    <string name="retry_location_action">Retry location</string>
+    <string name="station_location_permission_denied">Location permission was denied. Stations are still available, but nearby ordering is unavailable.</string>
+    <string name="station_location_permission_permanent">Location permission is disabled for this app. Stations are shown without nearby ordering.</string>
+    <string name="station_location_services_disabled">Device location is turned off. Stations are shown without nearby ordering.</string>
+    <string name="station_location_temporarily_unavailable">Your current location is temporarily unavailable. Stations are shown without nearby ordering.</string>
+    <string name="station_map_unavailable">Google Play services is unavailable. You can continue using the station list.</string>
+    <string name="station_marker_details">Code: %1$s\nAddress: %2$s\nCapacity: %3$.1f kWh\nBattery storage: %4$.1f kWh\nEmpty space: %5$.1f kWh\nOperating hours: %6$s–%7$s\nStatus: %8$s</string>
+    <string name="station_selected_details">%1$s (%2$s)\n%3$s\nCapacity: %4$.1f kWh · Battery storage: %5$.1f kWh\nOperating hours: %6$s–%7$s · %8$s</string>
     <string name="role_label">Role</string>
     <string name="session_expired">Your session has expired. Please sign in again.</string>
 </resources>
