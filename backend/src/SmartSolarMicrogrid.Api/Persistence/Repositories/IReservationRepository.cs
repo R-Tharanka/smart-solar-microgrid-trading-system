@@ -74,4 +74,11 @@ public interface IReservationRepository
     Task<Dictionary<ReservationStatus, long>> GetProsumerStatusCountsAsync(
         string prosumerNic,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Counts one Prosumer's reservations in a status that start after the supplied UTC time.</summary>
+    Task<long> CountProsumerReservationsStartingAfterAsync(
+        string prosumerNic,
+        ReservationStatus status,
+        DateTime scheduledStartAfterUtc,
+        CancellationToken cancellationToken = default);
 }

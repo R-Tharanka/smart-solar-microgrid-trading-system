@@ -192,4 +192,18 @@ public sealed class ReservationRepository(MongoDbContext context) : IReservation
             doc => Enum.Parse<ReservationStatus>(doc["_id"].AsString),
             doc => doc["count"].ToInt64());
     }
+
+    // Counts future reservations in one status for a Prosumer dashboard metric.
+    public Task<long> CountProsumerReservationsStartingAfterAsync(
+        string prosumerNic,
+        ReservationStatus status,
+        DateTime scheduledStartAfterUtc,
+        CancellationToken cancellationToken = default)
+    {
+        var builder = Builders<EnergyReservation>.Filter;
+        var filter = builder.Eq(r => r.ProsumerNic, prosumerNic)
+            & builder.Eq(r => r.Status, status)
+            & builder.Gt(r => r.ScheduledStartTimeUtc, scheduledStartAfterUtc);
+        return _reservations.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+    }
 }

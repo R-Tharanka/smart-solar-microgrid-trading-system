@@ -402,10 +402,16 @@ public sealed class ReservationService(
         string prosumerNic,
         CancellationToken cancellationToken = default)
     {
-        var counts = await reservationRepository.GetProsumerStatusCountsAsync(prosumerNic, cancellationToken);
+        var now = UtcNow();
+        var countsTask = reservationRepository.GetProsumerStatusCountsAsync(prosumerNic, cancellationToken);
+        var approvedFutureTask = reservationRepository.CountProsumerReservationsStartingAfterAsync(
+            prosumerNic, ReservationStatus.Approved, now, cancellationToken);
+        await Task.WhenAll(countsTask, approvedFutureTask);
+        var counts = await countsTask;
         return new ProsumerDashboardResponse(
             PendingCount: GetCount(counts, ReservationStatus.Pending),
             ApprovedCount: GetCount(counts, ReservationStatus.Approved),
+            ApprovedFutureCount: await approvedFutureTask,
             CompletedCount: GetCount(counts, ReservationStatus.Completed),
             CancelledCount: GetCount(counts, ReservationStatus.Cancelled),
             TotalCount: counts.Values.Sum());
