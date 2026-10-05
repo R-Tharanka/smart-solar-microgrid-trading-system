@@ -1,6 +1,18 @@
 # Phase 2 Verification and Team Handoff
 
-> Historical record: this file records Phase 2 checks performed on 2026-09-23. For the repository-wide implementation and evidence status audited on 2026-10-04, see `docs/project-status/full-system-progress-report.md`.
+> Historical record: this file records Phase 2 checks performed on 2026-09-23. For the repository-wide implementation and evidence status audited on 2026-10-05, see `docs/project-status/full-system-progress-report.md`.
+
+## Current Verification Addendum - 2026-10-05
+
+- Backend tests pass 123/123. This is unit/controller/service evidence, not live MongoDB or IIS proof.
+- Web tests pass 12/12, the production build succeeds, and ESLint reports zero errors plus the existing reservation-hook warning.
+- Android debug APK assembly succeeds; JVM tests pass 8/9 because `ApiErrorHandlerTest` expects raw server detail to be hidden.
+- Android source now includes booking action summaries, approved-booking QR rendering/regeneration, ZXing camera scanning, server verification and finalization.
+- The station map currently uses osmdroid/OpenStreetMap, not the Google Maps implementation named by the assignment.
+- The QR screen persists the raw bearer-style payload in `qr_cache` SharedPreferences. This contradicts the hash-only/no-token-persistence design and must be removed before security completion is claimed.
+- No camera/device transaction run, map/device run, SQLite migration inspection, all-domain Postman run, Atlas transaction/rollback proof or IIS-hosted end-to-end evidence is recorded.
+
+This current addendum supersedes status claims in the older addendum below but does not alter the historical Phase 2 verification record or member sign-off requirement.
 
 ## Current Verification Addendum - 2026-09-30
 

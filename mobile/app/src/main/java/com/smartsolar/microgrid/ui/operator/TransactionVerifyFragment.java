@@ -21,6 +21,7 @@ import com.smartsolar.microgrid.R;
 import com.smartsolar.microgrid.data.api.ApiCallback;
 import com.smartsolar.microgrid.data.api.ApiError;
 import com.smartsolar.microgrid.data.transaction.FinalizeTransactionRequest;
+import com.smartsolar.microgrid.data.transaction.FinalizedTransactionResponse;
 import com.smartsolar.microgrid.data.transaction.TransactionRepository;
 import com.smartsolar.microgrid.data.transaction.VerifiedTransactionResponse;
 import com.smartsolar.microgrid.data.transaction.VerifyTransactionRequest;
@@ -39,16 +40,16 @@ public class TransactionVerifyFragment extends Fragment {
     private ProgressBar progressBar;
     private LinearLayout detailsContainer;
     private LinearLayout errorContainer;
-    
+
     private TextView tvReservationCode;
     private TextView tvProsumerNic;
     private TextView tvRequestedEnergy;
     private TextView tvStatus;
     private TextView tvErrorMessage;
-    
+
     private EditText actualEnergyInput;
     private EditText confirmationNoteInput;
-    
+
     private Button btnFinalize;
     private Button btnCancel;
     private Button btnBackError;
@@ -69,16 +70,16 @@ public class TransactionVerifyFragment extends Fragment {
         progressBar = view.findViewById(R.id.progress_bar);
         detailsContainer = view.findViewById(R.id.details_container);
         errorContainer = view.findViewById(R.id.error_container);
-        
+
         tvReservationCode = view.findViewById(R.id.tv_reservation_code);
         tvProsumerNic = view.findViewById(R.id.tv_prosumer_nic);
         tvRequestedEnergy = view.findViewById(R.id.tv_requested_energy);
         tvStatus = view.findViewById(R.id.tv_status);
         tvErrorMessage = view.findViewById(R.id.tv_error_message);
-        
+
         actualEnergyInput = view.findViewById(R.id.actual_energy_input);
         confirmationNoteInput = view.findViewById(R.id.confirmation_note_input);
-        
+
         btnFinalize = view.findViewById(R.id.btn_finalize);
         btnCancel = view.findViewById(R.id.btn_cancel);
         btnBackError = view.findViewById(R.id.btn_back_error);
@@ -98,7 +99,7 @@ public class TransactionVerifyFragment extends Fragment {
         try {
             Gson gson = new Gson();
             QrPayloadData payloadData = gson.fromJson(rawQrPayload, QrPayloadData.class);
-            
+
             if (payloadData == null || payloadData.reservationCode == null || payloadData.transactionToken == null) {
                 showError("Invalid QR Code Format");
                 return;
@@ -134,7 +135,7 @@ public class TransactionVerifyFragment extends Fragment {
         tvProsumerNic.setText("Prosumer NIC: " + verifiedTransaction.getProsumerNic());
         tvRequestedEnergy.setText("Requested Energy: " + verifiedTransaction.getRequestedEnergyKwh() + " kWh");
         tvStatus.setText("Status: " + verifiedTransaction.getStatus());
-        
+
         actualEnergyInput.setText(String.valueOf(verifiedTransaction.getRequestedEnergyKwh()));
     }
 
@@ -174,7 +175,21 @@ public class TransactionVerifyFragment extends Fragment {
             return;
         }
 
+        if (actualEnergy > verifiedTransaction.getRequestedEnergyKwh()) {
+            actualEnergyInput.setError("Cannot exceed reserved energy");
+            return;
+        }
+
         String note = confirmationNoteInput.getText().toString().trim();
+        if (note.length() < 2) {
+            confirmationNoteInput.setError("Enter at least 2 characters");
+            return;
+        }
+
+        if (note.length() > 500) {
+            confirmationNoteInput.setError("Must be 500 characters or fewer");
+            return;
+        }
 
         new AlertDialog.Builder(requireContext())
                 .setTitle("Confirm Energy Transfer")
@@ -192,11 +207,11 @@ public class TransactionVerifyFragment extends Fragment {
                 actualEnergy
         );
 
-        repository.finalizeTransaction(request, new ApiCallback<VerifiedTransactionResponse>() {
+        repository.finalizeTransaction(request, new ApiCallback<FinalizedTransactionResponse>() {
             @Override
-            public void onSuccess(VerifiedTransactionResponse data, String message) {
+            public void onSuccess(FinalizedTransactionResponse data, String message) {
                 hideLoading();
-                showSuccessAndNavigateBack(data, actualEnergy);
+                showSuccessAndNavigateBack(data);
             }
 
             @Override
@@ -209,10 +224,12 @@ public class TransactionVerifyFragment extends Fragment {
         });
     }
 
-    private void showSuccessAndNavigateBack(VerifiedTransactionResponse data, double actualEnergy) {
+    private void showSuccessAndNavigateBack(FinalizedTransactionResponse data) {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Success")
-                .setMessage("Energy transfer completed successfully.\n\nCode: " + data.getReservationCode() + "\nTransferred: " + actualEnergy + " kWh")
+                .setMessage("Energy transfer completed successfully.\n\nCode: "
+                        + data.getReservationCode() + "\nTransferred: "
+                        + data.getActualEnergyTransferredKwh() + " kWh")
                 .setPositiveButton("OK", (dialog, which) -> {
                     NavHostFragment.findNavController(this).popBackStack(R.id.gridOperatorHomeFragment, false);
                 })

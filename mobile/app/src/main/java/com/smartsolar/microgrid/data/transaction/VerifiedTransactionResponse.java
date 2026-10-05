@@ -15,4 +15,3 @@ public class VerifiedTransactionResponse {
     public double getRequestedEnergyKwh() { return requestedEnergyKwh; }
     public String getStatus() { return status; }
 }
-

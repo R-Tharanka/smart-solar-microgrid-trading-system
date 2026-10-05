@@ -1,6 +1,6 @@
 # Smart Solar Microgrid Android Application
 
-This folder contains the native Android client. It uses Java, XML layouts, AndroidX Navigation, Material Components, Google Maps/Play Services location and SQLite. The application ID is `com.smartsolar.microgrid`. Identity/account, map/list station discovery, station details, slot selection, bounded profile/station reference caching, Prosumer reservation actions, booking search/current-pending-history categories and live dashboard counts are present. Maps authorization/rendering, location/cache behavior, approved-booking QR display and Grid Operator camera scanning/finalization still require device verification or implementation as applicable.
+This folder contains the native Android client. It uses Java, XML layouts, AndroidX Navigation, Material Components, Play Services location, osmdroid/OpenStreetMap map rendering and SQLite. The application ID is `com.smartsolar.microgrid`. Source exists for identity/account, map/list station discovery, station details, slot selection, bounded profile/station reference caching, Prosumer reservation actions/search/categories/counts, approved-booking QR display, Grid Operator camera scanning, server verification and finalization. The APK assembles, but device/API verification is still absent. The current osmdroid map does not match the assignment's explicit Google Maps requirement.
 
 ## Shared mobile infrastructure
 
@@ -12,19 +12,24 @@ This folder contains the native Android client. It uses Java, XML layouts, Andro
 - `data/location/DeviceLocationProvider.java` performs one current-location lookup for optional nearby ordering.
 - `navigation/RoleNavigator.java` routes supported sessions to the Prosumer or Grid Operator foundation.
 - `data/identity/` sends `clientType: Android`; Prosumer deactivation calls the request-only API and displays pending state without logging out.
-- `data/station/`, `data/reservation/`, and `ui/prosumer/` contain station/slot browsing and basic booking actions. Verify these flows against the same deployed API and MongoDB before treating them as complete.
+- `data/station/`, `data/reservation/`, and `ui/prosumer/` contain station/slot browsing, booking actions and QR display.
+- `data/transaction/` and `ui/operator/` contain transaction DTO/repository code, camera scanning, verification and finalization. These flows still require focused tests and device/API evidence.
 
-The shared local SQLite database is version 3 and contains `session`, `user_profile` and `grid_node_reference`. Profile and station rows are bounded read-only caches with local synchronization timestamps. Passwords, duplicate tokens, slots and reservations are not cached. Server-authoritative account, station activity, live slot availability, reservation, transaction and QR state remain on the API. Logout, expiry and unauthorized-session clearing remove authenticated cached data.
+The shared local SQLite database is version 3 and contains `session`, `user_profile` and `grid_node_reference`. Profile and station rows are bounded read-only caches with local synchronization timestamps. Passwords, slots and reservations are not stored in SQLite. Server-authoritative account, station activity, live slot availability, reservation, transaction and QR state remain on the API. Logout, expiry and unauthorized-session clearing remove the SQLite authenticated caches.
 
-## Google Maps local key
+Security blocker: `BookingDetailsFragment` currently writes the full raw QR payload, including `transactionToken`, to `qr_cache` SharedPreferences. That value is not cleared by the normal identity/logout path, and the backup rules exclude only the SQLite database. Remove this persistence and keep transaction tokens in transient memory only before treating the QR workflow as secure or complete.
 
-The key is injected into `com.google.android.geo.API_KEY` through a manifest placeholder. Add a real Android Maps SDK key to the ignored `local.properties` file:
+## Map provider and Google Maps requirement
+
+The current station screen renders an osmdroid `MapView` with OpenStreetMap tiles. It does not consume the configured Google Maps key. Because the assignment explicitly requires Google Maps, replace the current widget/controller with Google Maps or obtain and document explicit lecturer approval for the provider deviation.
+
+Google Maps dependency and manifest-key configuration remain in the project from the earlier implementation. If the required Google Maps screen is restored, add a real Android Maps SDK key to the ignored `local.properties` file:
 
 ```properties
 MAPS_API_KEY=YOUR_REAL_GOOGLE_MAPS_ANDROID_KEY
 ```
 
-The build also accepts a Gradle property or `MAPS_API_KEY` environment variable. Do not commit a real key. Restrict it to the Maps SDK for Android, package `com.smartsolar.microgrid`, and the applicable debug/release SHA-1 fingerprints. A Google Maps Demo Key does not provide native Maps SDK for Android production/runtime coverage; billing-enabled or institution-provided Android Maps credentials are still required for final device evidence.
+The key is injected into `com.google.android.geo.API_KEY` through a manifest placeholder. The build also accepts a Gradle property or `MAPS_API_KEY` environment variable. Do not commit a real key. Restrict it to the Maps SDK for Android, package `com.smartsolar.microgrid`, and the applicable debug/release SHA-1 fingerprints. A configured key alone is not evidence that the current osmdroid screen meets the Google Maps requirement.
 
 The API base URL is configured once as `API_BASE_URL` in `app/build.gradle.kts`. Its development value is:
 
@@ -38,7 +43,7 @@ http://10.0.2.2:5080/
 
 - Android Studio with the Android SDK installed
 - Android SDK Platform 36 (API 36) and Android SDK Build-Tools 36.0.0
-- JDK 17 or newer (Android Studio's bundled JDK is suitable)
+- A complete JDK 21 containing both `java.exe` and `jlink.exe` (Android Studio's compatible bundled JBR is also suitable)
 - An Android emulator or physical device running Android 7.0 (API 24) or newer
 
 The Gradle wrapper is included, so a separate Gradle installation is not required.

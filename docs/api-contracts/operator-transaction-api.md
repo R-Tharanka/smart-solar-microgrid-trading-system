@@ -23,7 +23,9 @@ Rules:
 - Token is generated server-side.
 - Token hash is stored in `energyReservations.qrTokenHash`.
 - QR expires at or before the scheduled reservation window.
-- Only `Approved` reservations can receive QR data.
+- `Approved` reservations can receive QR data; `QrIssued` reservations can rotate/reissue it.
+- Reissue replaces the stored hash, so every previously displayed token becomes invalid.
+- Clients must keep the raw QR payload/token only in transient memory and must not log, cache, back up or persist it.
 - Verified and completed reservations cannot be verified/finalized again.
 
 ## Endpoints
@@ -39,9 +41,9 @@ Related collection: `energyReservations`
 Validation:
 
 - Reservation must exist.
-- Reservation must be `Approved`.
+- Reservation must be `Approved` or `QrIssued`.
 - Authenticated Prosumer must own the reservation if called from Android.
-- Existing non-expired QR may be reused or rotated based on implementation decision.
+- Every successful call generates a fresh token and replaces the previous hash/expiry while leaving status `QrIssued`.
 
 Success: `200 OK`
 
@@ -110,7 +112,7 @@ Errors: `400`, `401`, `403`, `404`, `409`
 
 Authorization: GridOperator
 
-Related collections: `energyReservations`, `energyBookingSlots`
+Related collections: `energyReservations`, `solarStationInfo`
 
 Request:
 
@@ -129,8 +131,9 @@ Validation:
 - Authenticated user must be a Grid Operator.
 - Reservation must be `Verified`.
 - Reservation must not already be `Completed`.
-- Reservation completion and closure of its reserved booking slot are committed in one MongoDB transaction.
-- The consumed booking slot becomes `Expired`; a failed slot transition rolls back reservation completion.
+- Reservation completion and the station battery-storage increment are committed in one MongoDB transaction.
+- The shared-capacity booking slot is not closed or moved to `Expired` during finalization; allocation was already handled by the reservation approval workflow.
+- A missing station, storage-capacity overflow or competing state change aborts/rolls back completion.
 
 Success: `200 OK`
 
