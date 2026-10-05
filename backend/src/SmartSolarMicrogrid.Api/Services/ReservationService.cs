@@ -83,7 +83,9 @@ public sealed class ReservationService(
             ReservationCode = code,
             ProsumerNic = prosumerNic,
             StationId = stationOid,
+            StationName = station.Name,
             SlotId = slotOid,
+            SlotName = slot.SlotCode,
             RequestedEnergyKwh = request.RequestedEnergyKwh,
             ScheduledStartTimeUtc = slot.StartTimeUtc,
             ScheduledEndTimeUtc = slot.EndTimeUtc,
@@ -450,14 +452,14 @@ public sealed class ReservationService(
 
     private static ReservationResponse MapToResponse(EnergyReservation r) =>
         new(r.Id.ToString(), r.ReservationCode, r.ProsumerNic,
-            r.StationId.ToString(), r.SlotId.ToString(), r.RequestedEnergyKwh,
+            r.StationId.ToString(), r.StationName ?? "", r.SlotId.ToString(), r.SlotName ?? "", r.RequestedEnergyKwh,
             r.ScheduledStartTimeUtc, r.ScheduledEndTimeUtc, r.Status.ToString(),
             r.ConfirmationNote,
             r.CreatedAtUtc, r.UpdatedAtUtc);
 
     private static ReservationSummaryResponse MapToSummary(EnergyReservation r) =>
         new(r.Id.ToString(), r.ReservationCode, r.ProsumerNic,
-            r.StationId.ToString(), r.SlotId.ToString(), r.RequestedEnergyKwh,
+            r.StationId.ToString(), r.StationName ?? "", r.SlotId.ToString(), r.SlotName ?? "", r.RequestedEnergyKwh,
             r.ScheduledStartTimeUtc, r.ScheduledEndTimeUtc, r.Status.ToString(),
             r.CreatedAtUtc, r.UpdatedAtUtc);
 }

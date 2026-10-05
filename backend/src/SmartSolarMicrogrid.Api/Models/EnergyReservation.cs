@@ -17,8 +17,14 @@ public sealed class EnergyReservation
     [BsonElement("stationId")]
     public ObjectId StationId { get; set; }
 
+    [BsonElement("stationName")]
+    public string StationName { get; set; } = string.Empty;
+
     [BsonElement("slotId")]
     public ObjectId SlotId { get; set; }
+
+    [BsonElement("slotName")]
+    public string SlotName { get; set; } = string.Empty;
 
     [BsonElement("requestedEnergyKwh")]
     [BsonRepresentation(BsonType.Decimal128)]

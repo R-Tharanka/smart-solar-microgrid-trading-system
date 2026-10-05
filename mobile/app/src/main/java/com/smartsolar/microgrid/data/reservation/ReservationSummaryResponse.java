@@ -6,6 +6,8 @@ public class ReservationSummaryResponse {
     private String prosumerNic;
     private String stationId;
     private String slotId;
+    private String stationName;
+    private String slotName;
     private double requestedEnergyKwh;
     private String scheduledStartTimeUtc;
     private String scheduledEndTimeUtc;
@@ -18,6 +20,8 @@ public class ReservationSummaryResponse {
     public String getProsumerNic() { return prosumerNic; }
     public String getStationId() { return stationId; }
     public String getSlotId() { return slotId; }
+    public String getStationName() { return stationName; }
+    public String getSlotName() { return slotName; }
     public double getRequestedEnergyKwh() { return requestedEnergyKwh; }
     public String getScheduledStartTimeUtc() { return scheduledStartTimeUtc; }
     public String getScheduledEndTimeUtc() { return scheduledEndTimeUtc; }
