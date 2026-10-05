@@ -84,6 +84,55 @@
                 android:layout_marginTop="8dp"
                 android:text="Cancel Reservation"
                 android:textColor="@android:color/holo_red_dark" />
+                
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/generate_qr_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Generate Transaction QR"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/qr_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Show this QR code to the Grid Operator to complete your energy transfer."
+                android:textAlignment="center"
+                android:layout_marginBottom="16dp"
+                android:textColor="#757575" />
+
+            <ImageView
+                android:id="@+id/qr_image"
+                android:layout_width="250dp"
+                android:layout_height="250dp"
+                android:scaleType="fitCenter" />
+
+            <TextView
+                android:id="@+id/qr_expiry_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textColor="@android:color/holo_red_dark"
+                android:textStyle="bold" />
+                
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/renew_qr_button"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Renew QR Code"
+                android:visibility="gone" />
         </LinearLayout>
 
         <ProgressBar

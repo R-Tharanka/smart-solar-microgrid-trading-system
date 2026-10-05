@@ -37,4 +37,8 @@ public class ReservationRepository {
     public void cancelReservation(String id, CancelReservationRequest request, ApiCallback<ReservationResponse> callback) {
         apiClient.post(RESERVATIONS_PATH + "/" + id + "/cancel", request, ReservationResponse.class, true, callback);
     }
+
+    public void generateQr(String id, ApiCallback<QrTransactionResponse> callback) {
+        apiClient.post(RESERVATIONS_PATH + "/" + id + "/qr", null, QrTransactionResponse.class, true, callback);
+    }
 }

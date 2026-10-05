@@ -27,6 +27,8 @@ core-splashscreen = { group = "androidx.core", name = "core-splashscreen", versi
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+zxing = { group = "com.google.zxing", name = "core", version = "3.5.3" }
+zxing-embedded = { group = "com.journeyapps", name = "zxing-android-embedded", version = "4.3.0" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

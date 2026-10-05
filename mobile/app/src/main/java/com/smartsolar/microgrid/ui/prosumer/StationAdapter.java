@@ -13,10 +13,12 @@ import com.smartsolar.microgrid.data.station.StationResponse;
 
 import java.util.ArrayList;
 import java.util.List;
+import android.location.Location;
 
 public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHolder> {
     private final List<StationResponse> stations = new ArrayList<>();
     private final OnStationClickListener listener;
+    private Location userLocation;
 
     public interface OnStationClickListener {
         void onStationClick(StationResponse station);
@@ -24,6 +26,10 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
 
     public StationAdapter(OnStationClickListener listener) {
         this.listener = listener;
+    }
+
+    public void setUserLocation(Location location) {
+        this.userLocation = location;
     }
 
     public void setStations(List<StationResponse> newStations) {
@@ -45,7 +51,7 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         StationResponse station = stations.get(position);
-        holder.bind(station, listener);
+        holder.bind(station, userLocation, listener);
     }
 
     @Override
@@ -58,6 +64,7 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
         private final TextView addressText;
         private final TextView capacityText;
         private final TextView emptySpaceText;
+        private final TextView distanceText;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -65,15 +72,31 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
             addressText = itemView.findViewById(R.id.station_address);
             capacityText = itemView.findViewById(R.id.station_capacity);
             emptySpaceText = itemView.findViewById(R.id.station_empty_space);
+            distanceText = itemView.findViewById(R.id.station_distance);
         }
 
-        void bind(StationResponse station, OnStationClickListener listener) {
+        void bind(StationResponse station, Location userLocation, OnStationClickListener listener) {
             nameText.setText(station.getName() + " (" + station.getStationCode() + ")");
             addressText.setText(station.getAddress());
             capacityText.setText(String.format("%.1f kWh", station.getCapacityKwh()));
             
             double emptySpace = station.getCapacityKwh() - station.getBatteryStorageKwh();
             emptySpaceText.setText(String.format("%.1f kWh", emptySpace));
+
+            if (userLocation != null && Double.isFinite(station.getLatitude()) && Double.isFinite(station.getLongitude())) {
+                Location stationLoc = new Location("");
+                stationLoc.setLatitude(station.getLatitude());
+                stationLoc.setLongitude(station.getLongitude());
+                float distanceMeters = userLocation.distanceTo(stationLoc);
+                if (distanceMeters < 1000) {
+                    distanceText.setText(String.format("%.0f m away", distanceMeters));
+                } else {
+                    distanceText.setText(String.format("%.1f km away", distanceMeters / 1000f));
+                }
+                distanceText.setVisibility(View.VISIBLE);
+            } else {
+                distanceText.setVisibility(View.GONE);
+            }
 
             itemView.setOnClickListener(v -> listener.onStationClick(station));
         }

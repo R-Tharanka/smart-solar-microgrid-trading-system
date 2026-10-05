@@ -68,11 +68,11 @@ export default function ReservationDetails({
     ],
     ['Slot', slotCode],
     [
-      'Scheduled start (UTC)',
+      'Scheduled start',
       new Date(reservation.scheduledStartTimeUtc).toLocaleString(),
     ],
     [
-      'Scheduled end (UTC)',
+      'Scheduled end',
       new Date(reservation.scheduledEndTimeUtc).toLocaleString(),
     ],
     ['Created', new Date(reservation.createdAtUtc).toLocaleString()],

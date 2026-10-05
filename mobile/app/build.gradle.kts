@@ -67,7 +67,10 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.play.services.maps)
     implementation(libs.play.services.location)
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    implementation(libs.zxing)
+    implementation(libs.zxing.embedded)
 }
