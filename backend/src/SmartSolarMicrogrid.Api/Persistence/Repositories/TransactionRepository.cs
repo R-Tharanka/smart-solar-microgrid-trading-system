@@ -28,7 +28,7 @@ public sealed class TransactionRepository(MongoDbContext context) : ITransaction
     {
         if (!ObjectId.TryParse(reservationId, out var id)) return false;
         var filter = Builders<EnergyReservation>.Filter.Where(r =>
-            r.Id == id && r.Status == ReservationStatus.Approved);
+            r.Id == id && (r.Status == ReservationStatus.Approved || r.Status == ReservationStatus.QrIssued));
         var update = Builders<EnergyReservation>.Update
             .Set(r => r.QrTokenHash, tokenHash)
             .Set(r => r.QrExpiresAtUtc, expiresAtUtc)

@@ -28,9 +28,9 @@ public sealed class TransactionService(
         {
             throw TransactionException.Forbidden();
         }
-        if (reservation.Status != ReservationStatus.Approved)
+        if (reservation.Status != ReservationStatus.Approved && reservation.Status != ReservationStatus.QrIssued)
         {
-            throw TransactionException.Conflict("QR_STATUS_INVALID", "Only an approved reservation can receive a QR transaction.");
+            throw TransactionException.Conflict("QR_STATUS_INVALID", "Only an approved or already issued reservation can receive a QR transaction.");
         }
 
         var now = UtcNow();
