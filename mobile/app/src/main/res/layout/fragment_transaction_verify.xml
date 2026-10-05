@@ -1,134 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fillViewport="true">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="Verify Transaction"
-            android:textColor="@color/text_primary"
-            android:textSize="24sp"
-            android:textStyle="bold" />
-            
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="32dp" />
-
-        <LinearLayout
-            android:id="@+id/details_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone"
-            android:layout_marginTop="24dp">
-
-            <TextView
-                android:id="@+id/tv_reservation_code"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/tv_prosumer_nic"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textSize="16sp" />
-                
-            <TextView
-                android:id="@+id/tv_requested_energy"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/tv_status"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/surface_light" android:fillViewport="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="@dimen/space_4">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_4" android:text="Energy transfer"
+            android:textAppearance="@style/TextAppearance.Solar.ScreenTitle" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_2"
+            android:text="Confirm the verified reservation before completing the transfer."
+            android:textAppearance="@style/TextAppearance.Solar.Supporting" />
+        <ProgressBar android:id="@+id/progress_bar" style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent" android:layout_height="3dp"
+            android:layout_marginTop="@dimen/space_6" android:indeterminate="true" />
+        <LinearLayout android:id="@+id/details_container"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:visibility="gone">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_6" android:text="Verified reservation"
+                android:textAppearance="@style/TextAppearance.Solar.SectionTitle" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_3" android:background="@drawable/bg_solar_notice"
+                android:orientation="vertical" android:padding="@dimen/space_4">
+                <TextView android:id="@+id/tv_reservation_code"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Solar.Code" />
+                <TextView android:id="@+id/tv_status" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_3"
+                    android:textSize="12sp" />
+                <TextView android:id="@+id/tv_prosumer_nic"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_4"
+                    android:textAppearance="@style/TextAppearance.Solar.Supporting" />
+                <TextView android:id="@+id/tv_requested_energy"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_3"
+                    android:textAppearance="@style/TextAppearance.Solar.Body" />
+            </LinearLayout>
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_6" android:text="Complete transfer"
+                android:textAppearance="@style/TextAppearance.Solar.SectionTitle" />
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/actual_energy_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:hint="Actual Energy Transferred (kWh)">
-
+                android:id="@+id/actual_energy_layout" style="@style/Widget.Solar.Input"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_3"
+                android:hint="Actual transferred energy (kWh)">
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/actual_energy_input"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="numberDecimal" />
+                    android:id="@+id/actual_energy_input" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:inputType="numberDecimal" />
             </com.google.android.material.textfield.TextInputLayout>
-            
             <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="Confirmation Note (Optional)">
-
+                style="@style/Widget.Solar.Input" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_3"
+                android:hint="Operator note (required)">
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/confirmation_note_input"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text" />
+                    android:id="@+id/confirmation_note_input" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:inputType="textCapSentences|textMultiLine"
+                    android:minLines="2" android:maxLength="500" />
             </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_finalize"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:text="Confirm and Finalize Transfer" />
-                
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_cancel"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Cancel" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/btn_finalize"
+                style="@style/Widget.Solar.Button.Primary" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_6"
+                android:text="Review and finalize" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/btn_cancel"
+                style="@style/Widget.Solar.Button.Text" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_2"
+                android:text="Back to scanner" />
         </LinearLayout>
-        
-        <LinearLayout
-            android:id="@+id/error_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone"
-            android:gravity="center"
-            android:layout_marginTop="32dp">
-            
-            <TextView
-                android:id="@+id/tv_error_message"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@android:color/holo_red_dark"
-                android:textSize="18sp"
-                android:textAlignment="center" />
-                
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_back_error"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="Go Back" />
+        <LinearLayout android:id="@+id/error_container" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_6"
+            android:background="@color/status_error_bg" android:orientation="vertical"
+            android:padding="@dimen/space_5" android:visibility="gone">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Transaction unavailable" android:textColor="@color/status_error"
+                android:textSize="20sp" android:fontFamily="sans-serif-medium" />
+            <TextView android:id="@+id/tv_error_message" android:accessibilityLiveRegion="polite" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_2"
+                android:textColor="@color/status_error" android:textSize="14sp" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/btn_back_error"
+                style="@style/Widget.Solar.Button.Secondary" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_4"
+                android:text="Scan another QR" />
         </LinearLayout>
-
     </LinearLayout>
 </ScrollView>

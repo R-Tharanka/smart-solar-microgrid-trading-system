@@ -56,7 +56,7 @@ The team has now resolved the assignment's Grid Operator slot-availability rule:
 | Native Android | All four domains have source/UI coverage, including transient QR/scanner/finalization and operator map/list/details; Google Maps compliance and runtime proof remain missing |
 | MongoDB/SQLite | Four server collections plus Android `session`, `user_profile` and `grid_node_reference` tables; migration/device inspection evidence remains |
 | IIS | No demonstrated IIS-hosted API or both-client integration |
-| Assessment package | Final screenshots, all-domain Postman run, video, verified contributions and final report missing |
+| Assessment package | Full-system Postman artifact exists; final-environment run/export, screenshots, video, verified contributions and final report remain missing |
 
 ## 3. Current Architecture and Repository Evidence
 
@@ -71,7 +71,7 @@ The repository has React/Router/Axios/Tailwind on web; native Java/XML, AndroidX
 | React | Role routes; account, station, slot, reservation and transaction pages | Source-verified; current browser matrix not run |
 | Android | Login/profile, location-aware station map/list/details for Prosumer and Grid Operator, reservation workflows, transient QR rendering, camera scanning, verification and finalization | Source/build/test-verified; uses osmdroid instead of required Google Maps and lacks device/API proof |
 | SQLite | Shared `SessionDatabaseHelper`, `SessionManager`, `UserProfileCache`, `GridNodeReferenceCache` | Session plus API-derived profile/station caches implemented; v1-v2-v3 migration/device inspection not yet demonstrated |
-| Postman | Identity collection only | All-domain suite absent |
+| Postman | Importable 73-request full-system collection plus the earlier identity-only collection | Final-environment collection run and redacted result export remain absent |
 | Deployment | Docker files, `.env.example`, emulator development URL | IIS hosting not evidenced |
 
 Current verification on 2026-10-05: backend 145/145 tests passed, including Grid Operator slot-policy/status coverage and QR issue/renewal/old-token/new-token/ownership/state coverage; Web 12/12 tests and production build passed, with zero lint errors and one existing hooks-dependency warning; Android 12/12 JVM tests passed and the debug APK assembled. The Android total includes `ApiErrorHandlerTest` and focused canonical-parser/ephemeral-store tests. These automated checks do not establish live MongoDB, browser, map tiles/location, camera, emulator/device or IIS behavior.
@@ -86,7 +86,7 @@ Current verification on 2026-10-05: backend 145/145 tests passed, including Grid
 | React web | Public home, role workspaces, account/activation, station/slot, reservation and transaction UI | Final role/browser/responsive/hosted verification and screenshots |
 | Native Android | Shared API/session, cached profile/station fallback, identity, location/map discovery for both roles, booking workflows, transient QR display, camera scan, verify/finalize and focused parser/error tests | Replace/justify osmdroid against Google Maps; add broader transaction/UI tests and device/E2E proof |
 | Deployment | Docker/local setup and health endpoints | Secure IIS/HTTPS/Atlas deployment and both-client connectivity |
-| Testing/report | Unit/helper tests and identity Postman | All-domain Postman, E2E/device/Atlas/IIS evidence, final student-authored report and video |
+| Testing/report | Unit/helper tests and a generated all-domain Postman collection | Execute/export the collection against the final environment; complete E2E/device/Atlas/IIS evidence, final student-authored report and video |
 
 ## 5. Shared Backend Foundation
 
@@ -174,7 +174,7 @@ SQLite database version 3 adds `grid_node_reference` to the existing shared help
 - Verify SQLite v2-to-v3 migration preserves `session` and `user_profile`; inspect cache upserts, subset preservation, offline/no-cache UI, timestamp formatting and logout/expiry clearing with redacted device evidence.
 - Verify the final authorization matrix over HTTP: Grid Operator can read stations/slots and patch slot status, but receives `403` for station create/update/status, slot create and slot detail update.
 - Run station/slot hosted HTTP, overlap, reservation guard, location and actual device-selection scenarios; provide Atlas, browser and map screenshots.
-- Add domain requests to the consolidated Postman collection and verify station/slot mobile DTOs against deployed responses.
+- Run the consolidated Postman station/slot requests against the deployed API and verify the mobile DTOs against those responses.
 
 **Member 2 conclusion:** API/Web, Android nearby map/list discovery and bounded station-reference caching exist in source. The slot-authority decision is implemented and policy-tested; the current map provider still does not satisfy the stated Google Maps requirement, and map/device/database/hosted evidence remains.
 
@@ -293,8 +293,9 @@ Pending: verify final Atlas documents/indexes with redacted examples; check uniq
 | 2026-10-05 Phase 4C and report refresh | Backend full suite | 145/145 passed; includes QR issue, renewal, old-token invalidation, renewed-token success, ownership and invalid-state coverage; no live MongoDB/IIS proof |
 | 2026-10-05 Phase 4C and report refresh | Web tests/lint/build | 12/12 passed; production build passed; lint 0 errors/1 existing `Reservations.jsx` hook-dependency warning |
 | 2026-10-05 Phase 4C and report refresh | Android JVM tests and debug APK | 12/12 passed and APK assembled; includes error sanitization and parser/ephemeral-store tests; no emulator/device/camera/map/API proof |
+| 2026-10-05 full-system Postman artifact | Static collection validation | JSON parsed; 73 requests in six ordered folders; all 40 controller routes plus two health routes covered; embedded scripts compiled with 0 syntax errors; no saved QR-token variable; live workflow not executed |
 
-Evidence still required: all-domain Postman and negative/auth/role cases; complete register→activate→book→approve→QR→scan→finalize lifecycle; exact boundary/timezone, reservation deactivation and concurrent allocation tests; actual Android emulator/physical device, browser, SQLite and Atlas records; IIS-hosted smoke and both-client calls. Record dates, environment, versions and redacted results so “tested” has a reproducible meaning.
+Evidence still required: execute and export the generated all-domain Postman collection against the final environment; complete register→activate→book→approve→QR→scan→finalize device lifecycle; exact boundary/timezone, reservation deactivation and concurrent allocation tests; actual Android emulator/physical device, browser, SQLite and Atlas records; IIS-hosted smoke and both-client calls. Record dates, environment, versions and redacted results so “tested” has a reproducible meaning.
 
 ## 14. Deployment Status
 
@@ -304,9 +305,9 @@ Required sequence: publish API for Windows; configure Hosting Bundle, IIS site/a
 
 ## 15. Documentation and Evidence Status
 
-Present: requirements/decision logs, architecture/use-case/DFD diagrams, MongoDB design, API contracts, traceability/change register, Member 1/2 backend notes, Member 1/4 Web notes, Android setup guidance and an identity-only Postman collection. This progress report records the current source-level assessment; it is not the final assessed report. The root README now declares the four student IDs/names, but those declarations still require commit/student verification and should not be treated as independent authorship proof.
+Present: requirements/decision logs, architecture/use-case/DFD diagrams, MongoDB design, API contracts, traceability/change register, Member 1/2 backend notes, Member 1/4 Web notes, Android setup guidance, the historical identity collection and a generated 73-request full-system Postman collection with a run guide. The full collection covers every current controller route plus role/validation and QR-renewal checks, but has not yet been executed against the final environment. This progress report records the current source-level assessment; it is not the final assessed report. The root README now declares the four student IDs/names, but those declarations still require commit/student verification and should not be treated as independent authorship proof.
 
-Missing or needing review: Member 3/4 backend notes; all-domain Postman; IIS runbook/evidence; unique screenshots of all UIs; source-code excerpts as **text**; exact references; Git history mapped to verified students; authentic individual contributions/challenges; README video link (maximum five minutes); submission screenshot/ZIP naming. For the PDF page-4 code-comment gate, **33 of 81** current `.cs` files do not begin with a comment/header; method-opening comments still need a separate manual review. Page-6 AI-use restrictions require truthful disclosure and independent student-authored implementation/report work; no evidence or personal reflection should be fabricated.
+Missing or needing review: Member 3/4 backend notes; a final-environment Postman run/export; IIS runbook/evidence; unique screenshots of all UIs; source-code excerpts as **text**; exact references; Git history mapped to verified students; authentic individual contributions/challenges; README video link (maximum five minutes); submission screenshot/ZIP naming. For the PDF page-4 code-comment gate, **33 of 81** current `.cs` files do not begin with a comment/header; method-opening comments still need a separate manual review. Page-6 AI-use restrictions require truthful disclosure and independent student-authored implementation/report work; no evidence or personal reflection should be fabricated.
 
 ## 16. Requirements Readiness Summary
 
@@ -338,7 +339,7 @@ The Android app is **already started**; retain the original heading for continui
 ### Priority 1 - Complete integration verification
 
 1. Verify the implemented Grid Operator read-only-detail/slot-status boundary over hosted HTTP and resolve the rubric's delete/soft-deactivation wording.
-2. Build one chained, all-domain Postman collection and run positive/negative/role cases on final MongoDB.
+2. Run the generated chained, all-domain Postman collection on final MongoDB, resolve environment-specific failures and retain a redacted result export.
 3. Prove concurrent approvals, reservation-aware deactivation, QR renewal/old-token invalidation, expiry/replay and transaction rollback.
 4. Retain the fixed Android error-sanitization contract; triage the remaining Web hook warning, run Android lint and complete the `.cs` comment review.
 5. Perform authenticated browser, accessibility, Android emulator/physical-device and SQLite inspections.
@@ -358,4 +359,4 @@ The Android app is **already started**; retain the original heading for continui
 
 ## 18. Final Readiness Decision
 
-**Not submission-ready on repository evidence.** The API and Web implementation are broad, and Android now contains source for identity, offline profile/station-reference caching, map/list discovery for both mobile roles, reservation workflows, transient QR display, camera verification and finalization. Phase 4C closed the raw-token persistence, parser consistency, renewal-test, error-sanitization and operator-map source gaps, and all current automated suites pass. The remaining blockers are the explicit Google Maps requirement, IIS/common-host deployment, real Atlas/browser/device/camera/map/end-to-end proof, all-domain Postman coverage, C# comment compliance and the student-authored assessment package. Automated/source evidence must not be converted into claims of complete live workflows. The four students must validate the final implementation and author their own assessed contribution/report material under the PDF's AI Planning Level 2 rules.
+**Not submission-ready on repository evidence.** The API and Web implementation are broad, and Android now contains source for identity, offline profile/station-reference caching, map/list discovery for both mobile roles, reservation workflows, transient QR display, camera verification and finalization. Phase 4C closed the raw-token persistence, parser consistency, renewal-test, error-sanitization and operator-map source gaps, and all current automated suites pass. A full-system Postman artifact now exists, but its final-environment run is not evidence yet. The remaining blockers are the explicit Google Maps requirement, IIS/common-host deployment, real Atlas/browser/device/camera/map/end-to-end proof, Postman execution evidence, C# comment compliance and the student-authored assessment package. Automated/source evidence must not be converted into claims of complete live workflows. The four students must validate the final implementation and author their own assessed contribution/report material under the PDF's AI Planning Level 2 rules.

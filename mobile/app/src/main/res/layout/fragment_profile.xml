@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/surface_light">
 
     <ProgressBar
         android:id="@+id/profile_progress"
@@ -18,7 +19,7 @@
         android:padding="32dp"
         android:visibility="gone">
         <TextView
-            android:id="@+id/profile_error"
+            android:id="@+id/profile_error" android:accessibilityLiveRegion="polite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
@@ -50,15 +51,23 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="@dimen/space_4">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Your account" android:textAppearance="@style/TextAppearance.Solar.ScreenTitle" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_2" android:text="Identity and account details"
+                android:textAppearance="@style/TextAppearance.Solar.Supporting" />
             <TextView
                 android:id="@+id/profile_offline_notice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:padding="12dp"
-                android:textColor="@color/text_primary"
+                android:background="@drawable/bg_solar_notice"
+                android:padding="@dimen/space_4"
+                android:textColor="@color/text_secondary"
                 android:visibility="gone" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_6" android:text="Personal information" android:textAppearance="@style/TextAppearance.Solar.SectionTitle" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_3" android:background="@drawable/bg_solar_notice" android:orientation="vertical" android:padding="@dimen/space_4">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/first_name_label" android:textStyle="bold" />
             <TextView android:id="@+id/profile_first_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:textSize="18sp" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/last_name_label" android:textStyle="bold" />
@@ -71,15 +80,17 @@
             <TextView android:id="@+id/profile_phone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:textSize="18sp" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/address_label" android:textStyle="bold" />
             <TextView android:id="@+id/profile_address" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:textSize="18sp" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/status_label" android:textStyle="bold" />
-            <TextView android:id="@+id/profile_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="24dp" android:textSize="18sp" />
+            </LinearLayout>
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_6" android:text="Account status" android:textAppearance="@style/TextAppearance.Solar.SectionTitle" />
+            <TextView android:id="@+id/profile_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="24dp" android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/profile_deactivation_request"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:padding="12dp"
+                android:background="@color/status_warning_bg"
+                android:padding="@dimen/space_4"
                 android:text="@string/deactivation_request_pending"
                 android:textColor="@color/text_primary"
                 android:visibility="gone" />
@@ -91,14 +102,14 @@
                 android:text="@string/edit_profile_action" />
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/deactivate_button"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.Solar.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:text="@string/deactivate_action" />
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/profile_logout_button"
-                style="@style/Widget.Material3.Button.TextButton"
+                style="@style/Widget.Solar.Button.Text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"

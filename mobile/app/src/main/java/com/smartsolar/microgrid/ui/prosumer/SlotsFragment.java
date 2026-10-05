@@ -2,7 +2,6 @@ package com.smartsolar.microgrid.ui.prosumer;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -28,7 +27,7 @@ public class SlotsFragment extends Fragment {
     private String stationId; // Might need this later, but we use code to fetch slots
 
     private RecyclerView recyclerView;
-    private ProgressBar progressBar;
+    private View progressBar;
     private View errorContainer;
     private TextView errorMessage;
     private View emptyStateText;
@@ -67,6 +66,7 @@ public class SlotsFragment extends Fragment {
             args.putString("slotCode", slot.getSlotCode());
             args.putDouble("availableEnergy", slot.getAvailableEnergyKwh());
             args.putString("startTime", slot.getStartTimeUtc());
+            args.putString("endTime", slot.getEndTimeUtc());
             NavHostFragment.findNavController(this).navigate(R.id.createReservationFragment, args);
         });
 
@@ -115,18 +115,10 @@ public class SlotsFragment extends Fragment {
                 if (data == null || data.isEmpty()) {
                     showEmpty();
                 } else {
-                    List<BookingSlotResponse> activeSlots = new ArrayList<>();
-                    for (BookingSlotResponse slot : data) {
-                        if ("Available".equalsIgnoreCase(slot.getStatus())) {
-                            activeSlots.add(slot);
-                        }
-                    }
-                    if (activeSlots.isEmpty()) {
-                        showEmpty();
-                    } else {
-                        adapter.setSlots(activeSlots);
-                        showContent();
-                    }
+                    // Present every returned status; SlotAdapter only offers booking for
+                    // server-reported Available slots with remaining energy.
+                    adapter.setSlots(data);
+                    showContent();
                 }
             }
 

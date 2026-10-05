@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@id/gridOperatorHomeFragment" android:icon="@drawable/ic_solar_home" android:title="Operations" />
+    <item android:id="@id/scannerFragment" android:icon="@drawable/ic_solar_scan" android:title="Scan" />
+    <item android:id="@id/stationsFragment" android:icon="@drawable/ic_solar_station" android:title="Stations" />
+</menu>

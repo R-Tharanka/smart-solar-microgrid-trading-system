@@ -1,0 +1,3017 @@
+{
+  "info": {
+    "_postman_id": "1e18487e-9bf0-4dc8-98f7-43fe80af6f89",
+    "name": "Smart Solar Microgrid - Full System API",
+    "description": "Authoritative full-system collection generated from the current ASP.NET controllers and request contracts.\n\nRun folders in numeric order, preferably by running the complete collection against an isolated test database.\n\nBefore running, set adminEmail and the secret adminPassword to an active bootstrapped Backoffice account.\n\nThe run creates unique accounts, a station, a slot, and reservations. There are no delete endpoints, so generated records remain in the selected database.\n\nRaw QR transaction tokens are stored only in temporary pm.variables scope during a Collection Runner execution, then explicitly unset. They are never collection/environment variables or console output.\n\nThe collection covers all 40 controller routes plus positive lifecycle checks, validation checks, role-denial checks, QR renewal, old-token invalidation, and duplicate-finalization protection.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5080",
+      "type": "string"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@example.com",
+      "type": "string"
+    },
+    {
+      "key": "adminPassword",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "prosumerPassword",
+      "value": "Strong@1234",
+      "type": "secret"
+    },
+    {
+      "key": "prosumerNewPassword",
+      "value": "NewStrong@5678",
+      "type": "secret"
+    },
+    {
+      "key": "operatorPassword",
+      "value": "Operator@1234",
+      "type": "secret"
+    },
+    {
+      "key": "managedProsumerPassword",
+      "value": "Managed@1234",
+      "type": "secret"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "prosumerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "operatorToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "runId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "prosumerNic",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "prosumerEmail",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "operatorEmail",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "managedProsumerNic",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "managedProsumerEmail",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "rejectedProsumerNic",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "rejectedProsumerEmail",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "stationCode",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "stationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "slotCode",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "slotId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "slotStartUtc",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "slotEndUtc",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "queryFromUtc",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "queryToUtc",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reservationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reservationCode",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "rejectReservationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cancelReservationId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Run Setup and Health",
+      "description": "Initializes collision-resistant data and verifies public process/database health.",
+      "item": [
+        {
+          "name": "Initialize run and get API information",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/system/info",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const now = Date.now();",
+                  "const suffix = String(now).slice(-10);",
+                  "const nicTail = String(now).slice(-11);",
+                  "const runId = `${now}-${Math.floor(Math.random() * 100000)}`;",
+                  "const set = (key, value) => pm.collectionVariables.set(key, value);",
+                  "set('runId', runId);",
+                  "set('prosumerNic', `2${nicTail}`);",
+                  "set('prosumerEmail', `prosumer.${runId}@example.com`);",
+                  "set('operatorEmail', `operator.${runId}@example.com`);",
+                  "set('managedProsumerNic', `3${nicTail}`);",
+                  "set('managedProsumerEmail', `managed.${runId}@example.com`);",
+                  "set('rejectedProsumerNic', `4${nicTail}`);",
+                  "set('rejectedProsumerEmail', `rejected.${runId}@example.com`);",
+                  "set('stationCode', `STN-PM-${suffix}`);",
+                  "set('slotCode', `SLT-PM-${suffix}`);",
+                  "set('slotStartUtc', new Date(now + 48 * 60 * 60 * 1000).toISOString());",
+                  "set('slotEndUtc', new Date(now + 50 * 60 * 60 * 1000).toISOString());",
+                  "set('queryFromUtc', new Date(now).toISOString());",
+                  "set('queryToUtc', new Date(now + 7 * 24 * 60 * 60 * 1000).toISOString());",
+                  "['adminToken','prosumerToken','operatorToken','stationId','slotId','reservationId','reservationCode','rejectReservationId','cancelReservationId'].forEach(k => pm.collectionVariables.unset(k));",
+                  "pm.variables.unset('qrTokenA');",
+                  "pm.variables.unset('qrTokenB');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Correct API metadata is returned', () => {",
+                  "  pm.expect(json.data.name).to.eql('Smart Solar Microgrid Trading API');",
+                  "  pm.expect(json.data.version).to.eql('v1');",
+                  "  pm.expect(json.data.utcNow).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Liveness",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health/live",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Readiness - MongoDB",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health/ready",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 - Identity, Authentication and Accounts",
+      "description": "Covers registration, activation/rejection, client-role login, profile and Backoffice administration.",
+      "item": [
+        {
+          "name": "Login Backoffice and capture JWT",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/login",
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"clientType\": \"Web\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('adminPassword')) {",
+                  "  throw new Error('Set the secret collection variable adminPassword before running.');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('adminToken', json.data.accessToken);",
+                  "pm.test('Backoffice Web login succeeds', () => {",
+                  "  pm.expect(json.data.user.role).to.eql('Backoffice');",
+                  "  pm.expect(json.data.user.status).to.eql('Active');",
+                  "  pm.expect(json.data.accessToken).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Backoffice login from Android",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/login",
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"clientType\": \"Android\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403', () => pm.response.to.have.status(403));",
+                  "const json = pm.response.json();",
+                  "pm.test('Error code is AUTH_CLIENT_ROLE_FORBIDDEN', () => pm.expect(json.errorCode).to.eql('AUTH_CLIENT_ROLE_FORBIDDEN'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register public Prosumer - Pending",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/prosumer/register",
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nic\": \"{{prosumerNic}}\",\n  \"email\": \"{{prosumerEmail}}\",\n  \"password\": \"{{prosumerPassword}}\",\n  \"firstName\": \"Postman\",\n  \"lastName\": \"Prosumer\",\n  \"phoneNumber\": \"0771234567\",\n  \"address\": \"Colombo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Public registration is pending review', () => {",
+                  "  pm.expect(json.data.nic).to.eql(pm.collectionVariables.get('prosumerNic'));",
+                  "  pm.expect(json.data.role).to.eql('Prosumer');",
+                  "  pm.expect(json.data.status).to.eql('Pending');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject login before activation",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/login",
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{prosumerNic}}\",\n  \"password\": \"{{prosumerPassword}}\",\n  \"clientType\": \"Android\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403', () => pm.response.to.have.status(403));",
+                  "const json = pm.response.json();",
+                  "pm.test('Error code is AUTH_ACCOUNT_PENDING', () => pm.expect(json.errorCode).to.eql('AUTH_ACCOUNT_PENDING'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List pending Prosumers",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users/prosumers/pending",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('array'));",
+                  "pm.test('New registration appears in pending list', () => pm.expect(json.data.some(x => x.nic === pm.collectionVariables.get('prosumerNic'))).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Activate public Prosumer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/prosumers/{{prosumerNic}}/activate",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Prosumer on Android and capture JWT",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/login",
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{prosumerNic}}\",\n  \"password\": \"{{prosumerPassword}}\",\n  \"clientType\": \"Android\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('prosumerToken', json.data.accessToken);",
+                  "pm.test('Prosumer Android login succeeds', () => pm.expect(json.data.user.role).to.eql('Prosumer'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Prosumer login from Web",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/login",
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{prosumerNic}}\",\n  \"password\": \"{{prosumerPassword}}\",\n  \"clientType\": \"Web\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403', () => pm.response.to.have.status(403));",
+                  "const json = pm.response.json();",
+                  "pm.test('Error code is AUTH_CLIENT_ROLE_FORBIDDEN', () => pm.expect(json.errorCode).to.eql('AUTH_CLIENT_ROLE_FORBIDDEN'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get current Prosumer profile",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users/me",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Correct profile is returned', () => pm.expect(json.data.nic).to.eql(pm.collectionVariables.get('prosumerNic')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update current Prosumer profile",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/users/me",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Prosumer\",\n  \"phoneNumber\": \"+94771234567\",\n  \"address\": \"Colombo 03\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Profile fields changed', () => pm.expect(json.data.firstName).to.eql('Updated'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Grid Operator",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/staff",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{operatorEmail}}\",\n  \"password\": \"{{operatorPassword}}\",\n  \"firstName\": \"Postman\",\n  \"lastName\": \"Operator\",\n  \"role\": \"GridOperator\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Grid Operator is active', () => { pm.expect(json.data.role).to.eql('GridOperator'); pm.expect(json.data.status).to.eql('Active'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Grid Operator on Android and capture JWT",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/login",
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{operatorEmail}}\",\n  \"password\": \"{{operatorPassword}}\",\n  \"clientType\": \"Android\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('operatorToken', json.data.accessToken);",
+                  "pm.test('Grid Operator Android login succeeds', () => pm.expect(json.data.user.role).to.eql('GridOperator'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get current Grid Operator profile",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users/me",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Operator profile returned', () => pm.expect(json.data.email).to.eql(pm.collectionVariables.get('operatorEmail')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Prosumer through Backoffice",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/prosumers",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nic\": \"{{managedProsumerNic}}\",\n  \"email\": \"{{managedProsumerEmail}}\",\n  \"password\": \"{{managedProsumerPassword}}\",\n  \"firstName\": \"Managed\",\n  \"lastName\": \"Prosumer\",\n  \"phoneNumber\": \"0712345678\",\n  \"address\": \"Kandy\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Managed Prosumer is active', () => pm.expect(json.data.status).to.eql('Active'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Prosumer through Backoffice",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/users/prosumers/{{managedProsumerNic}}",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{managedProsumerEmail}}\",\n  \"firstName\": \"Managed Updated\",\n  \"lastName\": \"Prosumer\",\n  \"phoneNumber\": \"+94712345678\",\n  \"address\": \"Kandy Central\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Managed profile changed', () => pm.expect(json.data.firstName).to.eql('Managed Updated'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register Prosumer for rejection",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/prosumer/register",
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nic\": \"{{rejectedProsumerNic}}\",\n  \"email\": \"{{rejectedProsumerEmail}}\",\n  \"password\": \"{{prosumerPassword}}\",\n  \"firstName\": \"Rejected\",\n  \"lastName\": \"Candidate\",\n  \"phoneNumber\": \"0751234567\",\n  \"address\": \"Galle\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Candidate is pending', () => pm.expect(json.data.status).to.eql('Pending'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject pending Prosumer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/prosumers/{{rejectedProsumerNic}}/reject",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Identity document requires resubmission.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject login for rejected Prosumer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/login",
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{rejectedProsumerNic}}\",\n  \"password\": \"{{prosumerPassword}}\",\n  \"clientType\": \"Android\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403', () => pm.response.to.have.status(403));",
+                  "const json = pm.response.json();",
+                  "pm.test('Error code is AUTH_REGISTRATION_REJECTED', () => pm.expect(json.errorCode).to.eql('AUTH_REGISTRATION_REJECTED'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resubmit rejected Prosumer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/prosumer/register",
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nic\": \"{{rejectedProsumerNic}}\",\n  \"email\": \"{{rejectedProsumerEmail}}\",\n  \"password\": \"{{prosumerPassword}}\",\n  \"firstName\": \"Corrected\",\n  \"lastName\": \"Candidate\",\n  \"phoneNumber\": \"0751234567\",\n  \"address\": \"Galle Central\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Resubmission returns to Pending', () => pm.expect(json.data.status).to.eql('Pending'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List all users",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('array'));",
+                  "pm.test('Created users are listed', () => pm.expect(json.data.length).to.be.at.least(4));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Stations and Booking Slots",
+      "description": "Covers station/slot CRUD-like operations, filters, nearby ordering, statuses, and the Grid Operator read/status-only boundary.",
+      "item": [
+        {
+          "name": "Create station",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/stations",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationCode\": \"{{stationCode}}\",\n  \"name\": \"Postman Solar Station\",\n  \"description\": \"Generated by the full-system Postman collection\",\n  \"latitude\": 6.9271,\n  \"longitude\": 79.8612,\n  \"address\": \"Colombo\",\n  \"capacityKwh\": 500,\n  \"batteryStorageKwh\": 25,\n  \"openingTime\": \"00:00:00\",\n  \"closingTime\": \"23:59:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('stationId', json.data.id);",
+                  "pm.test('Station is active and captured', () => { pm.expect(json.data.stationCode).to.eql(pm.collectionVariables.get('stationCode')); pm.expect(json.data.status).to.eql('Active'); pm.expect(json.data.id).to.have.length(24); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List active stations",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/stations?status=Active",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List nearby active stations",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/stations?status=Active&nearLat=6.9271&nearLng=79.8612",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('array'));",
+                  "pm.test('Generated station is returned', () => pm.expect(json.data.some(x => x.stationCode === pm.collectionVariables.get('stationCode'))).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get station details",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/stations/{{stationCode}}",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update station details",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/stations/{{stationCode}}",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Solar Station Updated\",\n  \"description\": \"Updated through the full-system collection\",\n  \"latitude\": 6.9272,\n  \"longitude\": 79.8613,\n  \"address\": \"Colombo 02\",\n  \"capacityKwh\": 500,\n  \"batteryStorageKwh\": 25,\n  \"openingTime\": \"00:00:00\",\n  \"closingTime\": \"23:59:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Station name changed', () => pm.expect(json.data.name).to.eql('Postman Solar Station Updated'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Grid Operator can read station",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/stations/{{stationCode}}",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Grid Operator cannot edit station",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/stations/{{stationCode}}",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Forbidden\",\n  \"description\": \"Must not apply\",\n  \"latitude\": 6.9,\n  \"longitude\": 79.8,\n  \"address\": \"Forbidden\",\n  \"capacityKwh\": 400,\n  \"batteryStorageKwh\": 25,\n  \"openingTime\": \"00:00:00\",\n  \"closingTime\": \"23:59:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Set station to Maintenance",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/stations/{{stationCode}}/status",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Maintenance\",\n  \"reason\": \"Postman lifecycle check\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Station is in maintenance', () => pm.expect(json.data.status).to.eql('Maintenance'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Restore station to Active",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/stations/{{stationCode}}/status",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Active\",\n  \"reason\": \"Ready for slot tests\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Station is active', () => pm.expect(json.data.status).to.eql('Active'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create booking slot",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/stations/{{stationCode}}/slots",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slotCode\": \"{{slotCode}}\",\n  \"startTimeUtc\": \"{{slotStartUtc}}\",\n  \"endTimeUtc\": \"{{slotEndUtc}}\",\n  \"availableEnergyKwh\": 120,\n  \"pricePerKwh\": 42.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('slotId', json.data.id);",
+                  "pm.test('Available slot is captured', () => { pm.expect(json.data.slotCode).to.eql(pm.collectionVariables.get('slotCode')); pm.expect(json.data.status).to.eql('Available'); pm.expect(json.data.id).to.have.length(24); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List station slots with filters",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/stations/{{stationCode}}/slots?fromUtc={{queryFromUtc}}&toUtc={{queryToUtc}}&status=Available",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get slot details",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/slots/{{slotCode}}",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update slot details",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/slots/{{slotCode}}",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startTimeUtc\": \"{{slotStartUtc}}\",\n  \"endTimeUtc\": \"{{slotEndUtc}}\",\n  \"availableEnergyKwh\": 110,\n  \"pricePerKwh\": 45\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Slot values changed', () => { pm.expect(json.data.availableEnergyKwh).to.eql(110); pm.expect(json.data.pricePerKwh).to.eql(45); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Grid Operator sets slot Unavailable",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/slots/{{slotCode}}/status",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Unavailable\",\n  \"reason\": \"Operator availability check\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Slot is unavailable', () => pm.expect(json.data.status).to.eql('Unavailable'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Grid Operator restores slot Available",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/slots/{{slotCode}}/status",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Available\",\n  \"reason\": \"Available for reservation tests\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Slot is available', () => pm.expect(json.data.status).to.eql('Available'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject manual server-managed slot status",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/slots/{{slotCode}}/status",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Reserved\",\n  \"reason\": \"Must be server managed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Error code is VALIDATION_REQUEST', () => pm.expect(json.errorCode).to.eql('VALIDATION_REQUEST'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Grid Operator cannot edit slot details",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/slots/{{slotCode}}",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startTimeUtc\": \"{{slotStartUtc}}\",\n  \"endTimeUtc\": \"{{slotEndUtc}}\",\n  \"availableEnergyKwh\": 100,\n  \"pricePerKwh\": 44\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Reservations and Dashboards",
+      "description": "Covers create/read/update/cancel/approve/reject/list APIs and both dashboards.",
+      "item": [
+        {
+          "name": "Create main reservation",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": \"{{stationId}}\",\n  \"slotId\": \"{{slotId}}\",\n  \"requestedEnergyKwh\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('reservationId', json.data.reservationId);",
+                  "pm.collectionVariables.set('reservationCode', json.data.reservationCode);",
+                  "pm.test('Pending reservation is captured', () => { pm.expect(json.data.status).to.eql('Pending'); pm.expect(json.data.reservationId).to.have.length(24); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update pending reservation",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/reservations/{{reservationId}}",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestedEnergyKwh\": 18\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Requested energy changed', () => pm.expect(json.data.requestedEnergyKwh).to.eql(18));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create reservation for rejection",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": \"{{stationId}}\",\n  \"slotId\": \"{{slotId}}\",\n  \"requestedEnergyKwh\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('rejectReservationId', json.data.reservationId);",
+                  "pm.test('Second reservation is pending', () => pm.expect(json.data.status).to.eql('Pending'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create reservation for cancellation",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": \"{{stationId}}\",\n  \"slotId\": \"{{slotId}}\",\n  \"requestedEnergyKwh\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('cancelReservationId', json.data.reservationId);",
+                  "pm.test('Third reservation is pending', () => pm.expect(json.data.status).to.eql('Pending'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get own reservations",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reservations/me?status=Pending",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('array'));",
+                  "pm.test('Main reservation appears', () => pm.expect(json.data.some(x => x.reservationId === pm.collectionVariables.get('reservationId'))).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get reservation by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reservations/{{reservationId}}",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Correct reservation returned', () => pm.expect(json.data.reservationCode).to.eql(pm.collectionVariables.get('reservationCode')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List reservations as staff",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reservations?status=Pending&stationId={{stationId}}",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get staff dashboard summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/dashboard/summary",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Dashboard has counts', () => { pm.expect(json.data.pendingCount).to.be.a('number'); pm.expect(json.data.totalCount).to.be.a('number'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Prosumer dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/dashboard/me",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Personal dashboard has future count', () => pm.expect(json.data.approvedFutureCount).to.be.a('number'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Approve main reservation",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations/{{reservationId}}/approve",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Reservation is approved', () => pm.expect(json.data.status).to.eql('Approved'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject second reservation",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations/{{rejectReservationId}}/reject",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Rejected by the Postman workflow.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Reservation is rejected', () => pm.expect(json.data.status).to.eql('Rejected'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel third reservation",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations/{{cancelReservationId}}/cancel",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Cancelled by the Postman workflow.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Reservation is cancelled', () => pm.expect(json.data.status).to.eql('Cancelled'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prosumer cannot access staff reservation list",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reservations",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh staff dashboard summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/dashboard/summary",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 - QR Transactions and Finalization",
+      "description": "Runs the secure renewal path. QR secrets use temporary run variables and are removed immediately after use.",
+      "item": [
+        {
+          "name": "Issue QR A as owning Prosumer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations/{{reservationId}}/qr",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const payload = JSON.parse(json.data.qrPayload);",
+                  "pm.variables.set('qrTokenA', payload.transactionToken);",
+                  "pm.test('QR A has the canonical structure', () => {",
+                  "  pm.expect(payload.reservationCode).to.eql(pm.collectionVariables.get('reservationCode'));",
+                  "  pm.expect(payload.transactionToken).to.be.a('string').and.not.empty;",
+                  "  pm.expect(payload.expiresAtUtc).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Renew as QR B",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations/{{reservationId}}/qr",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const payload = JSON.parse(json.data.qrPayload);",
+                  "pm.variables.set('qrTokenB', payload.transactionToken);",
+                  "pm.test('Renewal produced a different token', () => pm.expect(pm.variables.get('qrTokenB')).not.to.eql(pm.variables.get('qrTokenA')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject invalidated QR A",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/transactions/verify",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationCode\": \"{{reservationCode}}\",\n  \"transactionToken\": \"{{qrTokenA}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Error code is QR_TOKEN_INVALID', () => pm.expect(json.errorCode).to.eql('QR_TOKEN_INVALID'));",
+                  "pm.variables.unset('qrTokenA');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify renewed QR B",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/transactions/verify",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationCode\": \"{{reservationCode}}\",\n  \"transactionToken\": \"{{qrTokenB}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Transaction is verified', () => pm.expect(json.data.status).to.eql('Verified'));",
+                  "pm.variables.unset('qrTokenB');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get verified transaction details",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/transactions/{{reservationCode}}",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Verification audit is present', () => { pm.expect(json.data.status).to.eql('Verified'); pm.expect(json.data.verifiedByIdentifier).to.eql(pm.collectionVariables.get('operatorEmail')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject excessive transferred energy",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/transactions/finalize",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationCode\": \"{{reservationCode}}\",\n  \"confirmationNote\": \"Invalid over-transfer check\",\n  \"actualEnergyTransferredKwh\": 9999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', () => pm.response.to.have.status(422));",
+                  "const json = pm.response.json();",
+                  "pm.test('Error code is TRANSFER_ENERGY_INVALID', () => pm.expect(json.errorCode).to.eql('TRANSFER_ENERGY_INVALID'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Finalize energy transfer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/transactions/finalize",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationCode\": \"{{reservationCode}}\",\n  \"confirmationNote\": \"Energy transfer confirmed through Postman.\",\n  \"actualEnergyTransferredKwh\": 15\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Transaction is completed', () => { pm.expect(json.data.status).to.eql('Completed'); pm.expect(json.data.actualEnergyTransferredKwh).to.eql(15); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get completed transaction as Backoffice",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/transactions/{{reservationCode}}",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Final audit fields are present and QR hash is absent', () => { pm.expect(json.data.status).to.eql('Completed'); pm.expect(json.data.finalizedByIdentifier).to.eql(pm.collectionVariables.get('operatorEmail')); pm.expect(json.data).not.to.have.property('qrTokenHash'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject duplicate finalization",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/transactions/finalize",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationCode\": \"{{reservationCode}}\",\n  \"confirmationNote\": \"Duplicate must fail\",\n  \"actualEnergyTransferredKwh\": 15\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 409', () => pm.response.to.have.status(409));",
+                  "const json = pm.response.json();",
+                  "pm.test('Error code is FINALIZE_STATUS_INVALID', () => pm.expect(json.errorCode).to.eql('FINALIZE_STATUS_INVALID'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject QR issue after completion",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations/{{reservationId}}/qr",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 409', () => pm.response.to.have.status(409));",
+                  "const json = pm.response.json();",
+                  "pm.test('Error code is QR_STATUS_INVALID', () => pm.expect(json.errorCode).to.eql('QR_STATUS_INVALID'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Backoffice cannot verify QR",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/transactions/verify",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationCode\": \"{{reservationCode}}\",\n  \"transactionToken\": \"not-a-real-transaction-token\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 - Password and Account Lifecycle",
+      "description": "Finishes with password rotation, self-service deactivation request, and Backoffice lifecycle endpoints.",
+      "item": [
+        {
+          "name": "Change Prosumer password",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/change-password",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{prosumerPassword}}\",\n  \"newPassword\": \"{{prosumerNewPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login with new password",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/login",
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{prosumerNic}}\",\n  \"password\": \"{{prosumerNewPassword}}\",\n  \"clientType\": \"Android\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('prosumerToken', json.data.accessToken);",
+                  "pm.test('New password works', () => pm.expect(json.data.user.status).to.eql('Active'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Restore original Prosumer password",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/change-password",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{prosumerNewPassword}}\",\n  \"newPassword\": \"{{prosumerPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Request own deactivation",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/me/deactivation-request",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get profile with pending deactivation request",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users/me",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{prosumerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('object'));",
+                  "pm.test('Deactivation request is visible', () => pm.expect(json.data.deactivationRequested).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deactivate managed Prosumer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/{{managedProsumerNic}}/deactivate",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reactivate managed Prosumer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/{{managedProsumerNic}}/reactivate",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Final user list and clear captured JWTs",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response uses the API data envelope', () => pm.expect(json.data).to.be.an('array'));",
+                  "['adminToken','prosumerToken','operatorToken'].forEach(k => pm.collectionVariables.unset(k));",
+                  "pm.test('Captured JWT variables were cleared', () => {",
+                  "  pm.expect(pm.collectionVariables.get('adminToken')).to.be.undefined;",
+                  "  pm.expect(pm.collectionVariables.get('prosumerToken')).to.be.undefined;",
+                  "  pm.expect(pm.collectionVariables.get('operatorToken')).to.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,154 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fillViewport="true">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/register_title"
-            android:textColor="@color/text_primary"
-            android:textSize="26sp"
-            android:textStyle="bold" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/nic_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:hint="@string/nic_label">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/nic_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textCapCharacters"
-                android:maxLength="12" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/email_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:hint="@string/email_label">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/email_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textEmailAddress"
-                android:maxLength="320" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/password_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:hint="@string/password_label"
-            app:endIconMode="password_toggle">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/password_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                android:maxLength="128" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/first_name_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:hint="@string/first_name_label">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/first_name_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPersonName"
-                android:maxLength="100" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/last_name_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:hint="@string/last_name_label">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/last_name_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPersonName"
-                android:maxLength="100" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/phone_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:hint="@string/phone_label">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/phone_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="phone"
-                android:maxLength="16" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/address_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:hint="@string/address_label">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/address_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="top"
-                android:inputType="textPostalAddress|textMultiLine"
-                android:maxLength="300"
-                android:minLines="2" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <TextView
-            android:id="@+id/register_error"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:textColor="?attr/colorError"
-            android:visibility="gone" />
-
-        <ProgressBar
-            android:id="@+id/register_progress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
-            android:visibility="gone" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/submit_registration_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="@string/register_action" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/back_to_login_button"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/surface_light" android:fillViewport="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="@dimen/space_4">
+        <LinearLayout android:id="@+id/register_form" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:orientation="vertical">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4" android:text="@string/register_title"
+                android:textAppearance="@style/TextAppearance.Solar.ScreenTitle" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_2"
+                android:text="Create account  &#8594;  Pending activation  &#8594;  Access"
+                android:textAppearance="@style/TextAppearance.Solar.Supporting" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_6" android:text="01  YOUR IDENTITY"
+                android:textAppearance="@style/TextAppearance.Solar.Metadata" />
+            <com.google.android.material.textfield.TextInputLayout android:id="@+id/first_name_layout"
+                style="@style/Widget.Solar.Input" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_3"
+                android:hint="@string/first_name_label">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/first_name_input"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:inputType="textPersonName" android:maxLength="100" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout android:id="@+id/last_name_layout"
+                style="@style/Widget.Solar.Input" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_3"
+                android:hint="@string/last_name_label">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/last_name_input"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:inputType="textPersonName" android:maxLength="100" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout android:id="@+id/nic_layout"
+                style="@style/Widget.Solar.Input" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_3"
+                android:hint="@string/nic_label">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/nic_input"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:inputType="textCapCharacters" android:maxLength="12" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_6" android:text="02  CONTACT"
+                android:textAppearance="@style/TextAppearance.Solar.Metadata" />
+            <com.google.android.material.textfield.TextInputLayout android:id="@+id/email_layout"
+                style="@style/Widget.Solar.Input" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_3"
+                android:hint="@string/email_label">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/email_input"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress" android:maxLength="320" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout android:id="@+id/phone_layout"
+                style="@style/Widget.Solar.Input" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_3"
+                android:hint="@string/phone_label">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/phone_input"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:inputType="phone" android:maxLength="16" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout android:id="@+id/address_layout"
+                style="@style/Widget.Solar.Input" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_3"
+                android:hint="@string/address_label">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/address_input"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:gravity="top" android:inputType="textPostalAddress|textMultiLine"
+                    android:maxLength="300" android:minLines="2" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_6" android:text="03  SECURITY"
+                android:textAppearance="@style/TextAppearance.Solar.Metadata" />
+            <com.google.android.material.textfield.TextInputLayout android:id="@+id/password_layout"
+                style="@style/Widget.Solar.Input" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_3"
+                android:hint="@string/password_label" app:endIconMode="password_toggle">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/password_input"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:inputType="textPassword" android:maxLength="128" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <TextView android:id="@+id/register_error" android:accessibilityLiveRegion="polite" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_4"
+                android:background="@color/status_error_bg" android:padding="@dimen/space_4"
+                android:textColor="@color/status_error" android:visibility="gone" />
+            <ProgressBar android:id="@+id/register_progress" style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent" android:layout_height="3dp"
+                android:layout_marginTop="@dimen/space_4" android:indeterminate="true"
+                android:visibility="gone" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/submit_registration_button"
+                style="@style/Widget.Solar.Button.Primary" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_6"
+                android:text="@string/register_action" />
+        </LinearLayout>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/registration_pending_panel" style="@style/Widget.Solar.Card"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_6" android:visibility="gone">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="@dimen/space_6">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Registration received"
+                    android:textAppearance="@style/TextAppearance.Solar.ScreenTitle" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_3"
+                    android:text="Your account is pending Backoffice activation. You can sign in after activation."
+                    android:textAppearance="@style/TextAppearance.Solar.Body" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.button.MaterialButton android:id="@+id/back_to_login_button"
+            style="@style/Widget.Solar.Button.Text" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_3"
             android:text="@string/back_to_login" />
     </LinearLayout>
 </ScrollView>

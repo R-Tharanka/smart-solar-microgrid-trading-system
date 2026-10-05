@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -26,6 +27,7 @@ import java.util.List;
 
 public class ScannerFragment extends Fragment {
     private DecoratedBarcodeView barcodeScannerView;
+    private TextView scannerStatus;
     private boolean hasScanned = false;
 
     private final ActivityResultLauncher<String> requestPermissionLauncher =
@@ -47,6 +49,7 @@ public class ScannerFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         EphemeralQrPayloadStore.clear();
         barcodeScannerView = view.findViewById(R.id.barcode_scanner);
+        scannerStatus = view.findViewById(R.id.scanner_status);
         
         barcodeScannerView.decodeContinuous(new BarcodeCallback() {
             @Override
@@ -57,12 +60,13 @@ public class ScannerFragment extends Fragment {
 
                     try {
                         EphemeralQrPayloadStore.put(QrPayload.parse(result.getText()));
+                        scannerStatus.setText("QR captured. Verifying transaction…");
                         NavHostFragment.findNavController(ScannerFragment.this)
                                 .navigate(R.id.transactionVerifyFragment);
                     } catch (IllegalArgumentException exception) {
                         hasScanned = false;
-                        Toast.makeText(requireContext(),
-                                "Invalid transaction QR code.", Toast.LENGTH_LONG).show();
+                        scannerStatus.setText("Invalid transaction QR code. Try another code.");
+                        scannerStatus.announceForAccessibility(scannerStatus.getText());
                         barcodeScannerView.resume();
                     }
                 }

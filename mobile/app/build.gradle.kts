@@ -33,9 +33,19 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Change only this value when the API moves from the emulator host to IIS.
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:5080/\"")
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
+    }
+
+    flavorDimensions += "apiTarget"
+    productFlavors {
+        create("emulator") {
+            dimension = "apiTarget"
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:5080/\"")
+        }
+        create("usbDevice") {
+            dimension = "apiTarget"
+            buildConfigField("String", "API_BASE_URL", "\"http://127.0.0.1:5080/\"")
+        }
     }
 
     buildTypes {

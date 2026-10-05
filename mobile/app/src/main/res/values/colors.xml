@@ -1,13 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="solar_green">#1B5E20</color>
-    <color name="solar_green_dark">#0D3B13</color>
-    <color name="solar_accent">#F5B700</color>
-    <color name="surface_light">#F9FBF9</color>
-    <color name="text_primary">#17211D</color>
-    <color name="text_secondary">#757575</color>
-    <color name="status_success">#2E7D32</color>
-    <color name="status_warning">#F57C00</color>
-    <color name="status_error">#D32F2F</color>
+    <color name="solar_green">#112019</color>
+    <color name="solar_green_dark">#0C1915</color>
+    <color name="solar_navigation_active">#294336</color>
+    <color name="solar_accent">#B1F688</color>
+    <color name="solar_on_accent">#19331F</color>
+    <color name="surface_light">#F3F5EF</color>
+    <color name="solar_surface">#FFFFFF</color>
+    <color name="solar_surface_muted">#EAF0E6</color>
+    <color name="solar_border">#DCE3D9</color>
+    <color name="solar_on_brand">#EDF3E8</color>
+    <color name="text_primary">#172B25</color>
+    <color name="text_secondary">#526557</color>
+    <color name="status_success">#187348</color>
+    <color name="status_success_bg">#E3F5EA</color>
+    <color name="status_warning">#875600</color>
+    <color name="status_warning_bg">#FFF0C9</color>
+    <color name="status_info">#12677A</color>
+    <color name="status_info_bg">#E1F2F5</color>
+    <color name="status_reserved">#6845A0</color>
+    <color name="status_reserved_bg">#F0EAF9</color>
+    <color name="status_error">#A62F38</color>
+    <color name="status_error_bg">#FCEAEC</color>
+    <color name="status_neutral">#55655D</color>
+    <color name="status_neutral_bg">#E9EEEA</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

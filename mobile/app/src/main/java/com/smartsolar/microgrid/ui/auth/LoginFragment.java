@@ -8,6 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
@@ -89,7 +90,13 @@ public class LoginFragment extends Fragment {
             public void onError(ApiError error) {
                 if (!isAdded()) return;
                 setLoading(false);
-                errorView.setText(error.getUserMessage());
+                boolean pending = "AUTH_ACCOUNT_PENDING".equals(error.getErrorCode());
+                errorView.setBackgroundColor(ContextCompat.getColor(requireContext(),
+                        pending ? R.color.status_warning_bg : R.color.status_error_bg));
+                errorView.setTextColor(ContextCompat.getColor(requireContext(),
+                        pending ? R.color.status_warning : R.color.status_error));
+                errorView.setText(pending ? "Activation pending\n" + error.getUserMessage()
+                        : error.getUserMessage());
                 errorView.setVisibility(View.VISIBLE);
             }
         });

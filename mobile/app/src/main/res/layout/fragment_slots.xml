@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/surface_light"
     android:orientation="vertical">
 
     <TextView
@@ -11,8 +12,7 @@
         android:padding="16dp"
         android:text="Station Slots"
         android:textColor="@color/text_primary"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:textAppearance="@style/TextAppearance.Solar.SectionTitle" />
 
     <TextView
         android:id="@+id/station_selected_details"
@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="12dp"
-        android:background="@color/surface_light"
+        android:background="@drawable/bg_solar_notice"
         android:padding="12dp"
         android:textColor="@color/text_primary"
         android:visibility="gone" />
@@ -34,14 +34,11 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:padding="8dp" />
+            android:paddingVertical="@dimen/space_2" />
 
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone" />
+        <include layout="@layout/include_solar_loading_list"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_gravity="top" android:visibility="gone" />
 
         <LinearLayout
             android:id="@+id/error_container"
@@ -53,11 +50,11 @@
             android:visibility="gone">
 
             <TextView
-                android:id="@+id/error_message"
+                android:id="@+id/error_message" android:accessibilityLiveRegion="polite"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:textColor="@android:color/holo_red_dark" />
+                android:textColor="@color/status_error" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/retry_button"
@@ -68,10 +65,15 @@
 
         <TextView
             android:id="@+id/empty_state_text"
+            android:drawableTop="@drawable/ic_solar_calendar"
+            android:drawableTint="@color/text_secondary"
+            android:drawablePadding="@dimen/space_3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="No available slots."
+            android:text="No slots were returned for this station. Check again later or choose another station."
+            android:gravity="center"
+            android:padding="@dimen/space_6"
             android:visibility="gone" />
     </FrameLayout>
 </LinearLayout>

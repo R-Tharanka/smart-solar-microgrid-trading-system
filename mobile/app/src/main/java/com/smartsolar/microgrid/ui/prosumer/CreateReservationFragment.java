@@ -1,6 +1,5 @@
 package com.smartsolar.microgrid.ui.prosumer;
 
-import android.app.AlertDialog;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -23,6 +22,7 @@ import com.smartsolar.microgrid.data.reservation.CreateReservationRequest;
 import com.smartsolar.microgrid.data.reservation.ReservationRepository;
 import com.smartsolar.microgrid.data.reservation.ReservationResponse;
 import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -37,6 +37,7 @@ public class CreateReservationFragment extends Fragment {
     private String slotCode;
     private double availableEnergy;
     private String startTime;
+    private String endTime;
 
     private EditText energyInput;
     private Button submitButton;
@@ -58,6 +59,7 @@ public class CreateReservationFragment extends Fragment {
             slotCode = getArguments().getString("slotCode");
             availableEnergy = getArguments().getDouble("availableEnergy", 0.0);
             startTime = getArguments().getString("startTime");
+            endTime = getArguments().getString("endTime");
         }
 
         TextView stationCodeText = view.findViewById(R.id.station_code_text);
@@ -102,9 +104,21 @@ public class CreateReservationFragment extends Fragment {
             return;
         }
 
-        showLoading(true);
-
         CreateReservationRequest request = new CreateReservationRequest(stationId, slotId, requestedEnergy);
+        String when = startTime == null ? "Time unavailable" : formatTime(startTime);
+        if (endTime != null) when += " – " + formatTime(endTime);
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Review reservation")
+                .setMessage("Station " + stationCode + "  •  Slot " + slotCode
+                        + "\n" + when + "\n" + requestedEnergy
+                        + " kWh\n\nYour request will be pending staff approval.")
+                .setNegativeButton("Edit", null)
+                .setPositiveButton("Submit reservation", (dialog, which) -> executeReservation(request))
+                .show();
+    }
+
+    private void executeReservation(CreateReservationRequest request) {
+        showLoading(true);
         repository.createReservation(request, new ApiCallback<ReservationResponse>() {
             @Override
             public void onSuccess(ReservationResponse data, String message) {
@@ -133,7 +147,7 @@ public class CreateReservationFragment extends Fragment {
                 formattedStart,
                 response.getStatus());
 
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Reservation Created")
                 .setMessage(message)
                 .setPositiveButton("OK", (dialog, which) -> {

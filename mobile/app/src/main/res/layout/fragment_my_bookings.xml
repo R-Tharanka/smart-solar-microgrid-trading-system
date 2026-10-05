@@ -3,22 +3,23 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/surface_light"
     android:orientation="vertical">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
-        android:text="My Bookings"
+        android:text="Your reservations"
         android:textColor="@color/text_primary"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:textAppearance="@style/TextAppearance.Solar.SectionTitle" />
 
-    <com.google.android.material.textfield.TextInputLayout
+    <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Solar.Input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
-        android:hint="@string/search_bookings_hint">
+        android:hint="@string/search_bookings_hint"
+        app:endIconMode="clear_text">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/booking_search_input"
@@ -46,28 +47,35 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/bookings_all_filter"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.Solar.Button.Secondary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/bookings_all_filter" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/bookings_pending_filter"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.Solar.Button.Secondary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/bookings_pending_filter" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/bookings_current_filter"
+                style="@style/Widget.Solar.Button.Secondary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bookings_current_filter" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/bookings_upcoming_filter"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.Solar.Button.Secondary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/bookings_upcoming_filter" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/bookings_history_filter"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.Solar.Button.Secondary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/bookings_history_filter" />
@@ -84,14 +92,11 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:padding="8dp" />
+            android:paddingVertical="@dimen/space_2" />
 
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone" />
+        <include layout="@layout/include_solar_loading_list"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_gravity="top" android:visibility="gone" />
 
         <LinearLayout
             android:id="@+id/error_container"
@@ -103,11 +108,11 @@
             android:visibility="gone">
 
             <TextView
-                android:id="@+id/error_message"
+                android:id="@+id/error_message" android:accessibilityLiveRegion="polite"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:textColor="@android:color/holo_red_dark" />
+                android:textColor="@color/status_error" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/retry_button"
@@ -118,10 +123,15 @@
 
         <TextView
             android:id="@+id/empty_state_text"
+            android:drawableTop="@drawable/ic_solar_calendar"
+            android:drawableTint="@color/text_secondary"
+            android:drawablePadding="@dimen/space_3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="No bookings found."
+            android:text="No bookings match this view. Try another category or clear your search."
+            android:gravity="center"
+            android:padding="@dimen/space_6"
             android:visibility="gone" />
     </FrameLayout>
 </LinearLayout>

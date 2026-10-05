@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="text_primary">#F1F5F3</color>
+    <color name="surface_light">#0C1915</color>
+    <color name="solar_surface">#13231F</color>
+    <color name="solar_surface_muted">#1B3027</color>
+    <color name="solar_border">#365044</color>
+    <color name="text_primary">#EDF3E8</color>
+    <color name="text_secondary">#B1C3B6</color>
+    <color name="status_success">#A1E6BB</color>
+    <color name="status_success_bg">#173A2B</color>
+    <color name="status_warning">#FFD990</color>
+    <color name="status_warning_bg">#433419</color>
+    <color name="status_info">#A5E0EB</color>
+    <color name="status_info_bg">#193C43</color>
+    <color name="status_reserved">#D7C0F4</color>
+    <color name="status_reserved_bg">#342847</color>
+    <color name="status_error">#FFB6BE</color>
+    <color name="status_error_bg">#4A252B</color>
+    <color name="status_neutral">#CFD9D1</color>
+    <color name="status_neutral_bg">#293830</color>
 </resources>
