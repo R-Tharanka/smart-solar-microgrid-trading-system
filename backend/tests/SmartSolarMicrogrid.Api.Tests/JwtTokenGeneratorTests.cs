@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: JwtTokenGeneratorTests.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Verifies access-token identifiers, claims, and expiration metadata.
 // -----------------------------------------------------------------------------
 using System.IdentityModel.Tokens.Jwt;

@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: ReservationsController.cs
+// Purpose: Exposes reservation creation, history, updates, and staff review endpoints.
+// -----------------------------------------------------------------------------
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -128,11 +132,13 @@ public sealed class ReservationsController(IReservationService reservationServic
     private string RequiredNic() => User.FindFirstValue("user_identifier")
         ?? throw new InvalidOperationException("Authenticated Prosumer token has no NIC identifier.");
 
+    // Read the authenticated user's business identifier or reject a missing claim.
     private string RequiredIdentifier() => User.FindFirstValue("user_identifier")
         ?? throw new InvalidOperationException("Authenticated token has no business identifier.");
 
     private UserRole RequiredRole()
     {
+        // Resolve the authenticated user's role or reject an invalid role claim.
         var role = User.FindFirstValue(ClaimTypes.Role);
         return Enum.TryParse<UserRole>(role, out var parsed)
             ? parsed

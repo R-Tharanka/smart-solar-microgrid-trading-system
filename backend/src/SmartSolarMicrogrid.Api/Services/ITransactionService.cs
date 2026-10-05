@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: ITransactionService.cs
+// Purpose: Defines QR issuance, verification, finalization, and transaction lookup operations.
+// -----------------------------------------------------------------------------
 using SmartSolarMicrogrid.Api.Contracts.Transactions;
 using SmartSolarMicrogrid.Api.Models;
 

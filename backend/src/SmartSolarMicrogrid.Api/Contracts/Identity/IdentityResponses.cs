@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: IdentityResponses.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Defines public identity responses without exposing persistence internals.
 // -----------------------------------------------------------------------------
 namespace SmartSolarMicrogrid.Api.Contracts.Identity;

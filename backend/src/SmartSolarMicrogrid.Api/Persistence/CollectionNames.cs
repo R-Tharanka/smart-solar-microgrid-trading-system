@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: CollectionNames.cs
+// Purpose: Centralizes MongoDB collection names used by persistence services.
+// -----------------------------------------------------------------------------
 namespace SmartSolarMicrogrid.Api.Persistence;
 
 public static class CollectionNames

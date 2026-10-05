@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: IReservationRepository.cs
+// Purpose: Defines persistence operations for reservations and status summaries.
+// -----------------------------------------------------------------------------
 using MongoDB.Bson;
 using SmartSolarMicrogrid.Api.Models;
 

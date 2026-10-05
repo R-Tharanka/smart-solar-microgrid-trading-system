@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: AuthorizationPolicyTests.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Verifies that role policies also require an active persisted account.
 // -----------------------------------------------------------------------------
 using System.Security.Claims;
@@ -73,6 +72,7 @@ public sealed class AuthorizationPolicyTests
         public Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(new List<User> { user });
 
+        // Return test Prosumers matching the requested account status.
         public Task<List<User>> GetProsumersByStatusAsync(
             UserStatus status,
             CancellationToken cancellationToken = default) => throw new NotSupportedException();
@@ -99,6 +99,7 @@ public sealed class AuthorizationPolicyTests
             CancellationToken cancellationToken = default,
             string? rejectionReason = null) => throw new NotSupportedException();
 
+        // Simulate recording a deactivation request in the test repository.
         public Task<bool> RequestDeactivationAsync(
             string nic,
             DateTime requestedAtUtc,

@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: ReservationResponses.cs
+// Purpose: Defines reservation details, list summaries, and dashboard response models.
+// -----------------------------------------------------------------------------
 namespace SmartSolarMicrogrid.Api.Contracts.Reservations;
 
 /// <summary>Full representation of a single energy reservation.</summary>

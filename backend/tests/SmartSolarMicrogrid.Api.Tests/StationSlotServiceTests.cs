@@ -153,6 +153,7 @@ public sealed class StationSlotServiceTests
     [Fact]
     public async Task CreateSlot_ExceedingIncomingCapacity_IsRejected()
     {
+        // Verify that slot creation rejects energy exceeding incoming capacity.
         var stations = new FakeStationRepository();
         var station = Station();
         station.CapacityKwh = 100;
@@ -318,6 +319,7 @@ public sealed class StationSlotServiceTests
         public Task<bool> HasActiveReservationsForSlotAsync(ObjectId slotId, CancellationToken cancellationToken = default) =>
             Task.FromResult(SlotHasActive);
 
+        // Return the approved reservation energy total for the selected station.
         public Task<decimal> GetTotalApprovedEnergyForStationAsync(ObjectId stationId, CancellationToken cancellationToken = default) =>
             Task.FromResult(0m);
     }

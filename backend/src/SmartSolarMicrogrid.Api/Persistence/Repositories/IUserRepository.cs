@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: IUserRepository.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Defines persistence operations required by the identity domain.
 // -----------------------------------------------------------------------------
 using SmartSolarMicrogrid.Api.Models;

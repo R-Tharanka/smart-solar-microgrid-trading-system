@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: TransactionServiceTests.cs
+// Purpose: Verifies QR ownership, token renewal, verification, and transfer finalization rules.
+// -----------------------------------------------------------------------------
 using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using MongoDB.Bson;
@@ -15,6 +19,7 @@ public sealed class TransactionServiceTests
     [Fact]
     public async Task IssueQr_AllowsOwningProsumer_AndStoresOnlyTokenHash()
     {
+        // Verify that the owning Prosumer can obtain a QR token and only its hash is stored.
         var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Approved));
         var service = Service(repository);
 
@@ -32,6 +37,7 @@ public sealed class TransactionServiceTests
     [Fact]
     public async Task IssueQr_RejectsDifferentProsumer()
     {
+        // Verify that another Prosumer cannot obtain the reservation QR token.
         var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Approved));
         var service = Service(repository);
 
@@ -45,6 +51,7 @@ public sealed class TransactionServiceTests
     [Fact]
     public async Task IssueQr_RenewsIssuedQr_AndReplacesHashAndExpiry()
     {
+        // Verify that QR renewal replaces the token hash and expiry.
         var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Approved));
         var service = Service(repository);
         var original = await service.IssueQrAsync(
@@ -70,6 +77,7 @@ public sealed class TransactionServiceTests
     [Fact]
     public async Task IssueQr_RenewalRejectsDifferentProsumerWithoutReplacingHash()
     {
+        // Verify that unauthorized QR renewal leaves the token hash unchanged.
         var reservation = Reservation(ReservationStatus.QrIssued);
         reservation.QrTokenHash = new string('A', 64);
         reservation.QrExpiresAtUtc = Now.AddMinutes(5);
@@ -87,6 +95,7 @@ public sealed class TransactionServiceTests
     [Fact]
     public async Task Verify_OldTokenAfterRenewal_IsRejected()
     {
+        // Verify that renewal invalidates the previous QR token.
         var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Approved));
         var service = Service(repository);
         var original = await service.IssueQrAsync(
@@ -109,6 +118,7 @@ public sealed class TransactionServiceTests
     [Fact]
     public async Task Verify_RenewedToken_RemainsValid()
     {
+        // Verify that the renewed QR token can be verified.
         var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Approved));
         var service = Service(repository);
         await service.IssueQrAsync(
@@ -132,6 +142,7 @@ public sealed class TransactionServiceTests
     [InlineData(ReservationStatus.Completed)]
     public async Task IssueQr_RejectsInvalidReservationState(ReservationStatus status)
     {
+        // Verify that QR issuance rejects ineligible reservation states.
         var repository = new FakeTransactionRepository(Reservation(status));
 
         var error = await Assert.ThrowsAsync<TransactionException>(() => Service(repository).IssueQrAsync(
@@ -145,6 +156,7 @@ public sealed class TransactionServiceTests
     [Fact]
     public async Task Verify_ValidIssuedToken_RecordsOperatorIdentifier()
     {
+        // Verify that successful QR verification records the operator identifier.
         var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Approved));
         var service = Service(repository);
         var qr = await service.IssueQrAsync(repository.Item.Id.ToString(), repository.Item.ProsumerNic,
@@ -163,6 +175,7 @@ public sealed class TransactionServiceTests
     [Fact]
     public async Task Verify_InvalidToken_DoesNotChangeReservation()
     {
+        // Verify that an invalid QR token leaves the reservation unchanged.
         var reservation = Reservation(ReservationStatus.QrIssued);
         reservation.QrTokenHash = new string('A', 64);
         reservation.QrExpiresAtUtc = Now.AddHours(1);
@@ -179,6 +192,7 @@ public sealed class TransactionServiceTests
     [Fact]
     public async Task Finalize_ChangesVerifiedTransactionOnlyOnce()
     {
+        // Verify that a verified transaction can be finalized only once.
         var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Verified));
         var service = Service(repository);
         var request = new FinalizeTransactionRequest(repository.Item.ReservationCode, "Transfer complete");
@@ -197,6 +211,7 @@ public sealed class TransactionServiceTests
     [Fact]
     public async Task Finalize_RecordsOperatorReportedEnergy()
     {
+        // Verify that finalization records the energy reported by the operator.
         var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Verified));
         var request = new FinalizeTransactionRequest(
             repository.Item.ReservationCode, "Partial transfer completed", 8.5m);
@@ -211,6 +226,7 @@ public sealed class TransactionServiceTests
     [Fact]
     public async Task Finalize_RejectsEnergyAboveReservation()
     {
+        // Verify that finalization rejects energy exceeding the reserved amount.
         var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Verified));
         var request = new FinalizeTransactionRequest(
             repository.Item.ReservationCode, "Transfer completed", 10.1m);
@@ -225,6 +241,7 @@ public sealed class TransactionServiceTests
     [Fact]
     public async Task Finalize_RejectsTransferExceedingBatteryCapacity()
     {
+        // Verify that finalization rejects transfers exceeding battery capacity.
         var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Verified))
         {
             SimulateStationCapacityExceeded = true
@@ -239,15 +256,18 @@ public sealed class TransactionServiceTests
         Assert.Equal(ReservationStatus.Verified, repository.Item.Status);
     }
 
+    // Create the transaction service with a fixed clock and the supplied test repository.
     private static TransactionService Service(ITransactionRepository repository) =>
         new(repository, new FixedTimeProvider(Now), NullLogger<TransactionService>.Instance);
 
     private static string ReadToken(QrTransactionResponse response)
     {
+        // Extract the transaction token from the issued QR payload.
         using var payload = JsonDocument.Parse(response.QrPayload);
         return payload.RootElement.GetProperty("transactionToken").GetString()!;
     }
 
+    // Create a reservation fixture with the requested lifecycle state.
     private static EnergyReservation Reservation(ReservationStatus status) => new()
     {
         Id = ObjectId.GenerateNewId(),
@@ -265,6 +285,7 @@ public sealed class TransactionServiceTests
 
     private sealed class FixedTimeProvider(DateTime utcNow) : TimeProvider
     {
+        // Return the fixed UTC time to keep the test deterministic.
         public override DateTimeOffset GetUtcNow() => new(utcNow);
     }
 
@@ -272,15 +293,18 @@ public sealed class TransactionServiceTests
     {
         public EnergyReservation Item { get; } = item;
 
+        // Look up the test record by its identifier.
         public Task<EnergyReservation?> FindByIdAsync(string reservationId, CancellationToken cancellationToken = default) =>
             Task.FromResult<EnergyReservation?>(reservationId == Item.Id.ToString() ? Item : null);
 
+        // Look up the test record by its public code.
         public Task<EnergyReservation?> FindByCodeAsync(string reservationCode, CancellationToken cancellationToken = default) =>
             Task.FromResult<EnergyReservation?>(reservationCode == Item.ReservationCode ? Item : null);
 
         public Task<bool> IssueQrAsync(string reservationId, string tokenHash, DateTime expiresAtUtc,
             DateTime changedAtUtc, CancellationToken cancellationToken = default)
         {
+            // Simulate storing a QR token hash and expiry for an eligible test reservation.
             if (reservationId != Item.Id.ToString() ||
                 (Item.Status != ReservationStatus.Approved && Item.Status != ReservationStatus.QrIssued))
             {
@@ -296,6 +320,7 @@ public sealed class TransactionServiceTests
         public Task<bool> VerifyAsync(string reservationCode, string tokenHash, string operatorIdentifier,
             DateTime verifiedAtUtc, CancellationToken cancellationToken = default)
         {
+            // Simulate QR verification after checking token, expiry, and reservation state.
             if (reservationCode != Item.ReservationCode || Item.Status != ReservationStatus.QrIssued ||
                 tokenHash != Item.QrTokenHash || Item.QrExpiresAtUtc <= verifiedAtUtc) return Task.FromResult(false);
             Item.Status = ReservationStatus.Verified;
@@ -310,6 +335,7 @@ public sealed class TransactionServiceTests
             string confirmationNote, decimal actualEnergyTransferredKwh, DateTime finalizedAtUtc,
             CancellationToken cancellationToken = default)
         {
+            // Simulate transfer completion while enforcing the test reservation's state and capacity outcome.
             if (SimulateStationCapacityExceeded) return Task.FromResult(false);
             if (reservationCode != Item.ReservationCode || slotId != Item.SlotId ||
                 Item.Status != ReservationStatus.Verified) return Task.FromResult(false);

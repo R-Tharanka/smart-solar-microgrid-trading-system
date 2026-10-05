@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: BootstrapAdminOptions.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Maps configuration used to provision the initial Backoffice account.
 // -----------------------------------------------------------------------------
 namespace SmartSolarMicrogrid.Api.Configuration;

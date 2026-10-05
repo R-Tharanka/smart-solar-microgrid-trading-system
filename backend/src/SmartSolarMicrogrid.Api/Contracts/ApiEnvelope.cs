@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: ApiEnvelope.cs
+// Purpose: Defines standard response envelopes and pagination metadata.
+// -----------------------------------------------------------------------------
 namespace SmartSolarMicrogrid.Api.Contracts;
 
 public sealed record ApiEnvelope<T>(T Data, string? Message = null);

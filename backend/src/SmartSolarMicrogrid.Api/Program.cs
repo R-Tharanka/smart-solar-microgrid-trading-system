@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: Program.cs
+// Purpose: Configures API services, middleware, endpoints, and database initialization.
+// -----------------------------------------------------------------------------
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;

@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: MongoDbOptions.cs
+// Purpose: Defines MongoDB connection and database settings.
+// -----------------------------------------------------------------------------
 using System.ComponentModel.DataAnnotations;
 
 namespace SmartSolarMicrogrid.Api.Configuration;
