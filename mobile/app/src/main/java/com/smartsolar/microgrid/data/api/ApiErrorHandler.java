@@ -9,7 +9,7 @@ public final class ApiErrorHandler {
 
     public static ApiError fromHttpResponse(int statusCode, String responseBody) {
         String errorCode = readErrorCode(responseBody);
-        return new ApiError(statusCode, errorCode, messageForError(statusCode, errorCode, responseBody));
+        return new ApiError(statusCode, errorCode, messageForError(statusCode, errorCode));
     }
 
     public static ApiError networkError() {
@@ -43,16 +43,7 @@ public final class ApiErrorHandler {
         return "HTTP_ERROR";
     }
 
-    private static String messageForError(int statusCode, String errorCode, String responseBody) {
-        try {
-            if (responseBody != null && !responseBody.trim().isEmpty()) {
-                JsonObject problem = JsonParser.parseString(responseBody).getAsJsonObject();
-                if (problem.has("detail") && !problem.get("detail").isJsonNull()) {
-                    return problem.get("detail").getAsString();
-                }
-            }
-        } catch (RuntimeException ignored) {
-        }
+    private static String messageForError(int statusCode, String errorCode) {
         switch (errorCode) {
             case "AUTH_INVALID_CREDENTIALS":
                 return "The identifier or password is incorrect.";
@@ -76,6 +67,19 @@ public final class ApiErrorHandler {
                 return "The account cannot be deactivated while it has active reservations.";
             case "USER_DEACTIVATION_ALREADY_REQUESTED":
                 return "Your deactivation request is already pending Backoffice review. Your account remains active.";
+            case "QR_TOKEN_INVALID":
+                return "This QR code is invalid or has been replaced. Ask the Prosumer to generate a new code.";
+            case "QR_EXPIRED":
+            case "QR_WINDOW_EXPIRED":
+                return "This QR code has expired. Ask the Prosumer to generate a new code.";
+            case "QR_STATUS_INVALID":
+            case "QR_VERIFY_CONFLICT":
+                return "This QR transaction is no longer available for verification.";
+            case "FINALIZE_STATUS_INVALID":
+            case "FINALIZE_CONFLICT":
+                return "This energy transfer can no longer be finalized.";
+            case "TRANSFER_ENERGY_INVALID":
+                return "Enter a transferred energy amount within the reserved quantity.";
             default:
                 break;
         }

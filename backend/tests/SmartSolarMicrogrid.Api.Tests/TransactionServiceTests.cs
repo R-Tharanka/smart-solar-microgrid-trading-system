@@ -43,6 +43,106 @@ public sealed class TransactionServiceTests
     }
 
     [Fact]
+    public async Task IssueQr_RenewsIssuedQr_AndReplacesHashAndExpiry()
+    {
+        var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Approved));
+        var service = Service(repository);
+        var original = await service.IssueQrAsync(
+            repository.Item.Id.ToString(), repository.Item.ProsumerNic, UserRole.Prosumer,
+            TestContext.Current.CancellationToken);
+        var originalToken = ReadToken(original);
+        var originalHash = repository.Item.QrTokenHash;
+        repository.Item.QrExpiresAtUtc = Now.AddMinutes(5);
+
+        var renewed = await service.IssueQrAsync(
+            repository.Item.Id.ToString(), repository.Item.ProsumerNic, UserRole.Prosumer,
+            TestContext.Current.CancellationToken);
+        var renewedToken = ReadToken(renewed);
+
+        Assert.NotEqual(originalToken, renewedToken);
+        Assert.Equal(ReservationStatus.QrIssued, repository.Item.Status);
+        Assert.NotEqual(originalHash, repository.Item.QrTokenHash);
+        Assert.DoesNotContain(renewedToken, repository.Item.QrTokenHash!, StringComparison.Ordinal);
+        Assert.Equal(repository.Item.ScheduledEndTimeUtc, repository.Item.QrExpiresAtUtc);
+        Assert.Equal(repository.Item.ScheduledEndTimeUtc, renewed.ExpiresAtUtc);
+    }
+
+    [Fact]
+    public async Task IssueQr_RenewalRejectsDifferentProsumerWithoutReplacingHash()
+    {
+        var reservation = Reservation(ReservationStatus.QrIssued);
+        reservation.QrTokenHash = new string('A', 64);
+        reservation.QrExpiresAtUtc = Now.AddMinutes(5);
+        var repository = new FakeTransactionRepository(reservation);
+
+        var error = await Assert.ThrowsAsync<TransactionException>(() => Service(repository).IssueQrAsync(
+            reservation.Id.ToString(), "other-nic", UserRole.Prosumer,
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal(StatusCodes.Status403Forbidden, error.StatusCode);
+        Assert.Equal(new string('A', 64), reservation.QrTokenHash);
+        Assert.Equal(Now.AddMinutes(5), reservation.QrExpiresAtUtc);
+    }
+
+    [Fact]
+    public async Task Verify_OldTokenAfterRenewal_IsRejected()
+    {
+        var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Approved));
+        var service = Service(repository);
+        var original = await service.IssueQrAsync(
+            repository.Item.Id.ToString(), repository.Item.ProsumerNic, UserRole.Prosumer,
+            TestContext.Current.CancellationToken);
+        var originalToken = ReadToken(original);
+
+        await service.IssueQrAsync(
+            repository.Item.Id.ToString(), repository.Item.ProsumerNic, UserRole.Prosumer,
+            TestContext.Current.CancellationToken);
+
+        var error = await Assert.ThrowsAsync<TransactionException>(() => service.VerifyAsync(
+            new VerifyTransactionRequest(repository.Item.ReservationCode, originalToken),
+            "operator@example.com", TestContext.Current.CancellationToken));
+
+        Assert.Equal("QR_TOKEN_INVALID", error.ErrorCode);
+        Assert.Equal(ReservationStatus.QrIssued, repository.Item.Status);
+    }
+
+    [Fact]
+    public async Task Verify_RenewedToken_RemainsValid()
+    {
+        var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Approved));
+        var service = Service(repository);
+        await service.IssueQrAsync(
+            repository.Item.Id.ToString(), repository.Item.ProsumerNic, UserRole.Prosumer,
+            TestContext.Current.CancellationToken);
+        var renewed = await service.IssueQrAsync(
+            repository.Item.Id.ToString(), repository.Item.ProsumerNic, UserRole.Prosumer,
+            TestContext.Current.CancellationToken);
+
+        var result = await service.VerifyAsync(
+            new VerifyTransactionRequest(repository.Item.ReservationCode, ReadToken(renewed)),
+            "operator@example.com", TestContext.Current.CancellationToken);
+
+        Assert.Equal("Verified", result.Status);
+        Assert.Equal("operator@example.com", repository.Item.VerifiedByUserId);
+    }
+
+    [Theory]
+    [InlineData(ReservationStatus.Pending)]
+    [InlineData(ReservationStatus.Verified)]
+    [InlineData(ReservationStatus.Completed)]
+    public async Task IssueQr_RejectsInvalidReservationState(ReservationStatus status)
+    {
+        var repository = new FakeTransactionRepository(Reservation(status));
+
+        var error = await Assert.ThrowsAsync<TransactionException>(() => Service(repository).IssueQrAsync(
+            repository.Item.Id.ToString(), repository.Item.ProsumerNic, UserRole.Prosumer,
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal("QR_STATUS_INVALID", error.ErrorCode);
+        Assert.Equal(status, repository.Item.Status);
+    }
+
+    [Fact]
     public async Task Verify_ValidIssuedToken_RecordsOperatorIdentifier()
     {
         var repository = new FakeTransactionRepository(Reservation(ReservationStatus.Approved));
@@ -142,6 +242,12 @@ public sealed class TransactionServiceTests
     private static TransactionService Service(ITransactionRepository repository) =>
         new(repository, new FixedTimeProvider(Now), NullLogger<TransactionService>.Instance);
 
+    private static string ReadToken(QrTransactionResponse response)
+    {
+        using var payload = JsonDocument.Parse(response.QrPayload);
+        return payload.RootElement.GetProperty("transactionToken").GetString()!;
+    }
+
     private static EnergyReservation Reservation(ReservationStatus status) => new()
     {
         Id = ObjectId.GenerateNewId(),
@@ -175,7 +281,11 @@ public sealed class TransactionServiceTests
         public Task<bool> IssueQrAsync(string reservationId, string tokenHash, DateTime expiresAtUtc,
             DateTime changedAtUtc, CancellationToken cancellationToken = default)
         {
-            if (reservationId != Item.Id.ToString() || Item.Status != ReservationStatus.Approved) return Task.FromResult(false);
+            if (reservationId != Item.Id.ToString() ||
+                (Item.Status != ReservationStatus.Approved && Item.Status != ReservationStatus.QrIssued))
+            {
+                return Task.FromResult(false);
+            }
             Item.QrTokenHash = tokenHash;
             Item.QrExpiresAtUtc = expiresAtUtc;
             Item.Status = ReservationStatus.QrIssued;

@@ -55,6 +55,7 @@ public class StationsFragment extends Fragment {
     private StationMapController mapController;
     private boolean mapAvailable = true;
     private boolean returningFromSettings;
+    private boolean operatorReadOnly;
 
     private final ActivityResultLauncher<String[]> locationPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
@@ -88,6 +89,8 @@ public class StationsFragment extends Fragment {
         repository = new StationRepository(requireContext());
         locationProvider = new DeviceLocationProvider(requireContext());
         mapController = new StationMapController(this::showMarkerStation);
+        operatorReadOnly = getArguments() != null
+                && getArguments().getBoolean("operatorReadOnly", false);
 
         recyclerView = view.findViewById(R.id.stations_recycler_view);
         progressBar = view.findViewById(R.id.progress_bar);
@@ -98,7 +101,11 @@ public class StationsFragment extends Fragment {
         cacheNotice = view.findViewById(R.id.station_cache_notice);
         locationAction = view.findViewById(R.id.station_location_action);
 
-        adapter = new StationAdapter(this::openStationSlots);
+        TextView title = view.findViewById(R.id.stations_title);
+        if (operatorReadOnly) title.setText(R.string.operator_station_map_title);
+
+        adapter = new StationAdapter(operatorReadOnly
+                ? this::showMarkerStation : this::openStationSlots);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(adapter);
 
@@ -297,13 +304,15 @@ public class StationsFragment extends Fragment {
                 station.getCapacityKwh(), station.getBatteryStorageKwh(), emptySpace,
                 value(station.getOpeningTime()), value(station.getClosingTime()),
                 value(station.getStatus()));
-        new MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder dialog = new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(station.getName())
                 .setMessage(details)
-                .setNegativeButton(R.string.cancel_action, null)
-                .setPositiveButton(R.string.view_slots_action,
-                        (dialog, which) -> openStationSlots(station))
-                .show();
+                .setNegativeButton(R.string.cancel_action, null);
+        if (!operatorReadOnly) {
+            dialog.setPositiveButton(R.string.view_slots_action,
+                    (ignored, which) -> openStationSlots(station));
+        }
+        dialog.show();
     }
 
     private String value(String value) {

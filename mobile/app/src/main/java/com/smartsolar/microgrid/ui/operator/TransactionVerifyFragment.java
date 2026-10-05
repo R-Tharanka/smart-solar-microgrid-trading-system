@@ -16,25 +16,20 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.google.gson.Gson;
 import com.smartsolar.microgrid.R;
 import com.smartsolar.microgrid.data.api.ApiCallback;
 import com.smartsolar.microgrid.data.api.ApiError;
 import com.smartsolar.microgrid.data.transaction.FinalizeTransactionRequest;
 import com.smartsolar.microgrid.data.transaction.FinalizedTransactionResponse;
+import com.smartsolar.microgrid.data.transaction.EphemeralQrPayloadStore;
+import com.smartsolar.microgrid.data.transaction.QrPayload;
 import com.smartsolar.microgrid.data.transaction.TransactionRepository;
 import com.smartsolar.microgrid.data.transaction.VerifiedTransactionResponse;
 import com.smartsolar.microgrid.data.transaction.VerifyTransactionRequest;
 import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
 
-class QrPayloadData {
-    public String reservationCode;
-    public String transactionToken;
-}
-
 public class TransactionVerifyFragment extends Fragment {
     private TransactionRepository repository;
-    private String rawQrPayload;
     private VerifiedTransactionResponse verifiedTransaction;
 
     private ProgressBar progressBar;
@@ -63,10 +58,6 @@ public class TransactionVerifyFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         repository = new TransactionRepository(requireContext());
 
-        if (getArguments() != null) {
-            rawQrPayload = getArguments().getString("qrPayload");
-        }
-
         progressBar = view.findViewById(R.id.progress_bar);
         detailsContainer = view.findViewById(R.id.details_container);
         errorContainer = view.findViewById(R.id.error_container);
@@ -88,26 +79,20 @@ public class TransactionVerifyFragment extends Fragment {
         btnBackError.setOnClickListener(v -> NavHostFragment.findNavController(this).popBackStack());
         btnFinalize.setOnClickListener(v -> finalizeTransaction());
 
-        if (rawQrPayload != null) {
-            verifyQrCode();
-        } else {
-            showError("No QR code data provided.");
-        }
+        verifyQrCode();
     }
 
     private void verifyQrCode() {
-        try {
-            Gson gson = new Gson();
-            QrPayloadData payloadData = gson.fromJson(rawQrPayload, QrPayloadData.class);
+        QrPayload payload = EphemeralQrPayloadStore.consume();
+        if (payload == null) {
+            showError("No QR code data provided. Please scan the code again.");
+            return;
+        }
 
-            if (payloadData == null || payloadData.reservationCode == null || payloadData.transactionToken == null) {
-                showError("Invalid QR Code Format");
-                return;
-            }
-
-            showLoading();
-            VerifyTransactionRequest request = new VerifyTransactionRequest(payloadData.reservationCode, payloadData.transactionToken);
-            repository.verifyTransaction(request, new ApiCallback<VerifiedTransactionResponse>() {
+        showLoading();
+        VerifyTransactionRequest request = new VerifyTransactionRequest(
+                payload.getReservationCode(), payload.getTransactionToken());
+        repository.verifyTransaction(request, new ApiCallback<VerifiedTransactionResponse>() {
                 @Override
                 public void onSuccess(VerifiedTransactionResponse data, String message) {
                     hideLoading();
@@ -122,9 +107,6 @@ public class TransactionVerifyFragment extends Fragment {
                     showError(error.getUserMessage());
                 }
             });
-        } catch (Exception e) {
-            showError("Failed to parse QR Code");
-        }
     }
 
     private void showDetails() {

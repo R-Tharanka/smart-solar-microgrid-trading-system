@@ -34,5 +34,12 @@ public class GridOperatorHomeFragment extends Fragment {
         view.findViewById(R.id.scan_qr_card).setOnClickListener(button -> 
                 androidx.navigation.fragment.NavHostFragment.findNavController(this)
                         .navigate(R.id.scannerFragment));
+
+        view.findViewById(R.id.station_map_card).setOnClickListener(button -> {
+            Bundle args = new Bundle();
+            args.putBoolean("operatorReadOnly", true);
+            androidx.navigation.fragment.NavHostFragment.findNavController(this)
+                    .navigate(R.id.stationsFragment, args);
+        });
     }
 }

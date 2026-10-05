@@ -53,6 +53,7 @@
     <string name="not_provided">Not provided</string>
     <string name="status_label">Status</string>
     <string name="view_slots_action">View slots</string>
+    <string name="operator_station_map_title">Nearby Grid Nodes</string>
     <string name="allow_location_action">Allow location</string>
     <string name="open_settings_action">Open settings</string>
     <string name="open_location_settings_action">Location settings</string>
