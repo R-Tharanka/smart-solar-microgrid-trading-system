@@ -19,6 +19,7 @@ import com.smartsolar.microgrid.data.identity.IdentityRepository;
 import com.smartsolar.microgrid.data.identity.CachedUserProfile;
 import com.smartsolar.microgrid.data.identity.UserResponse;
 import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
+import com.smartsolar.microgrid.ui.common.StatusUi;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -113,6 +114,7 @@ public class ProfileFragment extends Fragment {
         setText(view, R.id.profile_phone, user.getPhoneNumber());
         setText(view, R.id.profile_address, user.getAddress());
         setText(view, R.id.profile_status, user.getStatus());
+        StatusUi.bind(view.findViewById(R.id.profile_status), user.getStatus());
         showDeactivationRequestState(view, user.isDeactivationRequested());
     }
 
@@ -124,6 +126,7 @@ public class ProfileFragment extends Fragment {
         setText(view, R.id.profile_phone, user.getPhone());
         setText(view, R.id.profile_address, user.getAddress());
         setText(view, R.id.profile_status, user.getAccountStatus());
+        StatusUi.bind(view.findViewById(R.id.profile_status), user.getAccountStatus());
         showDeactivationRequestState(view, user.isDeactivationRequested());
     }
 

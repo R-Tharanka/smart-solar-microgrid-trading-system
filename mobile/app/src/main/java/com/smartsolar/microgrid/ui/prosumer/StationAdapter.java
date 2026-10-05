@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.smartsolar.microgrid.R;
 import com.smartsolar.microgrid.data.station.StationResponse;
+import com.smartsolar.microgrid.ui.common.StatusUi;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
     private final List<StationResponse> stations = new ArrayList<>();
     private final OnStationClickListener listener;
     private Location userLocation;
+    private String selectedStationCode;
 
     public interface OnStationClickListener {
         void onStationClick(StationResponse station);
@@ -30,6 +32,11 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
 
     public void setUserLocation(Location location) {
         this.userLocation = location;
+    }
+
+    public void setSelectedStation(String stationCode) {
+        selectedStationCode = stationCode;
+        notifyDataSetChanged();
     }
 
     public void setStations(List<StationResponse> newStations) {
@@ -51,7 +58,9 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         StationResponse station = stations.get(position);
-        holder.bind(station, userLocation, listener);
+        holder.bind(station, userLocation, listener,
+                station.getStationCode() != null
+                        && station.getStationCode().equals(selectedStationCode));
     }
 
     @Override
@@ -65,6 +74,7 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
         private final TextView capacityText;
         private final TextView emptySpaceText;
         private final TextView distanceText;
+        private final TextView statusText;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -73,15 +83,26 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
             capacityText = itemView.findViewById(R.id.station_capacity);
             emptySpaceText = itemView.findViewById(R.id.station_empty_space);
             distanceText = itemView.findViewById(R.id.station_distance);
+            statusText = itemView.findViewById(R.id.station_status);
         }
 
-        void bind(StationResponse station, Location userLocation, OnStationClickListener listener) {
+        void bind(StationResponse station, Location userLocation,
+                  OnStationClickListener listener, boolean selected) {
             nameText.setText(station.getName() + " (" + station.getStationCode() + ")");
             addressText.setText(station.getAddress());
+            StatusUi.bind(statusText, station.getStatus());
+            itemView.setContentDescription(station.getName() + ", "
+                    + station.getStationCode() + ", status " + station.getStatus()
+                    + ". View station details.");
+            com.google.android.material.card.MaterialCardView card =
+                    (com.google.android.material.card.MaterialCardView) itemView;
+            card.setStrokeColor(androidx.core.content.ContextCompat.getColor(itemView.getContext(),
+                    selected ? R.color.status_success : R.color.solar_border));
+            card.setStrokeWidth(Math.round((selected ? 2 : 1)
+                    * itemView.getResources().getDisplayMetrics().density));
             capacityText.setText(String.format("%.1f kWh", station.getCapacityKwh()));
             
-            double emptySpace = station.getCapacityKwh() - station.getBatteryStorageKwh();
-            emptySpaceText.setText(String.format("%.1f kWh", emptySpace));
+            emptySpaceText.setText(String.format("%.1f kWh", station.getBatteryStorageKwh()));
 
             if (userLocation != null && Double.isFinite(station.getLatitude()) && Double.isFinite(station.getLongitude())) {
                 Location stationLoc = new Location("");

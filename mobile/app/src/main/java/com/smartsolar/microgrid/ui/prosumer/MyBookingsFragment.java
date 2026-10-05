@@ -5,7 +5,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -21,6 +20,8 @@ import com.smartsolar.microgrid.data.api.ApiError;
 import com.smartsolar.microgrid.data.reservation.ReservationRepository;
 import com.smartsolar.microgrid.data.reservation.ReservationSummaryResponse;
 import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
+import com.smartsolar.microgrid.data.identity.UtcTimestampParser;
+import java.text.ParseException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,14 +32,16 @@ public class MyBookingsFragment extends Fragment {
     private BookingAdapter adapter;
 
     private RecyclerView recyclerView;
-    private ProgressBar progressBar;
+    private View progressBar;
     private View errorContainer;
     private TextView errorMessage;
-    private View emptyStateText;
+    private TextView emptyStateText;
     private EditText searchInput;
     private final List<ReservationSummaryResponse> allBookings = new ArrayList<>();
     private BookingCategoryClassifier.Category selectedCategory =
             BookingCategoryClassifier.Category.ALL;
+    private boolean currentOnly;
+    private boolean upcomingOnly;
 
     public MyBookingsFragment() {
         super(R.layout.fragment_my_bookings);
@@ -90,9 +93,11 @@ public class MyBookingsFragment extends Fragment {
                 view.findViewById(R.id.booking_category_toggle);
         group.addOnButtonCheckedListener((toggleGroup, checkedId, isChecked) -> {
             if (!isChecked) return;
+            currentOnly = checkedId == R.id.bookings_current_filter;
+            upcomingOnly = checkedId == R.id.bookings_upcoming_filter;
             if (checkedId == R.id.bookings_pending_filter) {
                 selectedCategory = BookingCategoryClassifier.Category.PENDING;
-            } else if (checkedId == R.id.bookings_upcoming_filter) {
+            } else if (currentOnly || upcomingOnly) {
                 selectedCategory = BookingCategoryClassifier.Category.CURRENT_UPCOMING;
             } else if (checkedId == R.id.bookings_history_filter) {
                 selectedCategory = BookingCategoryClassifier.Category.HISTORY;
@@ -133,6 +138,15 @@ public class MyBookingsFragment extends Fragment {
                     BookingCategoryClassifier.classify(booking, now);
             boolean categoryMatches = selectedCategory == BookingCategoryClassifier.Category.ALL
                     || selectedCategory == category;
+            if (categoryMatches && (currentOnly || upcomingOnly)) {
+                try {
+                    long start = UtcTimestampParser.parseEpochMillis(
+                            booking.getScheduledStartTimeUtc());
+                    categoryMatches = currentOnly ? start <= now : start > now;
+                } catch (ParseException ignored) {
+                    categoryMatches = false;
+                }
+            }
             String code = booking.getReservationCode() == null
                     ? "" : booking.getReservationCode().toLowerCase(Locale.ROOT);
             String status = booking.getStatus() == null
@@ -177,6 +191,20 @@ public class MyBookingsFragment extends Fragment {
         progressBar.setVisibility(View.GONE);
         recyclerView.setVisibility(View.GONE);
         errorContainer.setVisibility(View.GONE);
+        String query = searchInput.getText() == null ? "" : searchInput.getText().toString().trim();
+        if (allBookings.isEmpty()) {
+            emptyStateText.setText("No bookings yet. Open Stations to find an available slot.");
+        } else if (!query.isEmpty()) {
+            emptyStateText.setText("No results for this search. Clear the search or try another code.");
+        } else if (selectedCategory == BookingCategoryClassifier.Category.PENDING) {
+            emptyStateText.setText("No pending bookings. Check another category or find a station.");
+        } else if (currentOnly) {
+            emptyStateText.setText("No current bookings. Check Upcoming or History.");
+        } else if (upcomingOnly) {
+            emptyStateText.setText("No upcoming bookings. Open Stations to find a slot.");
+        } else {
+            emptyStateText.setText("No bookings in this category. Try All bookings.");
+        }
         emptyStateText.setVisibility(View.VISIBLE);
     }
 }

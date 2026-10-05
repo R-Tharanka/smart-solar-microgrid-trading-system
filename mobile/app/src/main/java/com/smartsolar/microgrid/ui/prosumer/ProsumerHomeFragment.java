@@ -19,6 +19,7 @@ import com.smartsolar.microgrid.data.reservation.ReservationRepository;
 import com.smartsolar.microgrid.data.session.Session;
 import com.smartsolar.microgrid.data.session.SessionManager;
 import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
+import com.smartsolar.microgrid.ui.common.StatusUi;
 
 public class ProsumerHomeFragment extends Fragment {
     private ReservationRepository reservationRepository;
@@ -55,6 +56,9 @@ public class ProsumerHomeFragment extends Fragment {
             @Override
             public void onSuccess(UserResponse user, String message) {
                 if (getView() != view || user == null) return;
+                TextView accountStatus = view.findViewById(R.id.prosumer_account_status);
+                StatusUi.bind(accountStatus, user.getStatus());
+                accountStatus.setVisibility(View.VISIBLE);
                 view.findViewById(R.id.prosumer_deactivation_request)
                         .setVisibility(user.isDeactivationRequested() ? View.VISIBLE : View.GONE);
             }
@@ -62,7 +66,10 @@ public class ProsumerHomeFragment extends Fragment {
             @Override
             public void onError(ApiError error) {
                 if (getView() != view) return;
-                AuthenticationNavigator.handleExpiredSession(ProsumerHomeFragment.this, error);
+                if (AuthenticationNavigator.handleExpiredSession(ProsumerHomeFragment.this, error)) return;
+                TextView accountStatus = view.findViewById(R.id.prosumer_account_status);
+                StatusUi.bind(accountStatus, "Status unavailable");
+                accountStatus.setVisibility(View.VISIBLE);
             }
         });
     }
@@ -83,6 +90,7 @@ public class ProsumerHomeFragment extends Fragment {
         view.findViewById(R.id.reservation_summary_content).setVisibility(View.GONE);
         view.findViewById(R.id.reservation_summary_error).setVisibility(View.GONE);
         view.findViewById(R.id.reservation_summary_retry).setVisibility(View.GONE);
+        view.findViewById(R.id.reservation_summary_zero).setVisibility(View.GONE);
 
         reservationRepository.getProsumerDashboard(new ApiCallback<ProsumerDashboardResponse>() {
             @Override
@@ -99,6 +107,9 @@ public class ProsumerHomeFragment extends Fragment {
                 ((TextView) view.findViewById(R.id.approved_future_reservation_count))
                         .setText(String.valueOf(summary.getApprovedFutureCount()));
                 view.findViewById(R.id.reservation_summary_content).setVisibility(View.VISIBLE);
+                view.findViewById(R.id.reservation_summary_zero).setVisibility(
+                        summary.getPendingCount() == 0 && summary.getApprovedFutureCount() == 0
+                                ? View.VISIBLE : View.GONE);
             }
 
             @Override
@@ -117,5 +128,6 @@ public class ProsumerHomeFragment extends Fragment {
         view.findViewById(R.id.reservation_summary_content).setVisibility(View.GONE);
         view.findViewById(R.id.reservation_summary_error).setVisibility(View.VISIBLE);
         view.findViewById(R.id.reservation_summary_retry).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.reservation_summary_zero).setVisibility(View.GONE);
     }
 }

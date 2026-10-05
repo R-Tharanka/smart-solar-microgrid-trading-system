@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:orientation="vertical" android:padding="@dimen/space_6">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="ENERGY TRANSFER" android:textColor="@color/status_success"
+        android:textSize="12sp" android:letterSpacing="0.1" />
+    <TextView android:id="@+id/transaction_success_status"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_3" android:textSize="12sp" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_5" android:text="Reservation"
+        android:textAppearance="@style/TextAppearance.Solar.Metadata" />
+    <TextView android:id="@+id/transaction_success_code"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_1"
+        android:textAppearance="@style/TextAppearance.Solar.Code" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_5" android:text="Transferred energy"
+        android:textAppearance="@style/TextAppearance.Solar.Metadata" />
+    <TextView android:id="@+id/transaction_success_energy"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_1" android:textColor="@color/text_primary"
+        android:textSize="28sp" android:fontFamily="sans-serif-medium" />
+</LinearLayout>

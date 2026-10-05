@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -33,6 +32,7 @@ import com.smartsolar.microgrid.data.station.CachedStationReferences;
 import com.smartsolar.microgrid.data.station.StationRepository;
 import com.smartsolar.microgrid.data.station.StationResponse;
 import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
+import com.smartsolar.microgrid.ui.common.StatusUi;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -44,10 +44,11 @@ public class StationsFragment extends Fragment {
     private DeviceLocationProvider locationProvider;
     private StationAdapter adapter;
     private RecyclerView recyclerView;
-    private ProgressBar progressBar;
+    private View progressBar;
     private View errorContainer;
     private TextView errorMessage;
     private View emptyStateText;
+    private View mapLoading;
     private TextView locationNotice;
     private TextView cacheNotice;
     private MaterialButton locationAction;
@@ -97,6 +98,7 @@ public class StationsFragment extends Fragment {
         errorContainer = view.findViewById(R.id.error_container);
         errorMessage = view.findViewById(R.id.error_message);
         emptyStateText = view.findViewById(R.id.empty_state_text);
+        mapLoading = view.findViewById(R.id.station_map_loading);
         locationNotice = view.findViewById(R.id.station_location_notice);
         cacheNotice = view.findViewById(R.id.station_cache_notice);
         locationAction = view.findViewById(R.id.station_location_action);
@@ -104,8 +106,7 @@ public class StationsFragment extends Fragment {
         TextView title = view.findViewById(R.id.stations_title);
         if (operatorReadOnly) title.setText(R.string.operator_station_map_title);
 
-        adapter = new StationAdapter(operatorReadOnly
-                ? this::showMarkerStation : this::openStationSlots);
+        adapter = new StationAdapter(this::showMarkerStation);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(adapter);
 
@@ -297,16 +298,23 @@ public class StationsFragment extends Fragment {
     }
 
     private void showMarkerStation(StationResponse station) {
-        double emptySpace = Math.max(0,
-                station.getCapacityKwh() - station.getBatteryStorageKwh());
-        String details = getString(R.string.station_marker_details,
-                station.getStationCode(), value(station.getAddress()),
-                station.getCapacityKwh(), station.getBatteryStorageKwh(), emptySpace,
-                value(station.getOpeningTime()), value(station.getClosingTime()),
-                value(station.getStatus()));
+        adapter.setSelectedStation(station.getStationCode());
+        mapController.selectStation(station.getStationCode());
+        View details = getLayoutInflater().inflate(R.layout.dialog_station_details, null);
+        ((TextView) details.findViewById(R.id.station_dialog_code)).setText(station.getStationCode());
+        StatusUi.bind(details.findViewById(R.id.station_dialog_status), station.getStatus());
+        ((TextView) details.findViewById(R.id.station_dialog_address))
+                .setText(value(station.getAddress()));
+        ((TextView) details.findViewById(R.id.station_dialog_capacity))
+                .setText(String.format(java.util.Locale.getDefault(),
+                        "Capacity %.1f kWh  •  Battery %.1f kWh",
+                        station.getCapacityKwh(), station.getBatteryStorageKwh()));
+        ((TextView) details.findViewById(R.id.station_dialog_hours))
+                .setText("Operating hours  " + value(station.getOpeningTime())
+                        + " – " + value(station.getClosingTime()));
         MaterialAlertDialogBuilder dialog = new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(station.getName())
-                .setMessage(details)
+                .setView(details)
                 .setNegativeButton(R.string.cancel_action, null);
         if (!operatorReadOnly) {
             dialog.setPositiveButton(R.string.view_slots_action,
@@ -371,6 +379,7 @@ public class StationsFragment extends Fragment {
     }
 
     private void showLoading() {
+        mapLoading.setVisibility(View.VISIBLE);
         progressBar.setVisibility(View.VISIBLE);
         recyclerView.setVisibility(View.GONE);
         errorContainer.setVisibility(View.GONE);
@@ -379,6 +388,7 @@ public class StationsFragment extends Fragment {
     }
 
     private void showContent() {
+        mapLoading.setVisibility(View.GONE);
         progressBar.setVisibility(View.GONE);
         recyclerView.setVisibility(View.VISIBLE);
         errorContainer.setVisibility(View.GONE);
@@ -386,6 +396,7 @@ public class StationsFragment extends Fragment {
     }
 
     private void showError(String message) {
+        mapLoading.setVisibility(View.GONE);
         progressBar.setVisibility(View.GONE);
         recyclerView.setVisibility(View.GONE);
         errorContainer.setVisibility(View.VISIBLE);
@@ -394,6 +405,7 @@ public class StationsFragment extends Fragment {
     }
 
     private void showEmpty() {
+        mapLoading.setVisibility(View.GONE);
         progressBar.setVisibility(View.GONE);
         recyclerView.setVisibility(View.GONE);
         errorContainer.setVisibility(View.GONE);

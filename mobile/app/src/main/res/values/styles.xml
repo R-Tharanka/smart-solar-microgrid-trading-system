@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="TextAppearance.Solar.ScreenTitle" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:textColor">@color/text_primary</item><item name="android:textSize">28sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+    <style name="TextAppearance.Solar.SectionTitle" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textColor">@color/text_primary</item><item name="android:textSize">20sp</item>
+    </style>
+    <style name="TextAppearance.Solar.CardTitle" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textColor">@color/text_primary</item><item name="android:textSize">17sp</item>
+    </style>
+    <style name="TextAppearance.Solar.Body" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textColor">@color/text_primary</item><item name="android:textSize">16sp</item>
+    </style>
+    <style name="TextAppearance.Solar.Supporting" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textColor">@color/text_secondary</item><item name="android:textSize">14sp</item>
+    </style>
+    <style name="TextAppearance.Solar.Metadata" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textColor">@color/text_secondary</item><item name="android:textSize">12sp</item>
+    </style>
+    <style name="TextAppearance.Solar.Code" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:textColor">@color/text_primary</item><item name="android:fontFamily">monospace</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+    <style name="Widget.Solar.Card" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">@color/solar_surface</item>
+        <item name="cardCornerRadius">@dimen/radius_card</item>
+        <item name="strokeColor">@color/solar_border</item><item name="strokeWidth">1dp</item>
+        <item name="cardElevation">0dp</item>
+    </style>
+    <style name="Widget.Solar.Button.Primary" parent="Widget.Material3.Button">
+        <item name="android:minHeight">@dimen/primary_action_height</item>
+        <item name="cornerRadius">@dimen/radius_control</item>
+        <item name="backgroundTint">@color/solar_button_fill</item>
+        <item name="android:textColor">@color/solar_button_text</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+    <style name="Widget.Solar.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">@dimen/touch_target</item>
+        <item name="cornerRadius">@dimen/radius_control</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+    <style name="Widget.Solar.Button.Text" parent="Widget.Material3.Button.TextButton">
+        <item name="android:minHeight">@dimen/touch_target</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+    <style name="Widget.Solar.Input" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/solar_input_stroke</item>
+        <item name="boxCornerRadiusTopStart">@dimen/radius_control</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/radius_control</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/radius_control</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/radius_control</item>
+    </style>
+</resources>

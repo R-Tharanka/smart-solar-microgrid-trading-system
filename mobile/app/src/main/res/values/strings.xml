@@ -1,11 +1,11 @@
 <resources>
     <string name="app_name">Smart Solar Microgrid</string>
-    <string name="home_title">Mobile application is running</string>
-    <string name="home_message">The native Android foundation is ready.</string>
+    <string name="home_title">Smart Solar Microgrid</string>
+    <string name="home_message">Connected energy on your phone.</string>
     <string name="home_technology">Java • XML Views • Android</string>
-    <string name="prosumer_foundation_title">Prosumer mobile foundation</string>
-    <string name="grid_operator_foundation_title">Grid operator mobile foundation</string>
-    <string name="role_foundation_message">Role navigation is ready. Features will be added later.</string>
+    <string name="prosumer_foundation_title">Your energy workspace</string>
+    <string name="grid_operator_foundation_title">Energy operations</string>
+    <string name="role_foundation_message">Connected to a smarter energy network.</string>
     <string name="login_title">Sign in</string>
     <string name="login_subtitle">Access the Smart Solar Microgrid mobile application</string>
     <string name="identifier_label">Email or Prosumer NIC</string>
@@ -30,7 +30,7 @@
     <string name="invalid_password">Use 8–128 characters with uppercase, lowercase, number, special character, and no spaces.</string>
     <string name="invalid_phone">Phone number must contain 9–15 digits and may start with +.</string>
     <string name="invalid_address">Address must contain at least 3 characters.</string>
-    <string name="registration_success">Registration successful. You can now sign in.</string>
+    <string name="registration_success">Registration received. Your account is pending Backoffice activation.</string>
     <string name="welcome_user">Welcome, %1$s</string>
     <string name="profile_action">View profile</string>
     <string name="logout_action">Log out</string>
@@ -53,7 +53,7 @@
     <string name="not_provided">Not provided</string>
     <string name="status_label">Status</string>
     <string name="view_slots_action">View slots</string>
-    <string name="operator_station_map_title">Nearby Grid Nodes</string>
+    <string name="operator_station_map_title">Monitor station network</string>
     <string name="allow_location_action">Allow location</string>
     <string name="open_settings_action">Open settings</string>
     <string name="open_location_settings_action">Location settings</string>
@@ -62,7 +62,7 @@
     <string name="station_location_permission_permanent">Location permission is disabled for this app. Stations are shown without nearby ordering.</string>
     <string name="station_location_services_disabled">Device location is turned off. Stations are shown without nearby ordering.</string>
     <string name="station_location_temporarily_unavailable">Your current location is temporarily unavailable. Stations are shown without nearby ordering.</string>
-    <string name="station_map_unavailable">Google Play services is unavailable. You can continue using the station list.</string>
+    <string name="station_map_unavailable">The map is unavailable. You can continue using the station list.</string>
     <string name="station_offline_last_synced">Offline &#8212; showing cached stations. Last synchronized: %1$s</string>
     <string name="stations_unavailable_offline">Station information is unavailable offline because it has not been synchronized on this device. Reconnect to the internet and try again.</string>
     <string name="station_marker_details">Code: %1$s\nAddress: %2$s\nCapacity: %3$.1f kWh\nBattery storage: %4$.1f kWh\nEmpty space: %5$.1f kWh\nOperating hours: %6$s–%7$s\nStatus: %8$s</string>
@@ -76,7 +76,8 @@
     <string name="search_bookings_hint">Search by booking code or status</string>
     <string name="bookings_all_filter">All</string>
     <string name="bookings_pending_filter">Pending</string>
-    <string name="bookings_upcoming_filter">Current / Upcoming</string>
+    <string name="bookings_current_filter">Current</string>
+    <string name="bookings_upcoming_filter">Upcoming</string>
     <string name="bookings_history_filter">History</string>
     <string name="reservation_updated_title">Reservation updated</string>
     <string name="reservation_cancelled_title">Reservation cancelled</string>

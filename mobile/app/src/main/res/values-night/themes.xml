@@ -1,10 +1,22 @@
 <resources>
     <style name="Base.Theme.SmartSolarMicrogrid" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/solar_green</item>
-        <item name="colorPrimaryDark">@color/solar_green_dark</item>
-        <item name="colorAccent">@color/solar_accent</item>
+        <item name="colorOnPrimary">@color/solar_on_brand</item>
+        <item name="colorSecondary">@color/solar_accent</item>
+        <item name="colorOnSecondary">@color/solar_on_accent</item>
+        <item name="colorSurface">@color/solar_surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorSurfaceVariant">@color/solar_surface_muted</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="colorOutline">@color/solar_border</item>
+        <item name="colorError">@color/status_error</item>
+        <item name="android:colorBackground">@color/surface_light</item>
         <item name="android:fontFamily">sans</item>
         <item name="android:statusBarColor">@color/solar_green_dark</item>
+        <item name="android:navigationBarColor">@color/surface_light</item>
+        <item name="materialButtonStyle">@style/Widget.Solar.Button.Primary</item>
+        <item name="textInputStyle">@style/Widget.Solar.Input</item>
+        <item name="materialCardViewStyle">@style/Widget.Solar.Card</item>
     </style>
 
     <style name="Theme.SmartSolarMicrogrid.Starting" parent="Theme.SplashScreen">
