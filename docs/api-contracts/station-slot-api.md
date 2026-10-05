@@ -227,7 +227,7 @@ Errors: `400`, `401`, `403`, `404`
 
 `PUT /api/slots/{slotCode}`
 
-Authorization: Backoffice or Grid Operator (`Staff` policy)
+Authorization: Backoffice
 
 Related collections: `energyBookingSlots`, `energyReservations`
 
@@ -244,7 +244,7 @@ Errors: `400`, `401`, `403`, `404`, `409`
 
 `PATCH /api/slots/{slotCode}/status`
 
-Authorization: Backoffice
+Authorization: Backoffice or Grid Operator (`Staff` policy)
 
 Related collections: `energyBookingSlots`, `energyReservations`
 
@@ -262,6 +262,7 @@ Validation:
 - Slot must exist.
 - Status must be valid.
 - Active reservations prevent making the slot unavailable unless the reservation workflow handles cancellation/reassignment.
+- Grid Operators may change only availability/status; slot schedule, capacity and pricing remain read-only to them.
 
 Success: `200 OK`
 

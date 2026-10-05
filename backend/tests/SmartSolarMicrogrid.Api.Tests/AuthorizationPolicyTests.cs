@@ -18,6 +18,9 @@ public sealed class AuthorizationPolicyTests
     [InlineData(UserRole.Backoffice, UserStatus.Active, AuthorizationPolicies.BackofficeOnly, true)]
     [InlineData(UserRole.Prosumer, UserStatus.Active, AuthorizationPolicies.BackofficeOnly, false)]
     [InlineData(UserRole.GridOperator, UserStatus.Active, AuthorizationPolicies.BackofficeOnly, false)]
+    [InlineData(UserRole.Backoffice, UserStatus.Active, AuthorizationPolicies.Staff, true)]
+    [InlineData(UserRole.GridOperator, UserStatus.Active, AuthorizationPolicies.Staff, true)]
+    [InlineData(UserRole.Prosumer, UserStatus.Active, AuthorizationPolicies.Staff, false)]
     [InlineData(UserRole.Prosumer, UserStatus.Active, AuthorizationPolicies.ProsumerOnly, true)]
     [InlineData(UserRole.Backoffice, UserStatus.Deactivated, AuthorizationPolicies.BackofficeOnly, false)]
     public async Task Policies_RequireCorrectRoleAndActiveAccount(

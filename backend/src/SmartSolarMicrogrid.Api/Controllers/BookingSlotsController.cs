@@ -26,9 +26,9 @@ public sealed class BookingSlotsController(IBookingSlotService bookingSlotServic
         return Ok(new ApiEnvelope<BookingSlotResponse>(slot));
     }
 
-    // Allows Backoffice and Grid Operator staff to update an unreserved energy slot.
+    // Allows only Backoffice users to edit slot schedule, capacity and pricing details.
     [HttpPut("{slotCode}")]
-    [Authorize(Policy = AuthorizationPolicies.Staff)]
+    [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
     [ProducesResponseType<ApiEnvelope<BookingSlotResponse>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiEnvelope<BookingSlotResponse>>> Update(
         string slotCode,
@@ -39,9 +39,9 @@ public sealed class BookingSlotsController(IBookingSlotService bookingSlotServic
         return Ok(new ApiEnvelope<BookingSlotResponse>(slot, "Energy booking slot updated successfully."));
     }
 
-    // Allows Backoffice users to make a slot available or unavailable.
+    // Allows Backoffice and Grid Operator staff to change slot availability.
     [HttpPatch("{slotCode}/status")]
-    [Authorize(Policy = AuthorizationPolicies.BackofficeOnly)]
+    [Authorize(Policy = AuthorizationPolicies.Staff)]
     [ProducesResponseType<ApiEnvelope<BookingSlotResponse>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiEnvelope<BookingSlotResponse>>> ChangeStatus(
         string slotCode,
