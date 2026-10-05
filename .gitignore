@@ -6,6 +6,9 @@ docs/references
 .nuget/
 .dotnet-install.ps1
 .env
+/artifacts/
+/web/.env.iis.local
+/web/.codex-build-check/
 **/bin/
 **/obj/
 
