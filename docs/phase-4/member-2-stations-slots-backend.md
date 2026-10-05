@@ -47,6 +47,8 @@ All protected calls require `Authorization: Bearer <jwt-token>`.
 - Active reservations (`Pending`, `Approved`, `QrIssued`, `Verified`) prevent station deactivation.
 - Active reservations also prevent slot updates or making a slot unavailable.
 - Expired available slots are returned as `Expired` without deleting historical records.
+- Backoffice and Grid Operator users select slot availability from the predefined status dropdown. Only `Available` and `Unavailable` are manual targets; `Reserved` and `Expired` stay visible as predefined statuses but are disabled because server workflows own those transitions.
+- The API independently enforces this boundary: system-managed or unknown manual targets return `SLOT_STATUS_INVALID`, unchanged targets return `SLOT_STATUS_UNCHANGED`, active reservations block `Unavailable`, and ended slots cannot return to `Available`.
 
 ## Example create station request
 
@@ -85,6 +87,6 @@ When a station has a non-terminal reservation, deactivation returns `409 Conflic
 
 ## Verification
 
-Automated service tests cover station creation, duplicate codes, capacity/storage rules, reservation-safe deactivation, inactive-station slot rejection, overlap and schedule rules, valid slot creation, and reservation-safe slot changes.
+Automated service tests cover station creation, duplicate codes, capacity/storage rules, reservation-safe deactivation, inactive-station slot rejection, overlap and schedule rules, valid slot creation, reservation-safe slot changes, and rejection of system-managed manual status targets.
 
-Manual verification should include authenticated calls with Backoffice and Prosumer JWTs, MongoDB document inspection, validation failures, and the `409` station-deactivation scenario.
+Manual verification should include authenticated calls with Backoffice, Grid Operator and Prosumer JWTs, MongoDB document inspection, validation failures, the slot-status transition matrix, and the `409` station-deactivation scenario.

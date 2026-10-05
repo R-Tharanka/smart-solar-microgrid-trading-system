@@ -46,7 +46,7 @@ Member 2 subsequently advanced the same shared database to version 3 through a n
 
 Member 4's later Android integration adds a Prosumer QR screen and renewal action, ZXing camera scanner, Grid Operator verification form, final transfer confirmation and success/error dialogs. The backend was also changed after the original plan so an already `QrIssued` reservation can rotate/reissue its token; the newest token hash replaces the old hash. This renewal path is not directly covered by a backend test. More importantly, `BookingDetailsFragment` stores the entire raw QR payload in `qr_cache` SharedPreferences and does not clear it through the identity/logout cache path; current backup rules exclude only the SQLite database. Because the payload contains the transaction token, this contradicts the hash-only/no-token-persistence security design and must be remediated before the mobile QR feature is considered secure or complete.
 
-The team has now resolved the assignment's Grid Operator slot-availability rule: Grid Operators have read-only station and slot details, may change slot availability/status, and may not edit station data or slot schedule/capacity/price. The API and Web actions implement this division; Backoffice retains station/slot creation and detail-edit authority.
+The team has now resolved the assignment's Grid Operator slot-availability rule: Grid Operators have read-only station and slot details, may change slot availability/status, and may not edit station data or slot schedule/capacity/price. The shared Backoffice/Grid Operator Web dialog presents the four predefined backend statuses in a dropdown, enabling only the manual `Available` and `Unavailable` targets while keeping `Reserved` and `Expired` visible as disabled, server-managed states. The API independently rejects invalid/system-managed targets, unchanged transitions, active-reservation conflicts and attempts to reopen ended slots. Backoffice retains station/slot creation and detail-edit authority.
 
 | Area | Status and principal gap |
 | --- | --- |
@@ -74,7 +74,7 @@ The repository has React/Router/Axios/Tailwind on web; native Java/XML, AndroidX
 | Postman | Identity collection only | All-domain suite absent |
 | Deployment | Docker files, `.env.example`, emulator development URL | IIS hosting not evidenced |
 
-Current verification on 2026-10-05: backend 136/136 tests passed, including read and mutation endpoint-policy coverage for the finalized Grid Operator slot boundary; Web 12/12 tests and production build passed, with zero lint errors and one existing hooks-dependency warning; Android assembled successfully but its 9-test JVM suite has 8 passing and one failing API error-sanitization test. These automated checks do not establish live MongoDB, browser, map tiles/location, camera, emulator/device or IIS behavior.
+Current verification on 2026-10-05: backend 138/138 tests passed, including read and mutation endpoint-policy coverage for the finalized Grid Operator slot boundary and rejection tests for manual `Reserved`/`Expired` targets; Web 12/12 tests and production build passed, with zero lint errors and one existing hooks-dependency warning; Android assembled successfully but its 9-test JVM suite has 8 passing and one failing API error-sanitization test. These automated checks do not establish live MongoDB, browser, map tiles/location, camera, emulator/device or IIS behavior.
 
 ## 4. Progress by Planned Phase
 
@@ -161,7 +161,7 @@ Own station and booking-slot models/collections, GPS/capacity/schedules/status, 
 
 ### Completed web work
 
-- Backoffice station/slot create, edit, detail and status controls; Grid Operator read-only station/slot detail views plus slot availability/status control.
+- Backoffice station/slot create, edit, detail and status controls; Grid Operator read-only station/slot detail views plus the shared predefined slot-availability dropdown. Manual selection is limited to `Available`/`Unavailable`; server-managed `Reserved`/`Expired` remain disabled.
 - Location picker, filters, error feedback, responsive cards **and newly added table/list toggles** on both shared pages. Cards remain default for both roles.
 
 **Completed Android work:** the station screen preserves the list and adds an osmdroid `MapView` backed by OpenStreetMap tiles plus Play Services location. `DeviceLocationProvider` performs one current-location request rather than continuous tracking. Permission denied/permanently denied, disabled services and unavailable location have non-blocking fallbacks. With a usable location, Android calls `GET /api/stations?status=Active&nearLat=...&nearLng=...`; otherwise it calls `GET /api/stations?status=Active`. Markers use validated latitude/longitude, retain a safe station ID/code mapping and open API-derived station details before reusing the existing station-to-slots navigation. `SlotsFragment` displays the selected station context and continues using the live slot API and reservation contract. Google Maps dependencies, manifest key metadata and setup text remain, but no Java/XML screen currently imports or renders a Google Maps component.
@@ -287,7 +287,7 @@ Pending: verify final Atlas documents/indexes with redacted examples; check uniq
 | 2026-10-04 current repository audit | Backend full suite | 123/123 passed; unit/controller/service evidence only, not live MongoDB or hosted HTTP proof |
 | 2026-10-04 current repository audit | Web tests/lint/build | 12/12 passed; production build passed; lint 0 errors/1 existing hooks-dependency warning |
 | 2026-10-04 current repository audit | Android unit tests and debug APK | APK assembled; 8/9 JVM tests passed; `ApiErrorHandlerTest` failed because raw server detail is exposed |
-| 2026-10-05 Grid Operator slot boundary | Backend full suite | 136/136 passed; endpoint policies enforce read-only station/slot details plus shared slot-status control; no live MongoDB/IIS calls and no direct QR-renewal test |
+| 2026-10-05 Grid Operator slot boundary and status validation | Backend full suite | 138/138 passed; endpoint policies enforce read-only station/slot details plus shared slot-status control, and service tests reject manual `Reserved`/`Expired` targets; no live MongoDB/IIS calls and no direct QR-renewal test |
 | 2026-10-05 current repository audit | Web tests/lint/build | 12/12 passed; production build passed; lint 0 errors/1 existing hooks-dependency warning |
 | 2026-10-05 current repository audit | Android unit tests and debug APK | APK assembled; 8/9 JVM tests passed; no transaction/scanner tests; `ApiErrorHandlerTest` still fails |
 

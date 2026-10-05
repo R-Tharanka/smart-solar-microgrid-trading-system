@@ -260,8 +260,12 @@ Request:
 Validation:
 
 - Slot must exist.
-- Status must be valid.
+- The complete slot-status model is `Available`, `Reserved`, `Unavailable`, and `Expired`.
+- The Backoffice/Grid Operator availability dropdown exposes the predefined statuses but enables only `Available` and `Unavailable` as manual targets.
+- `Reserved` and `Expired` are system-managed states and are rejected as manual targets with `SLOT_STATUS_INVALID`.
+- Requesting the current status is rejected with `SLOT_STATUS_UNCHANGED`.
 - Active reservations prevent making the slot unavailable unless the reservation workflow handles cancellation/reassignment.
+- An expired slot cannot be made available.
 - Grid Operators may change only availability/status; slot schedule, capacity and pricing remain read-only to them.
 
 Success: `200 OK`
