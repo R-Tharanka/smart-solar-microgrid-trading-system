@@ -178,6 +178,25 @@ adb -s DEVICE_SERIAL install -r `
 
 The `usbDeviceDebug` application connects to `http://127.0.0.1:5080/`; ADB reverse forwards that address to the API running on the computer. Port forwarding may need to be configured again after disconnecting the USB cable or restarting ADB.
 
+### Windows PowerShell: USB device with the IIS API
+
+Use the `iisDebug` flavor instead of `usbDeviceDebug` when the API is hosted by IIS on port `8080`:
+
+```powershell
+adb -s DEVICE_SERIAL reverse --remove tcp:5080
+adb -s DEVICE_SERIAL reverse tcp:8080 tcp:8080
+adb -s DEVICE_SERIAL reverse --list
+.\gradlew.bat installIisDebug
+adb -s DEVICE_SERIAL shell am force-stop com.smartsolar.microgrid
+adb -s DEVICE_SERIAL shell am start -n com.smartsolar.microgrid/.MainActivity
+```
+
+These commands remove the old port-5080 rule, forward the phone's port `8080` to IIS, confirm the forwarding rule, install the IIS-specific APK, and restart the application. Replace `DEVICE_SERIAL` with the identifier printed by `adb devices`.
+
+Copy only commands, not the `PS ...>` prompt, `>>` continuation markers, previous output, or error lines beginning with `+`. If PowerShell is stuck at `>>`, press `Ctrl+C` and retry one command at a time.
+
+The complete IIS workflow, command-by-command explanations, LAN alternative and server checks are documented in [the IIS deployment guide](../docs/deployment/iis-deployment.md#8-point-android-at-iis).
+
 ### Windows PowerShell: emulator
 
 The emulator does not require ADB reverse. With the backend running, use:

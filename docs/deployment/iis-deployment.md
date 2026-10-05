@@ -148,7 +148,87 @@ The value is embedded at build time. Rebuild after changing it. Hosting the Reac
 
 ## 8. Point Android at IIS
 
-Find the IIS computer's current LAN IPv4 address:
+There are two supported ways to connect a physical Android device to the IIS API. USB forwarding is the simplest option during development and assessment because it does not require a Windows Firewall rule or stable Wi-Fi address.
+
+### Option A: USB connection with ADB reverse (recommended)
+
+First verify IIS from a normal PowerShell window on the computer:
+
+```powershell
+Invoke-RestMethod http://localhost:8080/health/live
+Invoke-RestMethod http://localhost:8080/health/ready
+```
+
+The first command verifies that IIS and the API process are alive. The second also verifies that the API can reach MongoDB. Both should return `Healthy`.
+
+Connect the phone with USB debugging enabled, then run each of the following commands separately:
+
+```powershell
+adb devices
+```
+
+This lists Android devices visible to ADB. Copy the serial shown before the word `device`. The examples below use `DEVICE_SERIAL`; replace it with the real value, such as `R58T20MSV2H`.
+
+```powershell
+adb -s DEVICE_SERIAL reverse --remove tcp:5080
+```
+
+This removes the obsolete forwarding rule for the development API on port `5080`. A message saying that no listener exists is harmless if the old rule was already absent.
+
+```powershell
+adb -s DEVICE_SERIAL reverse tcp:8080 tcp:8080
+```
+
+This forwards the phone's loopback port `8080` to IIS port `8080` on the computer. The Android app can therefore call `http://127.0.0.1:8080/` while the request is actually handled by IIS.
+
+```powershell
+adb -s DEVICE_SERIAL reverse --list
+```
+
+This displays active forwarding rules. Confirm that the output contains:
+
+```text
+UsbFfs tcp:8080 tcp:8080
+```
+
+Move to the Android project only if the current prompt does not already end in `\mobile>`:
+
+```powershell
+cd "D:\work\Year - 4\sem 2\EAD\smart-solar-microgrid-trading-system\mobile"
+```
+
+Install the IIS-specific APK:
+
+```powershell
+.\gradlew.bat installIisDebug
+```
+
+This builds and installs the `iisDebug` flavor. When `IIS_API_BASE_URL` is not set in `mobile/local.properties`, this flavor uses `http://127.0.0.1:8080/`, which matches the ADB reverse rule. Do not use `installUsbDeviceDebug` for IIS; that flavor targets port `5080`.
+
+Restart the installed application so it does not keep an older process or screen alive:
+
+```powershell
+adb -s DEVICE_SERIAL shell am force-stop com.smartsolar.microgrid
+adb -s DEVICE_SERIAL shell am start -n com.smartsolar.microgrid/.MainActivity
+```
+
+The first command stops the application process. The second starts `MainActivity`. Keep the USB cable connected while testing; ADB reverse may need to be configured again after reconnecting the phone or restarting ADB.
+
+### PowerShell copy-and-paste rule
+
+Copy only the commands inside code blocks. Do not copy any of the following from a terminal transcript:
+
+- The prompt, such as `PS D:\work\...>`.
+- The continuation prompt `>>`.
+- Previous command output or error messages.
+- Diagnostic lines beginning with `+`, such as `+ CategoryInfo`.
+- Surrounding quotation marks around an entire transcript.
+
+If PowerShell displays `>>` unexpectedly, press `Ctrl+C` once to cancel the unfinished command, then paste one command at a time.
+
+### Option B: Wi-Fi/LAN connection
+
+Use this option when the phone should reach IIS without a USB cable. Find the IIS computer's current LAN IPv4 address:
 
 ```powershell
 ipconfig
@@ -167,7 +247,7 @@ cd .\mobile
 .\gradlew.bat installIisDebug
 ```
 
-The `iis` flavor permits cleartext HTTP only to support a local assessment deployment. A real production deployment must use HTTPS; when HTTPS is configured, remove the cleartext IIS flavor override.
+This `local.properties` value overrides the USB-loopback default. The `iis` flavor permits cleartext HTTP only to support a local assessment deployment. A real production deployment must use HTTPS; when HTTPS is configured, remove the cleartext IIS flavor override.
 
 To allow a physical phone to reach the local HTTP binding, add a narrowly scoped Windows Firewall rule from Administrator PowerShell:
 
