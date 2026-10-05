@@ -127,20 +127,65 @@ The APKs are created at `app/build/outputs/apk/emulator/debug/app-emulator-debug
 
 ## Run from a terminal
 
-Run all commands from the `mobile` directory.
+### Windows PowerShell: start the backend
 
-### Windows PowerShell
+Open a PowerShell window at the repository root and start the API:
 
 ```powershell
-cd mobile
-$androidSdk = "$env:LOCALAPPDATA\Android\Sdk"
-# Emulator:
-./gradlew.bat installEmulatorDebug
-# Or a USB device (run the forwarding command before installation):
-& "$androidSdk\platform-tools\adb.exe" reverse tcp:5080 tcp:5080
-./gradlew.bat installUsbDeviceDebug
-& "$androidSdk\platform-tools\adb.exe" shell am start -n com.smartsolar.microgrid/.MainActivity
+cd "D:\work\Year - 4\sem 2\EAD\smart-solar-microgrid-trading-system"
+dotnet run --project .\backend\src\SmartSolarMicrogrid.Api
 ```
+
+Keep that window open. In another PowerShell window, verify the API and its MongoDB dependency:
+
+```powershell
+Invoke-RestMethod http://localhost:5080/health/live
+Invoke-RestMethod http://localhost:5080/health/ready
+```
+
+Both health checks should report healthy before testing login.
+
+### Windows PowerShell: USB-connected physical device
+
+Confirm that ADB can see the device. Replace `DEVICE_SERIAL` below with the value printed by `adb devices`:
+
+```powershell
+adb devices
+adb -s DEVICE_SERIAL reverse tcp:5080 tcp:5080
+adb -s DEVICE_SERIAL reverse --list
+```
+
+An entry such as `UsbFfs tcp:5080 tcp:5080` confirms that forwarding is active. Then build and install the USB-device flavor:
+
+```powershell
+cd "D:\work\Year - 4\sem 2\EAD\smart-solar-microgrid-trading-system\mobile"
+.\gradlew.bat installUsbDeviceDebug
+adb -s DEVICE_SERIAL shell am force-stop com.smartsolar.microgrid
+adb -s DEVICE_SERIAL shell am start -n com.smartsolar.microgrid/.MainActivity
+```
+
+If the PowerShell prompt already ends in `\mobile>`, do not run `cd mobile` again. There is no single `installDebug` task after adding product flavors; use `installUsbDeviceDebug` for a physical device or `installEmulatorDebug` for an emulator.
+
+If an emulator and physical device are connected at the same time, build the APK and install it explicitly on the selected device:
+
+```powershell
+.\gradlew.bat assembleUsbDeviceDebug
+adb -s DEVICE_SERIAL install -r `
+  .\app\build\outputs\apk\usbDevice\debug\app-usbDevice-debug.apk
+```
+
+The `usbDeviceDebug` application connects to `http://127.0.0.1:5080/`; ADB reverse forwards that address to the API running on the computer. Port forwarding may need to be configured again after disconnecting the USB cable or restarting ADB.
+
+### Windows PowerShell: emulator
+
+The emulator does not require ADB reverse. With the backend running, use:
+
+```powershell
+cd "D:\work\Year - 4\sem 2\EAD\smart-solar-microgrid-trading-system\mobile"
+.\gradlew.bat installEmulatorDebug
+```
+
+The `emulatorDebug` application connects to `http://10.0.2.2:5080/`.
 
 ### macOS or Linux
 
@@ -155,14 +200,7 @@ adb reverse tcp:5080 tcp:5080
 adb shell am start -n com.smartsolar.microgrid/.MainActivity
 ```
 
-The install task requires the matching emulator or USB-debugging device to be connected. On Windows PowerShell, confirm that Android Debug Bridge can see it with:
-
-```powershell
-$androidSdk = "$env:LOCALAPPDATA\Android\Sdk"
-& "$androidSdk\platform-tools\adb.exe" devices
-```
-
-On macOS or Linux, use:
+The install task requires the matching emulator or USB-debugging device to be connected. On macOS or Linux, confirm that Android Debug Bridge can see it with:
 
 ```text
 adb devices
