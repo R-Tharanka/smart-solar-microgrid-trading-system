@@ -16,6 +16,12 @@ val mapsApiKey = localProperties.getProperty("MAPS_API_KEY")
     ?: System.getenv("MAPS_API_KEY")
     ?: ""
 
+val iisApiBaseUrl = localProperties.getProperty("IIS_API_BASE_URL")
+    ?: providers.gradleProperty("IIS_API_BASE_URL").orNull
+    ?: System.getenv("IIS_API_BASE_URL")
+    ?: "http://127.0.0.1:8080/"
+val normalizedIisApiBaseUrl = if (iisApiBaseUrl.endsWith("/")) iisApiBaseUrl else "$iisApiBaseUrl/"
+
 android {
     namespace = "com.smartsolar.microgrid"
     compileSdk {
@@ -45,6 +51,10 @@ android {
         create("usbDevice") {
             dimension = "apiTarget"
             buildConfigField("String", "API_BASE_URL", "\"http://127.0.0.1:5080/\"")
+        }
+        create("iis") {
+            dimension = "apiTarget"
+            buildConfigField("String", "API_BASE_URL", "\"$normalizedIisApiBaseUrl\"")
         }
     }
 
