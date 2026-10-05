@@ -4,7 +4,7 @@
 
 ## Current Verification Addendum - 2026-10-05
 
-- Backend tests pass 136/136, including read and mutation endpoint-policy coverage for the finalized Grid Operator slot boundary. This is unit/controller/service evidence, not live MongoDB or IIS proof.
+- Backend tests pass 138/138, including read and mutation endpoint-policy coverage for the finalized Grid Operator slot boundary and service tests rejecting manual `Reserved`/`Expired` targets. This is unit/controller/service evidence, not live MongoDB or IIS proof.
 - Web tests pass 12/12, the production build succeeds, and ESLint reports zero errors plus the existing reservation-hook warning.
 - Android debug APK assembly succeeds; JVM tests pass 8/9 because `ApiErrorHandlerTest` expects raw server detail to be hidden.
 - Android source now includes booking action summaries, approved-booking QR rendering/regeneration, ZXing camera scanning, server verification and finalization.

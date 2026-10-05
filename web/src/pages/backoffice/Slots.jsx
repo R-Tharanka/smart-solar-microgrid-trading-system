@@ -16,7 +16,10 @@ import ViewToggle from '../../components/ui/ViewToggle';
 import { EmptyState, LoadingState } from '../../components/ui/PageState';
 import { useToast } from '../../context/ToastContext';
 
+// Keep these values aligned with the backend SlotStatus enum. Reserved and
+// Expired are displayed for filtering, but are controlled by server workflows.
 const slotStatuses = ['Available', 'Reserved', 'Unavailable', 'Expired'];
+const manuallyAssignableSlotStatuses = new Set(['Available', 'Unavailable']);
 
 // Keeps displayed slot schedules in local time.
 const formatDateTime = (value) => new Intl.DateTimeFormat(undefined, {
@@ -49,7 +52,7 @@ const SlotActions = ({ slot, isBackoffice, canChangeStatus, onDetails, onEdit, o
   <div className="flex flex-wrap gap-1">
     <Button variant="secondary" onClick={() => onDetails(slot)}>Details</Button>
     {isBackoffice && <Button variant="ghost" onClick={() => onEdit(slot)} disabled={['Reserved', 'Expired'].includes(slot.status)}>Edit</Button>}
-    {canChangeStatus && <Button variant="ghost" onClick={() => onStatus(slot)} disabled={!['Available', 'Unavailable'].includes(slot.status)}>Availability</Button>}
+    {canChangeStatus && <Button variant="ghost" onClick={() => onStatus(slot)} disabled={!manuallyAssignableSlotStatuses.has(slot.status)}>Availability</Button>}
   </div>
 );
 
@@ -176,11 +179,11 @@ const Slots = () => {
   };
 
   const openStatusDialog = (slot) => {
-    if (!['Available', 'Unavailable'].includes(slot.status)) {
+    if (!manuallyAssignableSlotStatuses.has(slot.status)) {
       setError(`${slot.status} slots cannot be changed manually.`);
       return;
     }
-    setStatusDialog({ slot, nextStatus: slot.status === 'Available' ? 'Unavailable' : 'Available' });
+    setStatusDialog({ slot, nextStatus: slot.status });
     setStatusReason('');
     setError('');
   };
@@ -193,7 +196,7 @@ const Slots = () => {
   };
 
   const handleStatusChange = async () => {
-    if (!statusDialog) return;
+    if (!statusDialog || statusDialog.nextStatus === statusDialog.slot.status) return;
     try {
       setChangingStatus(true);
       setError('');
@@ -285,8 +288,39 @@ const Slots = () => {
       {showForm && <SlotForm slot={editingSlot} stationCode={selectedStationCode} onClose={() => setShowForm(false)} onSuccess={handleFormSuccess} />}
       {showDetails && <SlotDetails slot={selectedSlot} onClose={() => { setShowDetails(false); setSelectedSlot(null); }} />}
 
-      <Modal open={Boolean(statusDialog)} title="Change slot availability" description={statusDialog ? `Change ${statusDialog.slot.slotCode} from ${statusDialog.slot.status} to ${statusDialog.nextStatus}.` : ''} onClose={closeStatusDialog} size="max-w-md">
-        <div className="space-y-4"><FormField as="textarea" id="slot-status-reason" label="Reason" value={statusReason} onChange={(event) => setStatusReason(event.target.value)} placeholder="Reason for this availability change" />{statusDialog?.nextStatus === 'Unavailable' && <Alert title="Reservation check">The change will be rejected if this slot has an active reservation.</Alert>}<div className="flex justify-end gap-3"><Button variant="secondary" onClick={closeStatusDialog} disabled={changingStatus}>Cancel</Button><Button variant={statusDialog?.nextStatus === 'Unavailable' ? 'danger' : 'primary'} onClick={handleStatusChange} loading={changingStatus}>Confirm change</Button></div></div>
+      <Modal open={Boolean(statusDialog)} title="Change slot availability" description={statusDialog ? `Select the availability for ${statusDialog.slot.slotCode}. Current status: ${statusDialog.slot.status}.` : ''} onClose={closeStatusDialog} size="max-w-md">
+        <div className="space-y-4">
+          <FormField
+            as="select"
+            id="slot-new-status"
+            label="New availability status"
+            value={statusDialog?.nextStatus || ''}
+            onChange={(event) => setStatusDialog((current) => (
+              current ? { ...current, nextStatus: event.target.value } : current
+            ))}
+            disabled={changingStatus}
+            hint="Reserved and Expired are assigned automatically by server workflows."
+          >
+            {slotStatuses.map((status) => (
+              <option key={status} value={status} disabled={!manuallyAssignableSlotStatuses.has(status)}>
+                {status}
+              </option>
+            ))}
+          </FormField>
+          <FormField as="textarea" id="slot-status-reason" label="Reason" value={statusReason} onChange={(event) => setStatusReason(event.target.value)} placeholder="Reason for this availability change" disabled={changingStatus} />
+          {statusDialog?.nextStatus === 'Unavailable' && <Alert title="Reservation check">The change will be rejected if this slot has an active reservation.</Alert>}
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={closeStatusDialog} disabled={changingStatus}>Cancel</Button>
+            <Button
+              variant={statusDialog?.nextStatus === 'Unavailable' ? 'danger' : 'primary'}
+              onClick={handleStatusChange}
+              loading={changingStatus}
+              disabled={!statusDialog || statusDialog.nextStatus === statusDialog.slot.status}
+            >
+              Confirm change
+            </Button>
+          </div>
+        </div>
       </Modal>
     </MainLayout>
   );
