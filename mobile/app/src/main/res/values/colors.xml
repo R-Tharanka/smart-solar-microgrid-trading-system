@@ -2,6 +2,7 @@
 <resources>
     <color name="solar_green">#112019</color>
     <color name="solar_green_dark">#0C1915</color>
+    <color name="solar_navigation_active">#294336</color>
     <color name="solar_accent">#B1F688</color>
     <color name="solar_on_accent">#19331F</color>
     <color name="surface_light">#F3F5EF</color>
