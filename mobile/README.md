@@ -31,13 +31,14 @@ MAPS_API_KEY=YOUR_REAL_GOOGLE_MAPS_ANDROID_KEY
 
 The key is injected into `com.google.android.geo.API_KEY` through a manifest placeholder. The build also accepts a Gradle property or `MAPS_API_KEY` environment variable. Do not commit a real key. Restrict it to the Maps SDK for Android, package `com.smartsolar.microgrid`, and the applicable debug/release SHA-1 fingerprints. A configured key alone is not evidence that the current osmdroid screen meets the Google Maps requirement.
 
-The API base URL is configured once as `API_BASE_URL` in `app/build.gradle.kts`. Its development value is:
+The API base URL is selected by a Gradle product flavor in `app/build.gradle.kts`:
 
 ```text
-http://10.0.2.2:5080/
+emulator:  http://10.0.2.2:5080/
+usbDevice: http://127.0.0.1:5080/
 ```
 
-`10.0.2.2` is the Android emulator alias for the host computer. Replace the Gradle value with the HTTPS IIS URL when deployment is available, then sync and rebuild the project. Physical devices cannot use `10.0.2.2`; for local physical-device testing, use a host address reachable from that device.
+`10.0.2.2` is the Android emulator alias for the host computer. The `usbDevice` flavor uses `adb reverse` so that the physical device's loopback port `5080` is forwarded to the development computer. Select the matching build variant before installing the app. A deployed environment should use a separate HTTPS production flavor or configuration.
 
 ## Requirements
 
@@ -68,7 +69,7 @@ After cloning the repository, run the following steps from the repository root:
 ```powershell
 cd mobile
 ./gradlew.bat dependencies
-./gradlew.bat assembleDebug
+./gradlew.bat assembleEmulatorDebug assembleUsbDeviceDebug
 ```
 
 ### macOS or Linux
@@ -77,32 +78,32 @@ cd mobile
 cd mobile
 chmod +x gradlew
 ./gradlew dependencies
-./gradlew assembleDebug
+./gradlew assembleEmulatorDebug assembleUsbDeviceDebug
 ```
 
-The Gradle wrapper downloads the required Gradle and Android dependencies automatically. The `assembleDebug` command confirms that the mobile app is configured correctly and creates a debug APK at `app/build/outputs/apk/debug/app-debug.apk`.
+The Gradle wrapper downloads the required Gradle and Android dependencies automatically. These commands create separate emulator and USB-device debug APKs under `app/build/outputs/apk/`.
 
 Before building, make sure that Android Studio has the required Android SDK Platform and Build-Tools versions installed. If Gradle cannot find the SDK, open the `mobile` folder in Android Studio or create an untracked `local.properties` file with the path to your Android SDK.
 
 ## Backend and API configuration
 
-The default API URL is `http://10.0.2.2:5080/`. Before testing API-backed features, start the backend API and confirm that it is listening on port `5080`.
+Before testing API-backed features, start the backend API and confirm that it is listening on `http://localhost:5080`.
 
-- Android Emulator: keep `10.0.2.2`, which maps to the host computer.
-- Physical device: replace `API_BASE_URL` in `app/build.gradle.kts` with an address reachable from the device, such as the host computer's local network address.
-- Deployed environment: replace it with the HTTPS IIS or production API URL, then sync and rebuild.
+- Android Emulator: select `emulatorDebug`; `10.0.2.2` maps to the host computer.
+- USB-connected physical device: run `adb reverse tcp:5080 tcp:5080`, then select `usbDeviceDebug`.
+- Deployed environment: add or configure an HTTPS production target rather than using either local-development flavor.
 
-The URL must include its trailing `/`. The current local HTTP configuration permits cleartext traffic for `10.0.2.2`; other HTTP hosts require a corresponding update to the network security configuration. Do not commit environment-specific credentials, tokens, or private keys.
+The URL must include its trailing `/`. Each flavor permits cleartext traffic only for its local development host. Do not commit environment-specific credentials, tokens, or private keys.
 
 ## Run with Android Studio
 
 1. Open Android Studio.
 2. Select **Open** and choose the repository's `mobile` folder.
 3. Wait for the Gradle sync to finish.
-4. Open **Tools > Device Manager** and create an emulator if one does not exist.
-5. Start the emulator.
-6. Select the `app` run configuration and the emulator in the toolbar.
-7. Click **Run**, or press `Shift+F10`.
+4. Open **Build > Select Build Variant**.
+5. For an emulator, select `emulatorDebug`, start the emulator, and choose it in the toolbar.
+6. For a physical device, connect it with USB debugging, run `adb reverse tcp:5080 tcp:5080`, select `usbDeviceDebug`, and choose the device in the toolbar.
+7. Select the `app` run configuration and click **Run**, or press `Shift+F10`.
 
 The application opens with the branded splash screen and then displays the initial confirmation screen.
 
@@ -113,49 +114,93 @@ From the `mobile` directory, run:
 ### Windows PowerShell
 
 ```powershell
-./gradlew.bat assembleDebug
+./gradlew.bat assembleEmulatorDebug assembleUsbDeviceDebug
 ```
 
 ### macOS or Linux
 
 ```bash
-./gradlew assembleDebug
+./gradlew assembleEmulatorDebug assembleUsbDeviceDebug
 ```
 
-The debug APK is created at `app/build/outputs/apk/debug/app-debug.apk`. Debug builds are intended for development and testing, not distribution to end users.
+The APKs are created at `app/build/outputs/apk/emulator/debug/app-emulator-debug.apk` and `app/build/outputs/apk/usbDevice/debug/app-usbDevice-debug.apk`. Debug builds are intended for development and testing, not distribution to end users.
 
 ## Run from a terminal
 
-Run all commands from the `mobile` directory.
+### Windows PowerShell: start the backend
 
-### Windows PowerShell
+Open a PowerShell window at the repository root and start the API:
 
 ```powershell
-cd mobile
-$androidSdk = "$env:LOCALAPPDATA\Android\Sdk"
-./gradlew.bat assembleDebug
-./gradlew.bat installDebug
-& "$androidSdk\platform-tools\adb.exe" shell am start -n com.smartsolar.microgrid/.MainActivity
+cd "D:\work\Year - 4\sem 2\EAD\smart-solar-microgrid-trading-system"
+dotnet run --project .\backend\src\SmartSolarMicrogrid.Api
 ```
+
+Keep that window open. In another PowerShell window, verify the API and its MongoDB dependency:
+
+```powershell
+Invoke-RestMethod http://localhost:5080/health/live
+Invoke-RestMethod http://localhost:5080/health/ready
+```
+
+Both health checks should report healthy before testing login.
+
+### Windows PowerShell: USB-connected physical device
+
+Confirm that ADB can see the device. Replace `DEVICE_SERIAL` below with the value printed by `adb devices`:
+
+```powershell
+adb devices
+adb -s DEVICE_SERIAL reverse tcp:5080 tcp:5080
+adb -s DEVICE_SERIAL reverse --list
+```
+
+An entry such as `UsbFfs tcp:5080 tcp:5080` confirms that forwarding is active. Then build and install the USB-device flavor:
+
+```powershell
+cd "D:\work\Year - 4\sem 2\EAD\smart-solar-microgrid-trading-system\mobile"
+.\gradlew.bat installUsbDeviceDebug
+adb -s DEVICE_SERIAL shell am force-stop com.smartsolar.microgrid
+adb -s DEVICE_SERIAL shell am start -n com.smartsolar.microgrid/.MainActivity
+```
+
+If the PowerShell prompt already ends in `\mobile>`, do not run `cd mobile` again. There is no single `installDebug` task after adding product flavors; use `installUsbDeviceDebug` for a physical device or `installEmulatorDebug` for an emulator.
+
+If an emulator and physical device are connected at the same time, build the APK and install it explicitly on the selected device:
+
+```powershell
+.\gradlew.bat assembleUsbDeviceDebug
+adb -s DEVICE_SERIAL install -r `
+  .\app\build\outputs\apk\usbDevice\debug\app-usbDevice-debug.apk
+```
+
+The `usbDeviceDebug` application connects to `http://127.0.0.1:5080/`; ADB reverse forwards that address to the API running on the computer. Port forwarding may need to be configured again after disconnecting the USB cable or restarting ADB.
+
+### Windows PowerShell: emulator
+
+The emulator does not require ADB reverse. With the backend running, use:
+
+```powershell
+cd "D:\work\Year - 4\sem 2\EAD\smart-solar-microgrid-trading-system\mobile"
+.\gradlew.bat installEmulatorDebug
+```
+
+The `emulatorDebug` application connects to `http://10.0.2.2:5080/`.
 
 ### macOS or Linux
 
 ```bash
 cd mobile
 chmod +x gradlew
-./gradlew assembleDebug
-./gradlew installDebug
+# Emulator:
+./gradlew installEmulatorDebug
+# Or a USB device (run the forwarding command before installation):
+adb reverse tcp:5080 tcp:5080
+./gradlew installUsbDeviceDebug
 adb shell am start -n com.smartsolar.microgrid/.MainActivity
 ```
 
-`installDebug` requires a running emulator or a connected Android device with USB debugging enabled. On Windows PowerShell, confirm that Android Debug Bridge can see it with:
-
-```powershell
-$androidSdk = "$env:LOCALAPPDATA\Android\Sdk"
-& "$androidSdk\platform-tools\adb.exe" devices
-```
-
-On macOS or Linux, use:
+The install task requires the matching emulator or USB-debugging device to be connected. On macOS or Linux, confirm that Android Debug Bridge can see it with:
 
 ```text
 adb devices
@@ -250,7 +295,7 @@ Keep that PowerShell window open while the emulator runs. In a second PowerShell
 
 ```powershell
 $androidSdk = "$env:LOCALAPPDATA\Android\Sdk"
-./gradlew.bat installDebug
+./gradlew.bat installEmulatorDebug
 & "$androidSdk\platform-tools\adb.exe" shell am start -n com.smartsolar.microgrid/.MainActivity
 ```
 
@@ -284,10 +329,11 @@ emulator -list-avds
 ## Useful Gradle commands
 
 ```text
-./gradlew testDebugUnitTest   Run local unit tests
-./gradlew assembleDebug       Build the debug APK
-./gradlew installDebug        Install on a connected device
-./gradlew clean               Remove generated build output
+./gradlew testEmulatorDebugUnitTest testUsbDeviceDebugUnitTest   Run local unit tests for both targets
+./gradlew assembleEmulatorDebug assembleUsbDeviceDebug           Build both debug APKs
+./gradlew installEmulatorDebug                                  Install the emulator target
+./gradlew installUsbDeviceDebug                                 Install the USB-device target
+./gradlew clean                                                  Remove generated build output
 ```
 
 On Windows, replace `./gradlew` with `./gradlew.bat`.
@@ -295,7 +341,8 @@ On Windows, replace `./gradlew` with `./gradlew.bat`.
 The debug APK is generated at:
 
 ```text
-app/build/outputs/apk/debug/app-debug.apk
+app/build/outputs/apk/emulator/debug/app-emulator-debug.apk
+app/build/outputs/apk/usbDevice/debug/app-usbDevice-debug.apk
 ```
 
 ## Clean generated files
@@ -310,7 +357,7 @@ On Windows, use `./gradlew.bat clean`. The next build will recreate the required
 
 ## Common setup problems
 
-- **The app cannot reach the API:** Confirm the backend is running on port `5080`. Use `10.0.2.2` only from an Android Emulator; a physical device needs a reachable host address and matching cleartext or HTTPS configuration.
+- **The app cannot reach the API:** Confirm the backend is running on port `5080`. Use `emulatorDebug` for an emulator. For `usbDeviceDebug`, keep the USB connection active and verify `adb reverse --list` includes `tcp:5080 tcp:5080`.
 - **Gradle daemon issues:** Run `./gradlew --stop` or `./gradlew.bat --stop`, then retry the command.
 - **SDK location not found:** Open the project once in Android Studio, or create an untracked `local.properties` file containing `sdk.dir=C:\\Users\\YOUR_NAME\\AppData\\Local\\Android\\Sdk` on Windows.
 - **`emulator` is not recognized:** Use `& "$env:LOCALAPPDATA\Android\Sdk\emulator\emulator.exe"` or add the SDK's `emulator` directory to `PATH`.
@@ -324,9 +371,9 @@ On Windows, use `./gradlew.bat clean`. The next build will recreate the required
   Test-Path "$env:JAVA_HOME\bin\java.exe"
   Test-Path "$env:JAVA_HOME\bin\jlink.exe"
   ./gradlew.bat --version
-  ./gradlew.bat assembleDebug
+  ./gradlew.bat assembleEmulatorDebug assembleUsbDeviceDebug
   if ($LASTEXITCODE -ne 0) { throw 'Android build failed; do not install an old APK.' }
-  ./gradlew.bat installDebug
+  ./gradlew.bat installEmulatorDebug
   if ($LASTEXITCODE -ne 0) { throw 'Android installation failed.' }
   $androidSdk = Join-Path $env:LOCALAPPDATA 'Android\Sdk'
   & "$androidSdk\platform-tools\adb.exe" shell am force-stop com.smartsolar.microgrid
