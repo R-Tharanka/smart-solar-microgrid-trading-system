@@ -3,6 +3,53 @@ An end-to-end Smart Solar Microgrid Trading System. The planned system combines 
 
 Repository: https://github.com/R-Tharanka/smart-solar-microgrid-trading-system
 
+Demonstration video: pending; the assignment requires a video of no more than five minutes before submission.
+
+## Current project status
+
+The central API, React client and native Android client now cover all four planned domains in source. Android includes identity/account workflows, location-aware station map/list discovery for Prosumers and Grid Operators, bounded profile/station-reference caching, reservation actions/search/categories/counts, transient approved-booking QR rendering, camera scanning, server verification and finalization. Raw QR persistence has been removed, QR parsing is canonical, renewal invalidates the previous token, and Android error details are sanitized. The system is still not submission-ready: the map uses osmdroid/OpenStreetMap rather than the assignment's required Google Maps implementation, and device/camera/Atlas/IIS/end-to-end evidence is absent. Current 2026-10-05 checks are backend 145/145, Web 12/12 plus a successful production build and 0 lint errors/1 warning, and Android 12/12 JVM tests plus debug APK assembly. See the dated [progress report](docs/project-status/full-system-progress-report.md).
+
+- [Full system progress and completion report](docs/project-status/full-system-progress-report.md)
+- [Requirements traceability matrix](docs/requirements/requirements-traceability-matrix.md)
+- [Backend requirements change and alignment register](docs/requirements/backend-requirements-change-register.md)
+- [Member 1 React web implementation](docs/web/member-1-react-web.md)
+- [Member 4 React transaction implementation](docs/web/member-4-react-web.md)
+
+## Phase 1 foundation
+
+Phase 1 requirements analysis and project foundation documents:
+
+- [Requirements and project foundation](docs/phase-1/requirements-and-project-foundation.md)
+- [Member 1 identity scope](docs/phase-1/member-1-identity-scope.md)
+- [Identity API contract](docs/api-contracts/identity-api.md)
+- [Station and slot API contract](docs/api-contracts/station-slot-api.md)
+- [Reservation and dashboard API contract](docs/api-contracts/reservation-dashboard-api.md)
+- [Operator transaction API contract](docs/api-contracts/operator-transaction-api.md)
+- [MongoDB collection design](docs/database-design/mongodb-collections.md)
+- [Architecture diagrams](docs/architecture/phase-1-diagrams.md)
+- [Requirements traceability matrix](docs/requirements/requirements-traceability-matrix.md)
+- [UI and evidence checklist](docs/phase-1/ui-and-evidence-checklist.md)
+- [Decision log](docs/phase-1/decision-log.md)
+
+## Phase 2 architecture, database and API contracts
+
+- [Phase 2 master specification](docs/phase-2/architecture-database-api-contracts.md)
+- [Database specification](docs/phase-2/database-specification.md)
+- [API contract governance](docs/phase-2/api-contract-governance.md)
+- [Phase 2 diagrams](docs/architecture/phase-2-diagrams.md)
+- [Verification and team handoff](docs/phase-2/verification-and-handoff.md)
+
+## Backend implementation
+
+- [Member 1 implementation and verification](docs/phase-3/member-1-identity-backend.md)
+- [Member 2 stations and slots implementation](docs/phase-4/member-2-stations-slots-backend.md)
+- [Implemented identity API contract](docs/api-contracts/identity-api.md)
+- [Member integration contract](docs/phase-3/member-integration-contract.md)
+- [Full-system Postman collection](docs/postman/Smart-Solar-Microgrid-Full-System.postman_collection.json)
+- [Postman collection and execution guide](docs/postman/README.md)
+
+The ASP.NET Core foundation is under `backend/` and uses MongoDB Atlas. Copy `.env.example` to an untracked `.env`, add the Atlas SRV connection string and run `docker compose up --build`. Verify Atlas connectivity at `http://localhost:5080/health/ready`.
+
 ## Individual contributions
 
 The following names and responsibility claims are the repository's declared contribution record. Each student must confirm them against commits, pull requests, screenshots and viva evidence before submission; source presence is not proof of personal authorship or live completion.

@@ -1,65 +1,60 @@
-# Member 1 Postman Verification
+# Full-System Postman Collection
 
-This package tests every currently implemented HTTP endpoint in the backend and the complete Phase 3 identity/account-management contract.
+Import `Smart-Solar-Microgrid-Full-System.postman_collection.json` into Postman to exercise the current API contract across identity, stations, slots, reservations, dashboards and QR transactions.
 
-## File
-
-- `Smart-Solar-Microgrid-Identity.postman_collection.json`
+The older identity-only collection is retained as historical Member 1 evidence. The full-system collection is authoritative for current whole-system verification.
 
 ## Prerequisites
 
-1. Start the latest API image:
+1. Run the API and a transaction-capable MongoDB deployment. QR finalization uses a MongoDB transaction, so a standalone MongoDB instance may not support the complete workflow.
+2. Bootstrap at least one active Backoffice account using secure local configuration.
+3. Use an isolated test database. The API has no general delete endpoints, and each collection run creates uniquely named test records.
+4. In the imported collection, set:
+   - `baseUrl`, normally `http://localhost:5080`;
+   - `adminEmail` to the active Backoffice email;
+   - secret `adminPassword` to that account's password.
 
-   ```powershell
-   docker compose up -d --build --force-recreate api
-   ```
+Do not commit real credentials, JWTs, MongoDB connection strings or generated QR payloads.
 
-2. Confirm `GET http://localhost:5080/health/ready` returns `200`.
-3. Ensure an active Backoffice account exists and that its real password is known. Bootstrap settings only create the first Backoffice account; changing `.env` does not reset an existing password.
+## Run Order
 
-## Import And Configure
+Use Postman's Collection Runner and run the entire collection in numeric folder order:
 
-1. In Postman, select **Import** and import the collection JSON file.
-2. Open the imported collection, select **Variables**, and set the **Current value** of `adminEmail` to the active Backoffice email.
-3. Set the **Current value** of `adminPassword` to its current password. Do not save a real password into the repository copy or commit a re-export containing it.
-4. Keep `baseUrl` as `http://localhost:5080` for Docker, or change its current value for another deployment.
-5. Run the entire collection in its existing numeric order.
+1. `00 - Run Setup and Health`
+2. `01 - Identity, Authentication and Accounts`
+3. `02 - Stations and Booking Slots`
+4. `03 - Reservations and Dashboards`
+5. `04 - QR Transactions and Finalization`
+6. `05 - Password and Account Lifecycle`
 
-The first registration request generates unique Prosumer, Grid Operator, and secondary Backoffice identifiers. Later requests automatically capture `prosumerToken`, `operatorToken`, and `adminToken`.
+The first request generates unique NICs, emails, station/slot codes and future UTC slot times. Later requests capture IDs and JWTs automatically. Running an individual later folder without its prerequisites will leave required variables empty.
 
-## Coverage
+## Security Behavior
 
-| Area | Scenarios |
-| --- | --- |
-| System | API information, liveness, MongoDB readiness |
-| Registration | Valid registration, duplicate NIC/email, invalid and empty requests |
-| Authentication | Unknown user, wrong password, successful login, JWT claims |
-| Profile | Read and update own profile, reject incomplete Prosumer contact details |
-| Password | Wrong current password, unchanged password, successful change, old/new login |
-| Authorization | Missing/malformed JWT, Prosumer and Grid Operator role denials |
-| Staff and Prosumer administration | Create staff; Backoffice create/update Prosumer; duplicate email; invalid role; list users |
-| Administrative authorization | Prosumer and Grid Operator cannot create/update Prosumers; only Backoffice can reactivate |
-| Lifecycle | Admin and self-deactivation, immediate old-JWT denial, reactivation, invalid transitions |
-| Security | No password hash or MongoDB ID in user responses |
+JWTs are collection variables because they are required throughout the run. Treat them as sensitive and clear them before sharing an exported collection or run result.
 
-## Expected Run Behavior
+Raw QR transaction tokens are stored only in Postman's temporary `pm.variables` run scope. QR A is removed after the old-token rejection check, and QR B is removed immediately after successful verification. The collection does not save either token as a collection or environment variable and does not log them.
 
-- All Postman tests should pass.
-- Generated Prosumer and Grid Operator accounts finish as `Active`.
-- The generated secondary Backoffice finishes as `Deactivated`.
-- Generated records remain in Atlas as test evidence; each collection run uses new identifiers.
-- Password-change testing leaves the generated Prosumer using `prosumerNewPassword`.
+The QR sequence verifies initial issuance, renewal, QR A invalidation, QR B verification, excessive-transfer rejection, successful finalization, duplicate-finalization rejection and omission of the stored QR hash from API responses.
 
-## Evidence To Capture
+## Coverage and Evidence Boundary
 
-- Collection Runner summary showing all tests passed.
-- Successful Backoffice, Prosumer, and Grid Operator login responses with tokens visually redacted.
-- Representative `400`, `401`, `403`, `404`, and `409` Problem Details responses.
-- Atlas `users` documents showing roles, statuses, lifecycle audit fields, and BCrypt hashes without exposing the complete hashes publicly.
-- Atlas indexes `ux_users_email`, `ux_users_nic`, and `ix_users_role_status`.
+The collection contains 73 requests covering all current controller routes plus representative validation and authorization cases. A valid JSON file and passing script-syntax checks prove the artifact is importable; they do not prove the live API, MongoDB, IIS or role workflow.
 
-## Tests Outside This Collection
+Run it against the final test environment, export the result, redact secrets, and record the API/database versions and run date before treating it as assessment evidence. Generated database records remain because the API intentionally has no general delete endpoints.
 
-`IIdentityService.GetActiveProsumerAsync` is an internal backend service contract for Member 3 and has no public HTTP route. It is covered by automated .NET tests and must also be verified during reservation-module integration.
+## Regeneration
 
-`USER_ACTIVE_RESERVATIONS` requires Member 3's reservation data. Once that module is implemented, create a `Pending`, `Approved`, `QrIssued`, or `Verified` reservation for a test Prosumer and confirm both self-deactivation and Backoffice deactivation return `409 USER_ACTIVE_RESERVATIONS`.
+After editing the maintained generator, regenerate the collection with:
+
+```powershell
+node docs/postman/generate-full-system-collection.mjs
+```
+
+Then repeat JSON, script and route-coverage validation before committing the generated file.
+
+The maintained validation command is:
+
+```powershell
+node docs/postman/validate-full-system-collection.mjs
+```

@@ -10,7 +10,7 @@
 - Android source now includes booking action summaries, approved-booking QR rendering/regeneration, ZXing camera scanning, server verification and finalization.
 - The station map currently uses osmdroid/OpenStreetMap, not the Google Maps implementation named by the assignment.
 - The QR screen now keeps the raw bearer-style payload only in transient memory, clears obsolete `qr_cache` data on startup and uses the canonical parser for display/scanning.
-- The Grid Operator now reaches the shared station map/list/details infrastructure in read-only mode. No camera/device transaction run, map/device run, SQLite migration/legacy-cache inspection, all-domain Postman run, Atlas transaction/rollback proof or IIS-hosted end-to-end evidence is recorded.
+- The Grid Operator now reaches the shared station map/list/details infrastructure in read-only mode. A 73-request full-system Postman collection now covers every current controller route, but no final-environment collection run/export, camera/device transaction run, map/device run, SQLite migration/legacy-cache inspection, Atlas transaction/rollback proof or IIS-hosted end-to-end evidence is recorded.
 
 This current addendum supersedes status claims in the older addendum below but does not alter the historical Phase 2 verification record or member sign-off requirement.
 
