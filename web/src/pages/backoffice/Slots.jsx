@@ -45,11 +45,11 @@ const toUtcBoundary = (date, endOfDay = false) => {
   return new Date(`${date}${suffix}`).toISOString();
 };
 
-const SlotActions = ({ slot, canEditSlots, isBackoffice, onDetails, onEdit, onStatus }) => (
+const SlotActions = ({ slot, isBackoffice, canChangeStatus, onDetails, onEdit, onStatus }) => (
   <div className="flex flex-wrap gap-1">
     <Button variant="secondary" onClick={() => onDetails(slot)}>Details</Button>
-    {canEditSlots && <Button variant="ghost" onClick={() => onEdit(slot)} disabled={['Reserved', 'Expired'].includes(slot.status)}>Edit</Button>}
-    {isBackoffice && <Button variant="ghost" onClick={() => onStatus(slot)} disabled={!['Available', 'Unavailable'].includes(slot.status)}>Availability</Button>}
+    {isBackoffice && <Button variant="ghost" onClick={() => onEdit(slot)} disabled={['Reserved', 'Expired'].includes(slot.status)}>Edit</Button>}
+    {canChangeStatus && <Button variant="ghost" onClick={() => onStatus(slot)} disabled={!['Available', 'Unavailable'].includes(slot.status)}>Availability</Button>}
   </div>
 );
 
@@ -58,7 +58,7 @@ const Slots = () => {
   const { notify } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const isBackoffice = user?.role === 'Backoffice';
-  const canEditSlots = isBackoffice || user?.role === 'GridOperator';
+  const canChangeStatus = isBackoffice || user?.role === 'GridOperator';
 
   const [stations, setStations] = useState([]);
   const [selectedStationCode, setSelectedStationCode] = useState(searchParams.get('station') || '');
@@ -199,7 +199,7 @@ const Slots = () => {
       setError('');
       await apiClient.patch(`/slots/${statusDialog.slot.slotCode}/status`, {
         status: statusDialog.nextStatus,
-        reason: statusReason.trim() || 'Availability changed through the Backoffice portal',
+        reason: statusReason.trim() || 'Availability changed through the staff portal',
       });
       notify(`Slot ${statusDialog.slot.slotCode} is now ${statusDialog.nextStatus.toLowerCase()}.`);
       setStatusDialog(null);
@@ -261,7 +261,7 @@ const Slots = () => {
                     <td className="whitespace-nowrap">{slot.availableEnergyKwh} kWh</td>
                     <td className="whitespace-nowrap">${Number(slot.pricePerKwh).toFixed(2)}</td>
                     <td><SlotStatusBadge status={slot.status} /></td>
-                    <td className="min-w-52"><SlotActions slot={slot} canEditSlots={canEditSlots} isBackoffice={isBackoffice} onDetails={openDetails} onEdit={openEdit} onStatus={openStatusDialog} /></td>
+                    <td className="min-w-52"><SlotActions slot={slot} isBackoffice={isBackoffice} canChangeStatus={canChangeStatus} onDetails={openDetails} onEdit={openEdit} onStatus={openStatusDialog} /></td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -276,7 +276,7 @@ const Slots = () => {
               <p className="text-sm text-slate-500">{selectedStation?.name || selectedStationCode}</p>
               <div className="slot-window"><div><span>From</span><strong>{formatDateTime(slot.startTimeUtc)}</strong></div><div><span>Until</span><strong>{formatDateTime(slot.endTimeUtc)}</strong></div></div>
               <div className="asset-meta"><span>Price per kWh</span><strong>${Number(slot.pricePerKwh).toFixed(2)}</strong></div>
-              <div className="asset-actions"><SlotActions slot={slot} canEditSlots={canEditSlots} isBackoffice={isBackoffice} onDetails={openDetails} onEdit={openEdit} onStatus={openStatusDialog} /></div>
+              <div className="asset-actions"><SlotActions slot={slot} isBackoffice={isBackoffice} canChangeStatus={canChangeStatus} onDetails={openDetails} onEdit={openEdit} onStatus={openStatusDialog} /></div>
             </article>
           ))}
         </div>

@@ -21,7 +21,8 @@ The shared behavior in `architecture-database-api-contracts.md` applies to every
 | Own Prosumer profile | M1 | Optional | Profile | `users` |
 | Station list/details | M2 | Staff station views | Map and station details | `solarStationInfo` |
 | Station create/update/status | M2 | Backoffice | Operator reads status | `solarStationInfo`, reservations for guards |
-| Slot create/update/status | M2 | Backoffice schedule views | Availability reads | `energyBookingSlots`, stations |
+| Slot create/detail update | M2 | Backoffice schedule views; Grid Operator read-only details | Availability reads | `energyBookingSlots`, stations |
+| Slot availability/status | M2 | Backoffice and Grid Operator controls | Availability reads | `energyBookingSlots`, reservations for guards |
 | Create/update/cancel own reservation | M3 | None | Prosumer booking flow | reservations, slots, users |
 | Reservation details/history | M3 | Staff booking view | Prosumer history | reservations, stations, slots |
 | Approve/reject reservation | M3 | Backoffice/Grid Operator | Operator optional | reservations, slots |

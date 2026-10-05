@@ -7,7 +7,7 @@ Demonstration video: pending; the assignment requires a video of no more than fi
 
 ## Current project status
 
-The central API and React client cover all four planned domains in source. React includes pending Prosumer activation/deactivation-request management and card/list views for stations and slots. Native Android Java/SQLite now includes registration, login, profile/deactivation-request feedback, Google map/list station discovery with location-aware ordering, bounded profile/station reference caching, live slot selection, and basic Prosumer booking create/list/update/cancel screens. A valid locally configured Android Maps key and device verification, complete booking search/dashboard counts, approved-booking QR display, operator scanning/finalization, IIS deployment and final live evidence remain pending. Earlier full-suite results (backend 113, web 12, Android 7 JVM tests) are historical, not a current end-to-end certification; see the dated [progress report](docs/project-status/full-system-progress-report.md).
+The central API, React client and native Android client now cover all four planned domains in source. Android includes identity/account workflows, location-aware station map/list discovery, bounded profile/station-reference caching, reservation actions/search/categories/counts, approved-booking QR rendering, camera scanning, server verification and finalization. The system is still not submission-ready: the current Android map uses osmdroid/OpenStreetMap rather than the assignment's required Google Maps implementation, the raw QR payload/token is persisted in SharedPreferences, Android has one failing JVM test, and device/camera/Atlas/IIS/end-to-end evidence is absent. Current 2026-10-05 checks are backend 136/136, Web 12/12 plus a successful production build and 0 lint errors/1 warning, and Android APK assembly with 8/9 JVM tests. See the dated [progress report](docs/project-status/full-system-progress-report.md).
 
 - [Full system progress and completion report](docs/project-status/full-system-progress-report.md)
 - [Requirements traceability matrix](docs/requirements/requirements-traceability-matrix.md)
@@ -51,6 +51,8 @@ The ASP.NET Core foundation is under `backend/` and uses MongoDB Atlas. Copy `.e
 
 ## Individual contributions
 
+The following names and responsibility claims are the repository's declared contribution record. Each student must confirm them against commits, pull requests, screenshots and viva evidence before submission; source presence is not proof of personal authorship or live completion.
+
 ### IT22079268 - Premathilaka G.G.R.T
 
 Identity, Authentication, Account Management & Database Configuration
@@ -90,8 +92,9 @@ Microgrid Stations & Energy Booking Slots
 - Implemented the Backoffice web frontend for station and slot management using React and Tailwind CSS.
 - Implemented station list, create station, station details, edit station and station-status interfaces.
 - Implemented slot list, create slot, slot details, edit slot and slot-status interfaces.
+- Grid Operators have read-only station/slot details and may change slot availability; Backoffice retains create and detail-edit permissions.
 - Implemented Android GPS/location functionality for nearby station discovery.
-- Integrated Google Maps to display nearby microgrid stations.
+- Implemented an osmdroid/OpenStreetMap station map; explicitly approved as a requirement deviation.
 - Implemented station markers, station details and available slot viewing in the Android application.
 - Implemented automated tests for station and slot business rules.
 
@@ -135,4 +138,4 @@ Grid Operator Verification & Energy Transfer
 - Implemented Grid Operator transaction confirmation.
 - Implemented final energy-transfer completion and result screens.
 - Implemented handling for invalid, expired and already-completed transactions.
-- Implemented tests for QR verification, operator authorization and duplicate-transfer prevention.
+- Implemented backend tests for core QR verification, operator authorization and duplicate-transfer prevention; QR renewal and Android scanner/transaction paths still lack focused tests.

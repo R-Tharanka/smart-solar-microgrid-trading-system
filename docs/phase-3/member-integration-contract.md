@@ -18,8 +18,8 @@ This document defines the identity boundary Members 2, 3 and 4 may depend on. Ch
 | Policy | Intended use |
 | --- | --- |
 | `Authenticated` | Any active account. |
-| `Staff` | Active Backoffice or Grid Operator accounts. |
-| `BackofficeOnly` | Administrative station, slot, user and approval operations assigned to Backoffice. |
+| `Staff` | Active Backoffice or Grid Operator accounts; used for shared operations such as slot availability/status changes. |
+| `BackofficeOnly` | Station/slot creation and detail edits plus user administration assigned to Backoffice. |
 | `GridOperatorOnly` | QR verification and transfer operations assigned only to Grid Operators. |
 | `ProsumerOnly` | Own reservation, profile and Prosumer workflows. |
 

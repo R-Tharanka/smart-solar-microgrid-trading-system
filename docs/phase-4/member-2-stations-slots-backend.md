@@ -25,8 +25,8 @@ This module owns solar/microgrid station information and energy booking slots. I
 | `POST /api/stations/{stationCode}/slots` | `BackofficeOnly` | Create an available slot |
 | `GET /api/stations/{stationCode}/slots` | `Authenticated` | List slots with date/status filters |
 | `GET /api/slots/{slotCode}` | `Authenticated` | Get one slot |
-| `PUT /api/slots/{slotCode}` | `Staff` | Backoffice or Grid Operator updates an unreserved slot |
-| `PATCH /api/slots/{slotCode}/status` | `BackofficeOnly` | Make a slot available/unavailable |
+| `PUT /api/slots/{slotCode}` | `BackofficeOnly` | Update an unreserved slot's schedule, capacity or price |
+| `PATCH /api/slots/{slotCode}/status` | `Staff` | Backoffice or Grid Operator makes a slot available/unavailable |
 
 All protected calls require `Authorization: Bearer <jwt-token>`.
 

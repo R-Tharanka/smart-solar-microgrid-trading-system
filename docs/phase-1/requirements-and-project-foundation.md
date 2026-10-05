@@ -97,6 +97,9 @@ Phase 1 is complete when the team has agreed on:
 | Manage prosumer accounts | Yes | Read operational identity summary only | Own account only |
 | Deactivate/reactivate accounts | Yes | No | Request own deactivation through profile flow |
 | Manage stations and schedules | Yes | View operational station data | No |
+| View slot details | Yes | Yes | Available booking slots only |
+| Change slot availability/status | Yes | Yes | No |
+| Create/edit slot schedule, capacity or price | Yes | No | No |
 | View nearby stations | No | Yes | Yes |
 | Create reservation | No | No | Yes |
 | Update/cancel own reservation | No | No | Yes |
