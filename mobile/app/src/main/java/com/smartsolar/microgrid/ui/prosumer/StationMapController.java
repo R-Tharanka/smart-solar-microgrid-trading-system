@@ -7,6 +7,8 @@ import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import com.smartsolar.microgrid.R;
 import com.smartsolar.microgrid.data.station.StationResponse;
@@ -25,6 +27,7 @@ final class StationMapController {
     private final Map<String, StationResponse> stationsByIdentifier = new HashMap<>();
     private List<StationResponse> stations = new ArrayList<>();
     private MapView map;
+    private MyLocationNewOverlay myLocationOverlay;
 
     StationMapController(OnStationMarkerSelected listener) {
         this.listener = listener;
@@ -33,6 +36,10 @@ final class StationMapController {
     void attach(MapView mapView) {
         map = mapView;
         map.setMultiTouchControls(true);
+        
+        myLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(mapView.getContext()), map);
+        myLocationOverlay.enableMyLocation();
+
         render();
     }
 
@@ -45,6 +52,11 @@ final class StationMapController {
     private void render() {
         if (map == null) return;
         map.getOverlays().clear();
+        
+        if (myLocationOverlay != null) {
+            map.getOverlays().add(myLocationOverlay);
+        }
+        
         stationsByIdentifier.clear();
         List<GeoPoint> positions = new ArrayList<>();
 
