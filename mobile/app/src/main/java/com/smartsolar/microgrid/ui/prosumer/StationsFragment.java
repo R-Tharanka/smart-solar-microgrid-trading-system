@@ -218,6 +218,7 @@ public class StationsFragment extends Fragment {
                             }
                         }
 
+                        adapter.setUserLocation(location);
                         displayStations(activeStations);
                         hideCacheNotice();
                         if (activeStations.isEmpty()) {
@@ -253,6 +254,7 @@ public class StationsFragment extends Fragment {
                             return;
                         }
 
+                        adapter.setUserLocation(location);
                         displayStations(cachedActiveStations);
                         showCacheNotice(cached.getLastSyncedAtEpochMillis());
                         showContent();
