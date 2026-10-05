@@ -4,13 +4,13 @@
 
 ## Current Verification Addendum - 2026-10-05
 
-- Backend tests pass 138/138, including read and mutation endpoint-policy coverage for the finalized Grid Operator slot boundary and service tests rejecting manual `Reserved`/`Expired` targets. This is unit/controller/service evidence, not live MongoDB or IIS proof.
+- Backend tests pass 145/145, including the finalized Grid Operator slot boundary and QR issue/renewal/old-token/new-token/ownership/state coverage. This is unit/controller/service evidence, not live MongoDB or IIS proof.
 - Web tests pass 12/12, the production build succeeds, and ESLint reports zero errors plus the existing reservation-hook warning.
-- Android debug APK assembly succeeds; JVM tests pass 8/9 because `ApiErrorHandlerTest` expects raw server detail to be hidden.
+- Android debug APK assembly succeeds and JVM tests pass 12/12, including raw-detail sanitization and canonical QR parser/one-time-memory coverage.
 - Android source now includes booking action summaries, approved-booking QR rendering/regeneration, ZXing camera scanning, server verification and finalization.
 - The station map currently uses osmdroid/OpenStreetMap, not the Google Maps implementation named by the assignment.
-- The QR screen persists the raw bearer-style payload in `qr_cache` SharedPreferences. This contradicts the hash-only/no-token-persistence design and must be removed before security completion is claimed.
-- No camera/device transaction run, map/device run, SQLite migration inspection, all-domain Postman run, Atlas transaction/rollback proof or IIS-hosted end-to-end evidence is recorded.
+- The QR screen now keeps the raw bearer-style payload only in transient memory, clears obsolete `qr_cache` data on startup and uses the canonical parser for display/scanning.
+- The Grid Operator now reaches the shared station map/list/details infrastructure in read-only mode. No camera/device transaction run, map/device run, SQLite migration/legacy-cache inspection, all-domain Postman run, Atlas transaction/rollback proof or IIS-hosted end-to-end evidence is recorded.
 
 This current addendum supersedes status claims in the older addendum below but does not alter the historical Phase 2 verification record or member sign-off requirement.
 
