@@ -1,6 +1,6 @@
 # Smart Solar Microgrid Android Application
 
-This folder contains the native Android client. It uses Java, XML layouts, AndroidX Navigation, Material Components, Play Services location, osmdroid/OpenStreetMap map rendering and SQLite. The application ID is `com.smartsolar.microgrid`. Source exists for identity/account, map/list station discovery, station details, slot selection, bounded profile/station reference caching, Prosumer reservation actions/search/categories/counts, approved-booking QR display, Grid Operator camera scanning, server verification and finalization. The APK assembles, but device/API verification is still absent. The current osmdroid map does not match the assignment's explicit Google Maps requirement.
+This folder contains the native Android client. It uses Java, XML layouts, AndroidX Navigation, Material Components, Play Services location, osmdroid/OpenStreetMap map rendering and SQLite. The application ID is `com.smartsolar.microgrid`. Source exists for identity/account, shared Prosumer/Grid Operator map/list station discovery and details, Prosumer slot selection, bounded profile/station reference caching, reservation actions/search/categories/counts, transient approved-booking QR display, Grid Operator camera scanning, server verification and finalization. The APK assembles and 12/12 JVM tests pass, but device/API verification is still absent. The current osmdroid map does not match the assignment's explicit Google Maps requirement.
 
 ## Shared mobile infrastructure
 
@@ -13,11 +13,11 @@ This folder contains the native Android client. It uses Java, XML layouts, Andro
 - `navigation/RoleNavigator.java` routes supported sessions to the Prosumer or Grid Operator foundation.
 - `data/identity/` sends `clientType: Android`; Prosumer deactivation calls the request-only API and displays pending state without logging out.
 - `data/station/`, `data/reservation/`, and `ui/prosumer/` contain station/slot browsing, booking actions and QR display.
-- `data/transaction/` and `ui/operator/` contain transaction DTO/repository code, camera scanning, verification and finalization. These flows still require focused tests and device/API evidence.
+- `data/transaction/` and `ui/operator/` contain the canonical QR parser, single-use in-memory scanner handoff, transaction DTO/repository code, camera scanning, verification and finalization. Parser/error unit coverage exists; camera/Fragment and device/API evidence remain pending.
 
 The shared local SQLite database is version 3 and contains `session`, `user_profile` and `grid_node_reference`. Profile and station rows are bounded read-only caches with local synchronization timestamps. Passwords, slots and reservations are not stored in SQLite. Server-authoritative account, station activity, live slot availability, reservation, transaction and QR state remain on the API. Logout, expiry and unauthorized-session clearing remove the SQLite authenticated caches.
 
-Security blocker: `BookingDetailsFragment` currently writes the full raw QR payload, including `transactionToken`, to `qr_cache` SharedPreferences. That value is not cleared by the normal identity/logout path, and the backup rules exclude only the SQLite database. Remove this persistence and keep transaction tokens in transient memory only before treating the QR workflow as secure or complete.
+QR security: raw QR payloads and `transactionToken` are held only in temporary Fragment/process memory. `BookingDetailsFragment` no longer reads or writes `qr_cache`; `MainActivity` clears obsolete legacy entries on startup without touching session or SQLite data. Scanner handoff uses `EphemeralQrPayloadStore.consume()` once rather than persisting raw JSON in navigation state. No QR token is stored in SQLite or logged. Process death intentionally requires a newly issued QR.
 
 ## Map provider and Google Maps requirement
 

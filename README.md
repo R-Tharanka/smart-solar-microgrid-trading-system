@@ -7,7 +7,7 @@ Demonstration video: pending; the assignment requires a video of no more than fi
 
 ## Current project status
 
-The central API, React client and native Android client now cover all four planned domains in source. Android includes identity/account workflows, location-aware station map/list discovery, bounded profile/station-reference caching, reservation actions/search/categories/counts, approved-booking QR rendering, camera scanning, server verification and finalization. The system is still not submission-ready: the current Android map uses osmdroid/OpenStreetMap rather than the assignment's required Google Maps implementation, the raw QR payload/token is persisted in SharedPreferences, Android has one failing JVM test, and device/camera/Atlas/IIS/end-to-end evidence is absent. Current 2026-10-05 checks are backend 138/138, Web 12/12 plus a successful production build and 0 lint errors/1 warning, and Android APK assembly with 8/9 JVM tests. See the dated [progress report](docs/project-status/full-system-progress-report.md).
+The central API, React client and native Android client now cover all four planned domains in source. Android includes identity/account workflows, location-aware station map/list discovery for Prosumers and Grid Operators, bounded profile/station-reference caching, reservation actions/search/categories/counts, transient approved-booking QR rendering, camera scanning, server verification and finalization. Raw QR persistence has been removed, QR parsing is canonical, renewal invalidates the previous token, and Android error details are sanitized. The system is still not submission-ready: the map uses osmdroid/OpenStreetMap rather than the assignment's required Google Maps implementation, and device/camera/Atlas/IIS/end-to-end evidence is absent. Current 2026-10-05 checks are backend 145/145, Web 12/12 plus a successful production build and 0 lint errors/1 warning, and Android 12/12 JVM tests plus debug APK assembly. See the dated [progress report](docs/project-status/full-system-progress-report.md).
 
 - [Full system progress and completion report](docs/project-status/full-system-progress-report.md)
 - [Requirements traceability matrix](docs/requirements/requirements-traceability-matrix.md)
@@ -94,7 +94,7 @@ Microgrid Stations & Energy Booking Slots
 - Implemented slot list, create slot, slot details, edit slot and slot-status interfaces.
 - Grid Operators have read-only station/slot details and may change slot availability through the predefined status dropdown; Backoffice retains create and detail-edit permissions. Only `Available` and `Unavailable` are manual targets; `Reserved` and `Expired` remain server-managed.
 - Implemented Android GPS/location functionality for nearby station discovery.
-- Implemented an osmdroid/OpenStreetMap station map; explicitly approved as a requirement deviation.
+- Implemented an osmdroid/OpenStreetMap station map as a current requirement deviation.
 - Implemented station markers, station details and available slot viewing in the Android application.
 - Implemented automated tests for station and slot business rules.
 
