@@ -24,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
+        clearLegacyQrCache();
         setContentView(R.layout.activity_main);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (view, windowInsets) -> {
@@ -54,5 +55,10 @@ public class MainActivity extends AppCompatActivity {
             Session session = SessionManager.getInstance(this).loadSession();
             RoleNavigator.navigateToRoleHome(navController, session);
         }
+    }
+
+    // Removes QR bearer tokens persisted by older app versions without touching session data.
+    private void clearLegacyQrCache() {
+        getSharedPreferences("qr_cache", MODE_PRIVATE).edit().clear().apply();
     }
 }

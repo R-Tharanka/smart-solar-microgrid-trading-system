@@ -19,6 +19,8 @@ import com.journeyapps.barcodescanner.BarcodeCallback;
 import com.journeyapps.barcodescanner.BarcodeResult;
 import com.journeyapps.barcodescanner.DecoratedBarcodeView;
 import com.smartsolar.microgrid.R;
+import com.smartsolar.microgrid.data.transaction.EphemeralQrPayloadStore;
+import com.smartsolar.microgrid.data.transaction.QrPayload;
 
 import java.util.List;
 
@@ -43,6 +45,7 @@ public class ScannerFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        EphemeralQrPayloadStore.clear();
         barcodeScannerView = view.findViewById(R.id.barcode_scanner);
         
         barcodeScannerView.decodeContinuous(new BarcodeCallback() {
@@ -51,11 +54,17 @@ public class ScannerFragment extends Fragment {
                 if (!hasScanned && result.getText() != null) {
                     hasScanned = true;
                     barcodeScannerView.pause();
-                    
-                    Bundle args = new Bundle();
-                    args.putString("qrPayload", result.getText());
-                    NavHostFragment.findNavController(ScannerFragment.this)
-                            .navigate(R.id.transactionVerifyFragment, args);
+
+                    try {
+                        EphemeralQrPayloadStore.put(QrPayload.parse(result.getText()));
+                        NavHostFragment.findNavController(ScannerFragment.this)
+                                .navigate(R.id.transactionVerifyFragment);
+                    } catch (IllegalArgumentException exception) {
+                        hasScanned = false;
+                        Toast.makeText(requireContext(),
+                                "Invalid transaction QR code.", Toast.LENGTH_LONG).show();
+                        barcodeScannerView.resume();
+                    }
                 }
             }
 

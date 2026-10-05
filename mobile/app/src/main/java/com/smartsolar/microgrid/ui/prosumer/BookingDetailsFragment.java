@@ -26,6 +26,7 @@ import com.smartsolar.microgrid.data.reservation.ReservationRepository;
 import com.smartsolar.microgrid.data.reservation.ReservationResponse;
 import com.smartsolar.microgrid.data.reservation.UpdateReservationRequest;
 import com.smartsolar.microgrid.data.reservation.QrTransactionResponse;
+import com.smartsolar.microgrid.data.transaction.QrPayload;
 import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -60,6 +61,7 @@ public class BookingDetailsFragment extends Fragment {
     private ProgressBar progressBar;
 
     private ReservationResponse currentReservation;
+    private QrTransactionResponse currentQrData;
 
     public BookingDetailsFragment() {
         super(R.layout.fragment_booking_details);
@@ -165,10 +167,9 @@ public class BookingDetailsFragment extends Fragment {
         if ("QrIssued".equalsIgnoreCase(status)) {
             actionsContainer.setVisibility(View.GONE); // Once QR is issued, editing is usually disabled by workflow
             qrContainer.setVisibility(View.VISIBLE);
-            
-            QrTransactionResponse cachedQr = loadQrFromCache();
-            if (cachedQr != null) {
-                displayQrCode(cachedQr);
+
+            if (currentQrData != null) {
+                displayQrCode(currentQrData);
             } else {
                 qrExpiryText.setText("QR payload unavailable. Please regenerate the QR code.");
                 qrExpiryText.setTextColor(Color.parseColor("#F57C00")); // Orange
@@ -185,11 +186,10 @@ public class BookingDetailsFragment extends Fragment {
             @Override
             public void onSuccess(QrTransactionResponse data, String message) {
                 showLoading(false);
-                saveQrToCache(data);
-                displayQrCode(data);
-                
-                // Refresh details to update status to QrIssued
-                loadDetails();
+                if (displayQrCode(data)) {
+                    // Refresh details while retaining the newly issued payload in this Fragment only.
+                    loadDetails();
+                }
             }
 
             @Override
@@ -201,42 +201,22 @@ public class BookingDetailsFragment extends Fragment {
         });
     }
 
-    private void saveQrToCache(QrTransactionResponse qrData) {
-        if (qrData == null || qrData.getQrPayload() == null) return;
-        requireContext().getSharedPreferences("qr_cache", android.content.Context.MODE_PRIVATE)
-            .edit()
-            .putString(reservationId + "_payload", qrData.getQrPayload())
-            .putString(reservationId + "_expiry", qrData.getExpiresAtUtc())
-            .apply();
-    }
+    private boolean displayQrCode(QrTransactionResponse qrData) {
+        if (qrData == null || qrData.getQrPayload() == null) return false;
 
-    private QrTransactionResponse loadQrFromCache() {
-        android.content.SharedPreferences prefs = requireContext().getSharedPreferences("qr_cache", android.content.Context.MODE_PRIVATE);
-        String payload = prefs.getString(reservationId + "_payload", null);
-        String expiry = prefs.getString(reservationId + "_expiry", null);
-        if (payload != null && expiry != null) {
-            QrTransactionResponse response = new QrTransactionResponse();
-            response.setQrPayload(payload);
-            response.setExpiresAtUtc(expiry);
-            return response;
-        }
-        return null;
-    }
-
-    private void displayQrCode(QrTransactionResponse qrData) {
-        if (qrData == null || qrData.getQrPayload() == null) return;
-        
         try {
+            QrPayload payload = QrPayload.parse(qrData.getQrPayload());
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             Bitmap bitmap = barcodeEncoder.encodeBitmap(qrData.getQrPayload(), BarcodeFormat.QR_CODE, 600, 600);
             qrImage.setImageBitmap(bitmap);
-            
+            currentQrData = qrData;
+
             qrContainer.setVisibility(View.VISIBLE);
             actionsContainer.setVisibility(View.GONE);
-            
-            long expiresAt = UtcTimestampParser.parseEpochMillis(qrData.getExpiresAtUtc());
+
+            long expiresAt = UtcTimestampParser.parseEpochMillis(payload.getExpiresAtUtc());
             if (expiresAt > System.currentTimeMillis()) {
-                qrExpiryText.setText("QR expires at: " + formatTime(qrData.getExpiresAtUtc()));
+                qrExpiryText.setText("QR expires at: " + formatTime(payload.getExpiresAtUtc()));
                 qrExpiryText.setTextColor(Color.parseColor("#388E3C")); // Green
                 renewQrButton.setVisibility(View.GONE);
             } else {
@@ -244,9 +224,20 @@ public class BookingDetailsFragment extends Fragment {
                 qrExpiryText.setTextColor(Color.parseColor("#D32F2F")); // Red
                 renewQrButton.setVisibility(View.VISIBLE);
             }
-        } catch (WriterException | ParseException e) {
-            Toast.makeText(requireContext(), "Failed to generate QR code image", Toast.LENGTH_SHORT).show();
+            return true;
+        } catch (IllegalArgumentException | WriterException | ParseException exception) {
+            currentQrData = null;
+            qrContainer.setVisibility(View.GONE);
+            showErrorDialog("QR Generation Failed", "The server returned an invalid QR payload. Please try again.");
+            return false;
         }
+    }
+
+    @Override
+    public void onDestroyView() {
+        currentQrData = null;
+        if (qrImage != null) qrImage.setImageDrawable(null);
+        super.onDestroyView();
     }
 
     private void updateReservation() {
