@@ -51,7 +51,7 @@ The ASP.NET Core foundation is under `backend/` and uses MongoDB Atlas. Copy `.e
 
 ## Individual contributions
 
-### 12.1 IT22079268 - Premathilaka G.G.R.T
+### IT22079268 - Premathilaka G.G.R.T
 
 Identity, Authentication, Account Management & Database Configuration
 - Configured the MongoDB connection and database settings for the centralized ASP.NET Core Web API.
@@ -73,7 +73,7 @@ Identity, Authentication, Account Management & Database Configuration
 - Implemented Android authentication-related functionality including registration, login, session handling and profile management.
 - Implemented automated tests for authentication, authorization and account-management workflows.
 
-### 12.2 IT22070012 - Navoda H.G.J
+### IT22070012 - Navoda H.G.J
 
 Microgrid Stations & Energy Booking Slots
 - Implemented solar/microgrid station creation, retrieval and updating.
@@ -95,7 +95,7 @@ Microgrid Stations & Energy Booking Slots
 - Implemented station markers, station details and available slot viewing in the Android application.
 - Implemented automated tests for station and slot business rules.
 
-### 12.3 IT22217318 - Cassim T.S
+### IT22217318 - Cassim T.S
 
 Energy Reservations, Booking Management & Dashboards
 - Implemented energy reservation creation.
@@ -117,7 +117,7 @@ Energy Reservations, Booking Management & Dashboards
 - Implemented booking summaries, pending reservations and booking history.
 - Implemented automated tests for reservation business rules and state transitions.
 
-### 12.4 IT22087324 - Gunathunga P.C.I
+### IT22087324 - Gunathunga P.C.I
 
 Grid Operator Verification & Energy Transfer
 - Implemented Grid Operator transaction-verification functionality.
