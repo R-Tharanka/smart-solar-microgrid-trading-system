@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="solar_green">#176B52</color>
-    <color name="solar_green_dark">#0D4A38</color>
+    <color name="solar_green">#1B5E20</color>
+    <color name="solar_green_dark">#0D3B13</color>
     <color name="solar_accent">#F5B700</color>
-    <color name="surface_light">#F6FAF8</color>
+    <color name="surface_light">#F9FBF9</color>
     <color name="text_primary">#17211D</color>
+    <color name="text_secondary">#757575</color>
+    <color name="status_success">#2E7D32</color>
+    <color name="status_warning">#F57C00</color>
+    <color name="status_error">#D32F2F</color>
     <color name="white">#FFFFFFFF</color>
 </resources>
