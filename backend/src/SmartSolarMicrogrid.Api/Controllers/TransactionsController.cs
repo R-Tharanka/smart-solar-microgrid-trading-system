@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: TransactionsController.cs
+// Purpose: Exposes QR issuance, operator verification, and transfer finalization endpoints.
+// -----------------------------------------------------------------------------
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -67,6 +71,7 @@ public sealed class TransactionsController(ITransactionService transactionServic
 
     private UserRole RequiredRole()
     {
+        // Resolve the authenticated user's role or reject an invalid role claim.
         var role = User.FindFirstValue(ClaimTypes.Role);
         return Enum.TryParse<UserRole>(role, out var parsed)
             ? parsed

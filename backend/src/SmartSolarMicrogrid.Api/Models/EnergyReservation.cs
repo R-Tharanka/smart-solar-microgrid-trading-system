@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: EnergyReservation.cs
+// Purpose: Stores reservation details, lifecycle state, and transaction audit information.
+// -----------------------------------------------------------------------------
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -40,7 +44,6 @@ public sealed class EnergyReservation
     [BsonRepresentation(BsonType.String)]
     public ReservationStatus Status { get; set; }
 
-    // Member 4 transaction fields remain absent until their corresponding lifecycle stage.
     // Only the token hash is persisted; the original opaque token is returned once in the QR payload.
     [BsonIgnoreIfNull, BsonElement("qrTokenHash")]
     public string? QrTokenHash { get; set; }

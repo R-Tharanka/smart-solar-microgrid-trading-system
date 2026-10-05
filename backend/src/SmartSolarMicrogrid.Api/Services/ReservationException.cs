@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: ReservationException.cs
+// Purpose: Carries HTTP status codes and stable errors for reservation failures.
+// -----------------------------------------------------------------------------
 namespace SmartSolarMicrogrid.Api.Services;
 
 public sealed class ReservationException(int statusCode, string errorCode, string message) : Exception(message)

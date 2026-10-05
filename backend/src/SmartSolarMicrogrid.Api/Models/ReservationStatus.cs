@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: ReservationStatus.cs
+// Purpose: Defines reservation lifecycle states from submission through transfer completion.
+// -----------------------------------------------------------------------------
 namespace SmartSolarMicrogrid.Api.Models;
 
 public enum ReservationStatus

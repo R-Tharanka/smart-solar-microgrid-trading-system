@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: ReservationRepository.cs
+// Purpose: Persists reservations and queries ownership, lifecycle state, and dashboard counts.
+// -----------------------------------------------------------------------------
 using MongoDB.Bson;
 using MongoDB.Driver;
 using SmartSolarMicrogrid.Api.Models;

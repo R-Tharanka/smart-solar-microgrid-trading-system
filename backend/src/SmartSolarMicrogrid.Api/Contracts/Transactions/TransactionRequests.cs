@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: TransactionRequests.cs
+// Purpose: Defines request contracts for QR verification and transfer finalization.
+// -----------------------------------------------------------------------------
 using System.ComponentModel.DataAnnotations;
 
 namespace SmartSolarMicrogrid.Api.Contracts.Transactions;

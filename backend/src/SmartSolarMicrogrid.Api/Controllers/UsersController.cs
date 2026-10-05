@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: UsersController.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Exposes identity, profile, password, and account-status HTTP endpoints.
 // -----------------------------------------------------------------------------
 using System.Security.Claims;

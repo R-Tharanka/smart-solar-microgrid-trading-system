@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: ReservationAccountDeactivationGuard.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Blocks Prosumer deactivation while non-terminal reservations exist.
 // -----------------------------------------------------------------------------
 using MongoDB.Bson;

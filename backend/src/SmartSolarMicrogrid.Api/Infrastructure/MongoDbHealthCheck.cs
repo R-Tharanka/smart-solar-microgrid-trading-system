@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: MongoDbHealthCheck.cs
+// Purpose: Reports database availability by issuing a MongoDB ping.
+// -----------------------------------------------------------------------------
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -11,6 +15,7 @@ public sealed class MongoDbHealthCheck(MongoDbContext context) : IHealthCheck
         HealthCheckContext healthContext,
         CancellationToken cancellationToken = default)
     {
+        // Ping MongoDB and report whether the database is reachable.
         try
         {
             await context.Database.RunCommandAsync<BsonDocument>(

@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: TransactionRequestValidationTests.cs
-// Member 4: Operator Verification and Transactions
 // Purpose: Verifies MVC validation metadata for transaction request records.
 // -----------------------------------------------------------------------------
 using Microsoft.AspNetCore.Http;
@@ -19,6 +18,7 @@ public sealed class TransactionRequestValidationTests
     [Fact]
     public void VerifyRequest_UsesConstructorParameterValidationMetadata()
     {
+        // Verify that verification requests use MVC constructor-parameter validation metadata.
         var modelState = ValidateWithMvc(new VerifyTransactionRequest("R", "short"));
 
         Assert.False(modelState.IsValid);
@@ -29,6 +29,7 @@ public sealed class TransactionRequestValidationTests
     [Fact]
     public void FinalizeRequest_UsesConstructorParameterValidationMetadata()
     {
+        // Verify that finalization requests use MVC constructor-parameter validation metadata.
         var modelState = ValidateWithMvc(new FinalizeTransactionRequest("R", "", 0));
 
         Assert.False(modelState.IsValid);
@@ -39,6 +40,7 @@ public sealed class TransactionRequestValidationTests
 
     private static ModelStateDictionary ValidateWithMvc(object request)
     {
+        // Validate the request using MVC's model validation metadata.
         var services = new ServiceCollection()
             .AddLogging()
             .AddControllers()

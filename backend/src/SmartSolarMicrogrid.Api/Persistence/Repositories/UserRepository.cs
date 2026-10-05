@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: UserRepository.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Persists user identities and account lifecycle changes in MongoDB.
 // -----------------------------------------------------------------------------
 using MongoDB.Driver;

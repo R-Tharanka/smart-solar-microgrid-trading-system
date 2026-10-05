@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: ReservationServiceTests.cs
+// Purpose: Verifies reservation business rules and capacity changes using in-memory repositories.
+// -----------------------------------------------------------------------------
 using Microsoft.Extensions.Logging.Abstractions;
 using MongoDB.Bson;
 using SmartSolarMicrogrid.Api.Contracts.Reservations;
@@ -31,12 +35,14 @@ public sealed class ReservationServiceTests
             new FixedTimeProvider(Now),
             NullLogger<ReservationService>.Instance);
 
+    // Create an active station fixture for reservation tests.
     private static SolarStation ActiveStation() => new()
     {
         Id = ObjectId.GenerateNewId(),
         Status = StationStatus.Active
     };
 
+    // Create an available energy slot fixture for reservation tests.
     private static EnergyBookingSlot AvailableSlot(decimal energy = 50m, SlotStatus status = SlotStatus.Available) => new()
     {
         Id = ObjectId.GenerateNewId(),
@@ -47,6 +53,7 @@ public sealed class ReservationServiceTests
         Status = status
     };
 
+    // Create a pending reservation fixture for lifecycle tests.
     private static EnergyReservation PendingReservation(
         string prosumerNic = "200012345678",
         ReservationStatus status = ReservationStatus.Pending,
@@ -94,6 +101,7 @@ public sealed class ReservationServiceTests
     [Fact]
     public async Task Create_StationNotFound_Throws()
     {
+        // Verify that creating a reservation fails when its station is missing.
         var stationRepo = new FakeStationRepository(null);
         var service = Service(stations: stationRepo);
 
@@ -331,6 +339,7 @@ public sealed class ReservationServiceTests
     [Fact]
     public async Task Cancel_ApprovedReservation_RestoresAllocatedEnergy()
     {
+        // Verify that cancelling an approved reservation restores allocated energy.
         var r = PendingReservation(status: ReservationStatus.Approved);
         var slot = AvailableSlot(energy: 15m);
         slot.Id = r.SlotId;
@@ -409,6 +418,7 @@ public sealed class ReservationServiceTests
     [Fact]
     public async Task Approve_UsingAllRemainingEnergy_MarksSlotReserved()
     {
+        // Verify that allocating all remaining energy marks the slot reserved.
         var r = PendingReservation();
         var slot = AvailableSlot(energy: 10m);
         slot.Id = r.SlotId;
@@ -423,6 +433,7 @@ public sealed class ReservationServiceTests
     [Fact]
     public async Task Approve_LegacyReservedSlotWithEnergy_NormalizesSharedCapacity()
     {
+        // Verify that approval normalizes the shared capacity of a legacy reserved slot.
         var r = PendingReservation();
         var slot = AvailableSlot(energy: 25m, status: SlotStatus.Reserved);
         slot.Id = r.SlotId;
@@ -437,6 +448,7 @@ public sealed class ReservationServiceTests
     [Fact]
     public async Task Approve_InsufficientRemainingEnergy_LeavesReservationPending()
     {
+        // Verify that insufficient remaining energy leaves the reservation pending.
         var r = PendingReservation();
         var slot = AvailableSlot(energy: 5m);
         slot.Id = r.SlotId;
@@ -554,6 +566,7 @@ public sealed class ReservationServiceTests
     [Fact]
     public async Task GetProsumerDashboard_ReturnsPendingAndOnlyFutureApprovedCounts()
     {
+        // Verify that the dashboard reports pending and future approved reservations separately.
         var repo = new FakeReservationRepository(
             PendingReservation(status: ReservationStatus.Pending),
             PendingReservation(status: ReservationStatus.Approved, start: Now.AddHours(-2)),
@@ -682,6 +695,7 @@ public sealed class ReservationServiceTests
     [Fact]
     public async Task Reject_LeadingTrailingWhitespaceTrimmedBeforePersisting()
     {
+        // Verify that rejection notes are trimmed before persistence.
         var r = PendingReservation();
         var slot = AvailableSlot(energy: 25m);
         slot.Id = r.SlotId;
@@ -701,6 +715,7 @@ public sealed class ReservationServiceTests
 
     private sealed class FixedTimeProvider(DateTime utcNow) : TimeProvider
     {
+        // Return the fixed UTC time to keep the test deterministic.
         public override DateTimeOffset GetUtcNow() => new(utcNow);
     }
 
@@ -710,18 +725,22 @@ public sealed class ReservationServiceTests
 
         public Task CreateAsync(EnergyReservation reservation, CancellationToken cancellationToken = default)
         {
+            // Simulate creating a record in the test repository.
             reservation.CreatedAtUtc = DateTime.UtcNow;
             reservation.UpdatedAtUtc = DateTime.UtcNow;
             _items.Add(reservation);
             return Task.CompletedTask;
         }
 
+        // Look up the test record by its identifier.
         public Task<EnergyReservation?> FindByIdAsync(string reservationId, CancellationToken cancellationToken = default) =>
             Task.FromResult(_items.FirstOrDefault(r => r.Id.ToString() == reservationId));
 
+        // Look up the test record by its public code.
         public Task<EnergyReservation?> FindByCodeAsync(string reservationCode, CancellationToken cancellationToken = default) =>
             Task.FromResult(_items.FirstOrDefault(r => r.ReservationCode == reservationCode));
 
+        // Return the test reservations for the selected Prosumer and status.
         public Task<List<EnergyReservation>> GetByProsumerAsync(
             string prosumerNic, ReservationStatus? status, CancellationToken cancellationToken = default) =>
             Task.FromResult(_items
@@ -729,6 +748,7 @@ public sealed class ReservationServiceTests
                 .OrderByDescending(r => r.ScheduledStartTimeUtc)
                 .ToList());
 
+        // Return the test records for the requested query.
         public Task<List<EnergyReservation>> GetAllAsync(
             ReservationStatus? status, MongoDB.Bson.ObjectId? stationId, CancellationToken cancellationToken = default) =>
             Task.FromResult(_items
@@ -737,6 +757,7 @@ public sealed class ReservationServiceTests
 
         public Task<bool> UpdateAsync(EnergyReservation reservation, CancellationToken cancellationToken = default)
         {
+            // Simulate updating a record in the test repository.
             reservation.UpdatedAtUtc = DateTime.UtcNow;
             return Task.FromResult(true);
         }
@@ -749,6 +770,7 @@ public sealed class ReservationServiceTests
             DateTime changedAtUtc,
             CancellationToken cancellationToken = default)
         {
+            // Apply the requested energy change to the test reservation.
             var item = _items.FirstOrDefault(r =>
                 r.Id == id &&
                 string.Equals(r.ProsumerNic, prosumerNic, StringComparison.OrdinalIgnoreCase) &&
@@ -765,6 +787,7 @@ public sealed class ReservationServiceTests
             DateTime changedAtUtc,
             CancellationToken cancellationToken = default)
         {
+            // Record the rejection and its note on the test reservation.
             var item = _items.FirstOrDefault(r => r.Id == id && r.Status == ReservationStatus.Pending);
             if (item == null) return Task.FromResult(false);
             item.Status = ReservationStatus.Rejected;
@@ -781,6 +804,7 @@ public sealed class ReservationServiceTests
             string? confirmationNote = null,
             CancellationToken cancellationToken = default)
         {
+            // Simulate the requested record status transition.
             var item = _items.FirstOrDefault(r => r.Id == id && r.Status == expectedStatus);
             if (item == null) return Task.FromResult(false);
             item.Status = newStatus;
@@ -792,11 +816,13 @@ public sealed class ReservationServiceTests
             return Task.FromResult(true);
         }
 
+        // Return reservation totals grouped by status for the test data.
         public Task<Dictionary<ReservationStatus, long>> GetStatusCountsAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(_items
                 .GroupBy(r => r.Status)
                 .ToDictionary(g => g.Key, g => (long)g.Count()));
 
+        // Return status totals for the selected Prosumer's test reservations.
         public Task<Dictionary<ReservationStatus, long>> GetProsumerStatusCountsAsync(
             string prosumerNic, CancellationToken cancellationToken = default) =>
             Task.FromResult(_items
@@ -804,6 +830,7 @@ public sealed class ReservationServiceTests
                 .GroupBy(r => r.Status)
                 .ToDictionary(g => g.Key, g => (long)g.Count()));
 
+        // Count matching test reservations starting after the supplied time.
         public Task<long> CountProsumerReservationsStartingAfterAsync(
             string prosumerNic,
             ReservationStatus status,
@@ -817,18 +844,23 @@ public sealed class ReservationServiceTests
 
     private sealed class FakeStationRepository(SolarStation? station) : ISolarStationRepository
     {
+        // Look up the test record by its identifier.
         public Task<SolarStation?> FindByIdAsync(MongoDB.Bson.ObjectId id, CancellationToken cancellationToken = default) =>
             Task.FromResult(station);
 
         // Remaining interface members not used by ReservationService — minimal stubs.
         public Task<SolarStation?> FindByCodeAsync(string code, CancellationToken cancellationToken = default) =>
             Task.FromResult<SolarStation?>(null);
+        // Return the test records for the requested query.
         public Task<List<SolarStation>> GetAllAsync(StationStatus? status = null, CancellationToken cancellationToken = default) =>
             Task.FromResult(new List<SolarStation>());
+        // Simulate creating a record in the test repository.
         public Task CreateAsync(SolarStation station, CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
+        // Simulate updating a record in the test repository.
         public Task<bool> UpdateAsync(SolarStation station, CancellationToken cancellationToken = default) =>
             Task.FromResult(true);
+        // Simulate the requested record status transition.
         public Task<bool> UpdateStatusAsync(string code, StationStatus status, CancellationToken cancellationToken = default) =>
             Task.FromResult(true);
     }
@@ -837,33 +869,41 @@ public sealed class ReservationServiceTests
     {
         public EnergyBookingSlot Slot => slot!;
 
+        // Look up the test record by its identifier.
         public Task<EnergyBookingSlot?> FindByIdAsync(MongoDB.Bson.ObjectId id, CancellationToken cancellationToken = default) =>
             Task.FromResult(slot?.Id == id ? slot : null);
 
+        // Look up the test record by its public code.
         public Task<EnergyBookingSlot?> FindByCodeAsync(string slotCode, CancellationToken cancellationToken = default) =>
             Task.FromResult<EnergyBookingSlot?>(null);
 
+        // Return the slot query result supplied by this test repository.
         public Task<List<EnergyBookingSlot>> GetForStationAsync(
             MongoDB.Bson.ObjectId stationId, DateTime? fromUtc, DateTime? toUtc, SlotStatus? status,
             CancellationToken cancellationToken = default) =>
             Task.FromResult(new List<EnergyBookingSlot>());
 
+        // Return the overlap result supplied by this test repository.
         public Task<bool> HasOverlapAsync(
             MongoDB.Bson.ObjectId stationId, DateTime startTimeUtc, DateTime endTimeUtc,
             MongoDB.Bson.ObjectId? excludedId = null, CancellationToken cancellationToken = default) =>
             Task.FromResult(false);
 
+        // Simulate creating a record in the test repository.
         public Task CreateAsync(EnergyBookingSlot s, CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
 
+        // Simulate updating a record in the test repository.
         public Task<bool> UpdateAsync(EnergyBookingSlot s, CancellationToken cancellationToken = default) =>
             Task.FromResult(true);
 
+        // Simulate the requested record status transition.
         public Task<bool> UpdateStatusAsync(string slotCode, SlotStatus status, CancellationToken cancellationToken = default) =>
             Task.FromResult(true);
 
         public Task<bool> UpdateStatusByIdAsync(MongoDB.Bson.ObjectId id, SlotStatus status, CancellationToken cancellationToken = default)
         {
+            // Update the matching test slot's status and report whether it exists.
             if (slot != null && slot.Id == id)
             {
                 slot.Status = status;
@@ -877,6 +917,7 @@ public sealed class ReservationServiceTests
             decimal energyKwh,
             CancellationToken cancellationToken = default)
         {
+            // Deduct available test slot energy only when the requested allocation is valid.
             if (slot == null || slot.Id != id ||
                 slot.Status is not (SlotStatus.Available or SlotStatus.Reserved) ||
                 energyKwh <= 0 || slot.AvailableEnergyKwh < energyKwh)
@@ -894,6 +935,7 @@ public sealed class ReservationServiceTests
             decimal energyKwh,
             CancellationToken cancellationToken = default)
         {
+            // Restore test slot energy when the slot and amount permit it.
             if (slot == null || slot.Id != id || energyKwh <= 0 || slot.Status == SlotStatus.Expired)
             {
                 return Task.FromResult(false);

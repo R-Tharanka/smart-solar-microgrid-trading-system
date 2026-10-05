@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: JwtTokenGenerator.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Issues signed access tokens containing business identity and role claims.
 // -----------------------------------------------------------------------------
 using System.IdentityModel.Tokens.Jwt;

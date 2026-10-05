@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: IIdentityService.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Defines identity and account-management use cases exposed to the API.
 // -----------------------------------------------------------------------------
 using SmartSolarMicrogrid.Api.Contracts.Identity;

@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: TransactionRepository.cs
+// Purpose: Persists QR and transfer transitions with database state checks.
+// -----------------------------------------------------------------------------
 using MongoDB.Bson;
 using MongoDB.Driver;
 using SmartSolarMicrogrid.Api.Models;

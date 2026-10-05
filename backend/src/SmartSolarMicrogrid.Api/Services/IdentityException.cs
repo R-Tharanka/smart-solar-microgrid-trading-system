@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: IdentityException.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Carries safe HTTP status and error codes for identity-domain failures.
 // -----------------------------------------------------------------------------
 namespace SmartSolarMicrogrid.Api.Services;

@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: IdentityRequests.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Defines validated request contracts for identity and account operations.
 // -----------------------------------------------------------------------------
 using System.ComponentModel.DataAnnotations;

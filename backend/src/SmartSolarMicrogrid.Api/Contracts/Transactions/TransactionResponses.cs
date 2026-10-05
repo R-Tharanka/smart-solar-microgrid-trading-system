@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: TransactionResponses.cs
+// Purpose: Defines QR payload, verification, finalization, and transaction detail responses.
+// -----------------------------------------------------------------------------
 namespace SmartSolarMicrogrid.Api.Contracts.Transactions;
 
 /// <summary>Secure QR payload returned only at issue time to an authorized caller.</summary>
