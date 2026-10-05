@@ -218,6 +218,27 @@ public sealed class StationSlotServiceTests
         Assert.Equal("SLOT_ACTIVE_RESERVATION", exception.ErrorCode);
     }
 
+    // Verifies that reservation and expiry states remain controlled by server workflows.
+    [Theory]
+    [InlineData("Reserved")]
+    [InlineData("Expired")]
+    public async Task ChangeSlotStatus_ToSystemManagedStatus_IsRejected(string requestedStatus)
+    {
+        var stations = new FakeStationRepository();
+        var station = Station();
+        stations.Items.Add(station);
+        var slots = new FakeSlotRepository();
+        slots.Items.Add(Slot(station.Id));
+
+        var exception = await Assert.ThrowsAsync<StationSlotException>(() =>
+            SlotService(stations, slots).ChangeStatusAsync(
+                "SLT-CMB-001",
+                new ChangeBookingSlotStatusRequest(requestedStatus, "Manual override"),
+                TestCancellation));
+
+        Assert.Equal("SLOT_STATUS_INVALID", exception.ErrorCode);
+    }
+
     // Creates the station service with isolated fake dependencies.
     private static SolarStationService StationService(
         FakeStationRepository stations,
