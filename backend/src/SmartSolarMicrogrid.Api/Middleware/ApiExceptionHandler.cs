@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: ApiExceptionHandler.cs
+// Purpose: Converts application failures into consistent HTTP problem responses.
+// -----------------------------------------------------------------------------
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
@@ -14,6 +18,7 @@ public sealed class ApiExceptionHandler(
         Exception exception,
         CancellationToken cancellationToken)
     {
+        // Map the exception to a safe HTTP problem response and log the failure.
         var (status, title, code, detail) = exception switch
         {
             IdentityException identity =>

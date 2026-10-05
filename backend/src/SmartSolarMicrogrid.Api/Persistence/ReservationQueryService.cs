@@ -36,6 +36,7 @@ public sealed class ReservationQueryService(MongoDbContext context) : IReservati
 
     public async Task<decimal> GetTotalApprovedEnergyForStationAsync(ObjectId stationId, CancellationToken cancellationToken = default)
     {
+        // Return the approved reservation energy total for the selected station.
         var filter = new BsonDocument
         {
             { "stationId", stationId },

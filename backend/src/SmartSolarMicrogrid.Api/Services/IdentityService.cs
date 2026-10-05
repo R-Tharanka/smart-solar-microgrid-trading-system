@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: IdentityService.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Enforces identity validation, authentication, profile, and account rules.
 // -----------------------------------------------------------------------------
 using MongoDB.Driver;
@@ -42,6 +41,7 @@ public sealed class IdentityService(
         return new LoginResponse(token.Token, token.ExpiresAtUtc, MapToResponse(user));
     }
 
+    // Register a public Prosumer account for administrative review.
     public async Task<UserResponse> RegisterProsumerAsync(
         RegisterProsumerRequest request,
         CancellationToken cancellationToken = default) =>
@@ -52,6 +52,7 @@ public sealed class IdentityService(
             allowRejectedResubmission: true,
             cancellationToken: cancellationToken);
 
+    // Create a Prosumer account on behalf of the authenticated administrator.
     public async Task<UserResponse> CreateProsumerAsync(
         string actorIdentifier,
         RegisterProsumerRequest request,

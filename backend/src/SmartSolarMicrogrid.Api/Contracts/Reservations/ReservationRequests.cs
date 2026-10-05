@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: ReservationRequests.cs
+// Purpose: Defines validated request models for reservation creation, updates, cancellation, and rejection.
+// -----------------------------------------------------------------------------
 using System.ComponentModel.DataAnnotations;
 
 namespace SmartSolarMicrogrid.Api.Contracts.Reservations;
@@ -5,8 +9,10 @@ namespace SmartSolarMicrogrid.Api.Contracts.Reservations;
 /// <summary>Request body for creating a new energy reservation.</summary>
 public sealed record CreateReservationRequest
 {
+    // Initialize an empty request for model binding.
     public CreateReservationRequest() { }
 
+    // Initialize the request from the supplied values.
     public CreateReservationRequest(string stationId, string slotId, decimal requestedEnergyKwh) =>
         (StationId, SlotId, RequestedEnergyKwh) = (stationId, slotId, requestedEnergyKwh);
 
@@ -26,8 +32,10 @@ public sealed record CreateReservationRequest
 /// <summary>Request body for updating an existing reservation's energy amount.</summary>
 public sealed record UpdateReservationRequest
 {
+    // Initialize an empty request for model binding.
     public UpdateReservationRequest() { }
 
+    // Initialize the request from the supplied values.
     public UpdateReservationRequest(decimal requestedEnergyKwh) =>
         RequestedEnergyKwh = requestedEnergyKwh;
 
@@ -39,8 +47,10 @@ public sealed record UpdateReservationRequest
 /// <summary>Request body for cancelling a reservation.</summary>
 public sealed record CancelReservationRequest
 {
+    // Initialize an empty request for model binding.
     public CancelReservationRequest() { }
 
+    // Initialize the request from the supplied values.
     public CancelReservationRequest(string? reason) => Reason = reason;
 
     /// <summary>Optional reason for cancellation.</summary>
@@ -51,8 +61,10 @@ public sealed record CancelReservationRequest
 /// <summary>Request body for rejecting a pending reservation (Staff only).</summary>
 public sealed record RejectReservationRequest
 {
+    // Initialize an empty request for model binding.
     public RejectReservationRequest() { }
 
+    // Initialize the request from the supplied values.
     public RejectReservationRequest(string reason) => Reason = reason;
 
     /// <summary>Required reason explaining why the reservation is being rejected.</summary>

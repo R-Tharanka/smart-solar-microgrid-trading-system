@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: MongoCollectionInitializer.cs
+// Purpose: Prepares MongoDB collections, indexes, legacy fields, and the initial administrator.
+// -----------------------------------------------------------------------------
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -13,6 +17,7 @@ public sealed class MongoCollectionInitializer(
 {
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
+        // Prepare database collections, migrate legacy fields, create indexes, and seed the administrator.
         await EnsureCollectionsAsync(cancellationToken);
         await MigrateLegacyUserFieldNamesAsync(cancellationToken);
         await EnsureIndexesAsync(cancellationToken);
@@ -22,6 +27,7 @@ public sealed class MongoCollectionInitializer(
 
     private async Task MigrateLegacyUserFieldNamesAsync(CancellationToken cancellationToken)
     {
+        // Rename legacy user document fields to the current camel-case schema.
         var users = context.Database.GetCollection<BsonDocument>(CollectionNames.Users);
         var legacyDocuments = new BsonDocument
         {
@@ -53,6 +59,7 @@ public sealed class MongoCollectionInitializer(
 
     private async Task SeedInitialAdminAsync(CancellationToken cancellationToken)
     {
+        // Create the configured initial Backoffice account only when bootstrapping is enabled and none exists.
         var options = bootstrapAdminOptions.Value;
         if (!options.Enabled)
         {
@@ -87,6 +94,7 @@ public sealed class MongoCollectionInitializer(
 
     private async Task EnsureCollectionsAsync(CancellationToken cancellationToken)
     {
+        // Create any application collections that are missing from the database.
         var existing = await (await context.Database.ListCollectionNamesAsync(cancellationToken: cancellationToken))
             .ToListAsync(cancellationToken);
 
@@ -107,6 +115,7 @@ public sealed class MongoCollectionInitializer(
 
     private async Task EnsureIndexesAsync(CancellationToken cancellationToken)
     {
+        // Ensure the required database indexes exist with the expected key definitions.
         var users = context.Database.GetCollection<BsonDocument>(CollectionNames.Users);
         await EnsureIndexesAsync(users, new[]
         {
@@ -174,6 +183,7 @@ public sealed class MongoCollectionInitializer(
         IReadOnlyCollection<CreateIndexModel<BsonDocument>> desiredIndexes,
         CancellationToken cancellationToken)
     {
+        // Ensure the required database indexes exist with the expected key definitions.
         var existingIndexes = await (await collection.Indexes.ListAsync(cancellationToken))
             .ToListAsync(cancellationToken);
 
@@ -205,6 +215,7 @@ public sealed class MongoCollectionInitializer(
         }
     }
 
+    // Build a named MongoDB index definition with the requested constraints.
     private static CreateIndexModel<BsonDocument> Index(
         string name,
         BsonDocument keys,

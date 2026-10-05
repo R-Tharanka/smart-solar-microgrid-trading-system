@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: IReservationService.cs
+// Purpose: Defines reservation management and dashboard operations.
+// -----------------------------------------------------------------------------
 using SmartSolarMicrogrid.Api.Contracts.Reservations;
 using SmartSolarMicrogrid.Api.Models;
 

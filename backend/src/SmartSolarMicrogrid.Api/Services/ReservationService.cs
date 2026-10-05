@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: ReservationService.cs
+// Purpose: Enforces reservation ownership, capacity allocation, lifecycle transitions, and dashboard queries.
+// -----------------------------------------------------------------------------
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using MongoDB.Bson;
@@ -445,6 +449,7 @@ public sealed class ReservationService(
         string prosumerNic,
         CancellationToken cancellationToken = default)
     {
+        // Collect this Prosumer's reservation counts, including future approved reservations.
         var now = UtcNow();
         var countsTask = reservationRepository.GetProsumerStatusCountsAsync(prosumerNic, cancellationToken);
         var approvedFutureTask = reservationRepository.CountProsumerReservationsStartingAfterAsync(
@@ -466,6 +471,7 @@ public sealed class ReservationService(
 
     private DateTime UtcNow() => timeProvider.GetUtcNow().UtcDateTime;
 
+    // Return the count for the requested status, using zero when the status is absent.
     private static long GetCount(Dictionary<ReservationStatus, long> counts, ReservationStatus key) =>
         counts.TryGetValue(key, out var v) ? v : 0L;
 
@@ -491,6 +497,7 @@ public sealed class ReservationService(
         throw new InvalidOperationException("Failed to generate a unique reservation code after multiple attempts.");
     }
 
+    // Project a reservation into its detailed public response.
     private static ReservationResponse MapToResponse(EnergyReservation r) =>
         new(r.Id.ToString(), r.ReservationCode, r.ProsumerNic,
             r.StationId.ToString(), r.StationName ?? "", r.SlotId.ToString(), r.SlotName ?? "", r.RequestedEnergyKwh,
@@ -498,6 +505,7 @@ public sealed class ReservationService(
             r.ConfirmationNote,
             r.CreatedAtUtc, r.UpdatedAtUtc);
 
+    // Project a reservation into the summary returned in lists.
     private static ReservationSummaryResponse MapToSummary(EnergyReservation r) =>
         new(r.Id.ToString(), r.ReservationCode, r.ProsumerNic,
             r.StationId.ToString(), r.StationName ?? "", r.SlotId.ToString(), r.SlotName ?? "", r.RequestedEnergyKwh,

@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: DashboardController.cs
+// Purpose: Exposes reservation dashboard summaries for authorized users.
+// -----------------------------------------------------------------------------
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

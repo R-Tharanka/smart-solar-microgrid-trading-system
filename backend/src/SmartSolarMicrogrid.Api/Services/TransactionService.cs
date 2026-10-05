@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: TransactionService.cs
+// Purpose: Issues secure QR tokens and enforces verification and transfer completion rules.
+// -----------------------------------------------------------------------------
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -146,8 +150,10 @@ public sealed class TransactionService(
     // TimeProvider keeps lifecycle and expiry tests deterministic.
     private DateTime UtcNow() => timeProvider.GetUtcNow().UtcDateTime;
 
+    // Trim and normalize the public code for consistent lookup.
     private static string NormalizeCode(string value) => value.Trim().ToUpperInvariant();
 
+    // Hash the QR token so its raw value does not need to be stored.
     private static string HashToken(string token) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 

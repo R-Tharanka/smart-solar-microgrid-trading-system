@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: CorsOptions.cs
+// Purpose: Defines allowed origins for cross-origin API requests.
+// -----------------------------------------------------------------------------
 using System.ComponentModel.DataAnnotations;
 
 namespace SmartSolarMicrogrid.Api.Configuration;

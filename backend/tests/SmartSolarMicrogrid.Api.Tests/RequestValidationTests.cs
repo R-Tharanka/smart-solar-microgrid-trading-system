@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: RequestValidationTests.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Verifies MVC and data-annotation validation for identity requests.
 // -----------------------------------------------------------------------------
 using System.ComponentModel.DataAnnotations;

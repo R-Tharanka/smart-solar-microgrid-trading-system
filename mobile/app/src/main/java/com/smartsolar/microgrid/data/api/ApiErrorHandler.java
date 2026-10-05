@@ -9,7 +9,7 @@ public final class ApiErrorHandler {
 
     public static ApiError fromHttpResponse(int statusCode, String responseBody) {
         String errorCode = readErrorCode(responseBody);
-        return new ApiError(statusCode, errorCode, messageForError(statusCode, errorCode));
+        return new ApiError(statusCode, errorCode, messageForError(statusCode, errorCode, responseBody));
     }
 
     public static ApiError networkError() {
@@ -43,7 +43,7 @@ public final class ApiErrorHandler {
         return "HTTP_ERROR";
     }
 
-    private static String messageForError(int statusCode, String errorCode) {
+    private static String messageForError(int statusCode, String errorCode, String responseBody) {
         switch (errorCode) {
             case "AUTH_INVALID_CREDENTIALS":
                 return "The identifier or password is incorrect.";
@@ -80,6 +80,16 @@ public final class ApiErrorHandler {
                 return "This energy transfer can no longer be finalized.";
             case "TRANSFER_ENERGY_INVALID":
                 return "Enter a transferred energy amount within the reserved quantity.";
+            case "RESERVATION_WINDOW_INVALID":
+                try {
+                    JsonObject problem = JsonParser.parseString(responseBody).getAsJsonObject();
+                    if (problem.has("detail") && !problem.get("detail").isJsonNull()) {
+                        return problem.get("detail").getAsString();
+                    }
+                } catch (RuntimeException ignored) {}
+                return "Reservations can only be made for slots starting within 7 days and must not be in the past.";
+            case "RESERVATION_NOTICE_PERIOD":
+                return "Reservations must be updated or cancelled at least 12 hours before the scheduled start time.";
             default:
                 break;
         }

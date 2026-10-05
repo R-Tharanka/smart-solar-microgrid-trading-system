@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// File: ITransactionRepository.cs
+// Purpose: Defines conditional persistence operations for QR and transfer lifecycle changes.
+// -----------------------------------------------------------------------------
 using MongoDB.Bson;
 using SmartSolarMicrogrid.Api.Models;
 

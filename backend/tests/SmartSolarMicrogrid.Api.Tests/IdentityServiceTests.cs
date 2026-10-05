@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // File: IdentityServiceTests.cs
-// Member 1: Identity, Authentication, Authorization and Account Management
 // Purpose: Verifies identity business rules, account lifecycle, and security behavior.
 // -----------------------------------------------------------------------------
 using Microsoft.Extensions.Logging.Abstractions;
@@ -636,6 +635,7 @@ public sealed class IdentityServiceTests
         public Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(Users.ToList());
 
+        // Return test Prosumers matching the requested account status.
         public Task<List<User>> GetProsumersByStatusAsync(
             UserStatus status,
             CancellationToken cancellationToken = default) =>
@@ -701,6 +701,7 @@ public sealed class IdentityServiceTests
             DateTime requestedAtUtc,
             CancellationToken cancellationToken = default)
         {
+            // Simulate recording a deactivation request in the test repository.
             var user = Users.SingleOrDefault(item => item.Nic == nic);
             if (user is null || user.Role != UserRole.Prosumer ||
                 user.Status != UserStatus.Active || user.DeactivationRequested)
