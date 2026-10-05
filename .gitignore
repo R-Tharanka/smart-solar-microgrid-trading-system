@@ -23,3 +23,7 @@ node_modules
 /mobile/.externalNativeBuild/
 /mobile/.cxx/
 *.iml
+
+bin/
+obj/
+publish/
