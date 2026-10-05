@@ -48,3 +48,91 @@ Phase 1 requirements analysis and project foundation documents:
 - [Postman collection and execution guide](docs/postman/README.md)
 
 The ASP.NET Core foundation is under `backend/` and uses MongoDB Atlas. Copy `.env.example` to an untracked `.env`, add the Atlas SRV connection string and run `docker compose up --build`. Verify Atlas connectivity at `http://localhost:5080/health/ready`.
+
+## Individual contributions
+
+### IT22079268 - Premathilaka G.G.R.T
+
+Identity, Authentication, Account Management & Database Configuration
+- Configured the MongoDB connection and database settings for the centralized ASP.NET Core Web API.
+- Configured secure database connection handling using environment variables and application configuration.
+- Configured SQLite support for the native Android application.
+- Established the local SQLite database structure used for mobile-side persistence and reference data.
+- Assisted with Android database access configuration and integration between SQLite-stored data and the central Web API.
+- Implemented Prosumer registration and staff account creation.
+- Implemented secure login using BCrypt password hashing.
+- Implemented JWT-based authentication and role-based authorization.
+- Implemented Backoffice, Grid Operator and Prosumer authorization policies.
+- Implemented user profile retrieval and profile update functionality.
+- Implemented Prosumer account deactivation.
+- Implemented Backoffice-controlled account reactivation.
+- Implemented user listing and account-status management.
+- Added unique NIC and email validation and MongoDB indexes.
+- Implemented account-state validation and reservation-aware Prosumer deactivation.
+- Implemented web interfaces for login, user management, Prosumer management and profile/account operations.
+- Implemented Android authentication-related functionality including registration, login, session handling and profile management.
+- Implemented automated tests for authentication, authorization and account-management workflows.
+
+### IT22070012 - Navoda H.G.J
+
+Microgrid Stations & Energy Booking Slots
+- Implemented solar/microgrid station creation, retrieval and updating.
+- Implemented station GPS information using latitude and longitude.
+- Implemented station capacity and battery-storage management.
+- Implemented station operating schedules.
+- Implemented station activation, maintenance and deactivation functionality.
+- Implemented the rule preventing station deactivation when active reservations exist.
+- Implemented energy booking-slot creation, retrieval and updating.
+- Implemented slot availability/status management.
+- Implemented slot validation including time, schedule, capacity, price and overlap rules.
+- Implemented reservation-safe slot modification and status changes.
+- Implemented location-based station queries for nearby-station discovery.
+- Implemented the Backoffice web frontend for station and slot management using React and Tailwind CSS.
+- Implemented station list, create station, station details, edit station and station-status interfaces.
+- Implemented slot list, create slot, slot details, edit slot and slot-status interfaces.
+- Implemented Android GPS/location functionality for nearby station discovery.
+- Integrated Google Maps to display nearby microgrid stations.
+- Implemented station markers, station details and available slot viewing in the Android application.
+- Implemented automated tests for station and slot business rules.
+
+### IT22217318 - Cassim T.S
+
+Energy Reservations, Booking Management & Dashboards
+- Implemented energy reservation creation.
+- Implemented reservation modification and cancellation.
+- Implemented reservation retrieval and reservation-status management.
+- Implemented the required booking-window validation.
+- Implemented the minimum notice period for reservation updates and cancellations.
+- Implemented reservation ownership and authorization checks.
+- Integrated reservations with Prosumers, stations and energy booking slots.
+- Implemented slot availability checks during reservation operations.
+- Implemented reservation-state transition validation.
+- Implemented web interfaces for reservation management.
+- Implemented current, pending and historical booking views.
+- Implemented reservation searching and filtering.
+- Implemented booking and operational dashboard views.
+- Implemented the Android Prosumer reservation workflow.
+- Implemented reservation creation from a selected station and energy slot.
+- Implemented Android reservation modification and cancellation.
+- Implemented booking summaries, pending reservations and booking history.
+- Implemented automated tests for reservation business rules and state transitions.
+
+### IT22087324 - Gunathunga P.C.I
+
+Grid Operator Verification & Energy Transfer
+- Implemented Grid Operator transaction-verification functionality.
+- Implemented QR-based transaction validation.
+- Implemented Grid Operator authorization checks.
+- Implemented server-side verification of reservation and transaction states.
+- Implemented energy-transfer finalization.
+- Implemented protection against duplicate or invalid transaction completion.
+- Integrated the transaction workflow with reservation status information.
+- Implemented web interfaces for Grid Operator operational functionality.
+- Implemented transaction-detail and verification-status views.
+- Implemented transfer-related monitoring interfaces.
+- Implemented Android QR-code scanning functionality.
+- Implemented server-side QR verification from the Android application.
+- Implemented Grid Operator transaction confirmation.
+- Implemented final energy-transfer completion and result screens.
+- Implemented handling for invalid, expired and already-completed transactions.
+- Implemented tests for QR verification, operator authorization and duplicate-transfer prevention.

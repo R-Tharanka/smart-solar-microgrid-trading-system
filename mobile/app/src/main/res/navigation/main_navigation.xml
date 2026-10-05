@@ -64,4 +64,14 @@
         android:name="com.smartsolar.microgrid.ui.prosumer.BookingDetailsFragment"
         android:label="Booking Details" />
 
+    <fragment
+        android:id="@+id/scannerFragment"
+        android:name="com.smartsolar.microgrid.ui.operator.ScannerFragment"
+        android:label="Scan QR Code" />
+
+    <fragment
+        android:id="@+id/transactionVerifyFragment"
+        android:name="com.smartsolar.microgrid.ui.operator.TransactionVerifyFragment"
+        android:label="Verify Transaction" />
+
 </navigation>

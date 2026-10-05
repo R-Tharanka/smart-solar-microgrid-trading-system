@@ -30,5 +30,9 @@ public class GridOperatorHomeFragment extends Fragment {
         welcome.setText(getString(R.string.welcome_user, session.getDisplayName()));
         view.findViewById(R.id.logout_button).setOnClickListener(button ->
                 AuthenticationNavigator.logout(this));
+                
+        view.findViewById(R.id.scan_qr_card).setOnClickListener(button -> 
+                androidx.navigation.fragment.NavHostFragment.findNavController(this)
+                        .navigate(R.id.scannerFragment));
     }
 }

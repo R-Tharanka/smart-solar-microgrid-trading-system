@@ -21,9 +21,8 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.maps.SupportMapFragment;
+import org.osmdroid.config.Configuration;
+import org.osmdroid.views.MapView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.smartsolar.microgrid.R;
@@ -111,6 +110,10 @@ public class StationsFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        if (getView() != null) {
+            MapView mapView = getView().findViewById(R.id.station_map_view);
+            if (mapView != null) mapView.onResume();
+        }
         if (returningFromSettings && getView() != null) {
             returningFromSettings = false;
             if (hasLocationPermission()) {
@@ -122,20 +125,24 @@ public class StationsFragment extends Fragment {
         }
     }
 
-    private void initializeMap(View view) {
-        int availability = GoogleApiAvailability.getInstance()
-                .isGooglePlayServicesAvailable(requireContext());
-        if (availability != ConnectionResult.SUCCESS) {
-            mapAvailable = false;
-            view.findViewById(R.id.station_map_container).setVisibility(View.GONE);
-            showLocationNotice(R.string.station_map_unavailable, 0, null);
-            return;
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (getView() != null) {
+            MapView mapView = getView().findViewById(R.id.station_map_view);
+            if (mapView != null) mapView.onPause();
         }
+    }
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
-                .findFragmentById(R.id.station_map_fragment);
-        if (mapFragment != null) {
-            mapFragment.getMapAsync(mapController::attach);
+    private void initializeMap(View view) {
+        Configuration.getInstance().load(requireContext(), 
+                requireContext().getSharedPreferences("osmdroid", android.content.Context.MODE_PRIVATE));
+                
+        MapView mapView = view.findViewById(R.id.station_map_view);
+        if (mapView != null) {
+            mapController.attach(mapView);
+        } else {
+            mapAvailable = false;
         }
     }
 
@@ -211,6 +218,7 @@ public class StationsFragment extends Fragment {
                             }
                         }
 
+                        adapter.setUserLocation(location);
                         displayStations(activeStations);
                         hideCacheNotice();
                         if (activeStations.isEmpty()) {
@@ -246,6 +254,7 @@ public class StationsFragment extends Fragment {
                             return;
                         }
 
+                        adapter.setUserLocation(location);
                         displayStations(cachedActiveStations);
                         showCacheNotice(cached.getLastSyncedAtEpochMillis());
                         showContent();

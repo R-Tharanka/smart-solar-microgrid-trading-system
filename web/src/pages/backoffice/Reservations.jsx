@@ -257,7 +257,7 @@ const Reservations = () => {
               <tr>
                 <th scope="col">Code / Prosumer</th>
                 <th scope="col">Station</th>
-                <th scope="col">Energy &amp; date (UTC)</th>
+                <th scope="col">Energy &amp; date</th>
                 <th scope="col">Status</th>
                 <th scope="col" className="text-right">
                   Actions

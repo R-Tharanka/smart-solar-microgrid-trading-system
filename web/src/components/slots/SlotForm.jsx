@@ -8,16 +8,16 @@ import apiClient from '../../services/api';
 const SlotForm = ({ slot, stationCode, onClose, onSuccess }) => {
   const isEditing = !!slot;
   
-  // Format an API UTC timestamp for a timezone-neutral datetime-local input.
+  // Format a UTC timestamp into a timezone-aware local datetime string for the input.
   const formatDateForInput = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     const pad = (num) => String(num).padStart(2, '0');
-    return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   };
 
-  // Interpret the timezone-neutral form value as UTC, matching the API contract.
-  const toUtcIsoString = (value) => new Date(`${value}:00Z`).toISOString();
+  // Convert the local datetime value from the form back to an ISO string.
+  const toUtcIsoString = (value) => new Date(value).toISOString();
 
   const [formData, setFormData] = useState({
     slotCode: '',
@@ -102,9 +102,9 @@ const SlotForm = ({ slot, stationCode, onClose, onSuccess }) => {
         <fieldset disabled={isSubmitting} className="grid gap-5 sm:grid-cols-2">
           <legend className="sr-only">Energy window information</legend>
           {!isEditing && <FormField id="slot-slotCode" label="Slot code" type="text" name="slotCode" value={formData.slotCode} onChange={handleChange} required className="sm:col-span-2" />}
-          <div className="form-section-label sm:col-span-2"><span>01</span>Availability window · UTC</div>
-          <FormField id="slot-startTimeUtc" label="Start time (UTC)" type="datetime-local" name="startTimeUtc" value={formData.startTimeUtc} onChange={handleChange} required />
-          <FormField id="slot-endTimeUtc" label="End time (UTC)" type="datetime-local" name="endTimeUtc" value={formData.endTimeUtc} onChange={handleChange} required />
+          <div className="form-section-label sm:col-span-2"><span>01</span>Availability window</div>
+          <FormField id="slot-startTimeUtc" label="Start time" type="datetime-local" name="startTimeUtc" value={formData.startTimeUtc} onChange={handleChange} required />
+          <FormField id="slot-endTimeUtc" label="End time" type="datetime-local" name="endTimeUtc" value={formData.endTimeUtc} onChange={handleChange} required />
           <div className="form-section-label sm:col-span-2"><span>02</span>Energy & pricing</div>
           <FormField id="slot-availableEnergyKwh" label="Energy capacity (kWh)" type="number" step="0.01" name="availableEnergyKwh" value={formData.availableEnergyKwh} onChange={handleChange} required />
           <FormField id="slot-pricePerKwh" label="Price per kWh ($)" type="number" step="0.01" name="pricePerKwh" value={formData.pricePerKwh} onChange={handleChange} required />

@@ -8,7 +8,6 @@ public final class VerifyTransactionRequest {
         this.reservationCode = reservationCode;
         this.transactionToken = transactionToken;
     }
-
     public String getReservationCode() { return reservationCode; }
     public String getTransactionToken() { return transactionToken; }
 }

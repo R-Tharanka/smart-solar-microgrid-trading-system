@@ -1,11 +1,16 @@
 package com.smartsolar.microgrid.ui.prosumer;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
+import androidx.core.content.ContextCompat;
+
+import org.osmdroid.api.IMapController;
+import org.osmdroid.util.BoundingBox;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
+
+import com.smartsolar.microgrid.R;
 import com.smartsolar.microgrid.data.station.StationResponse;
 
 import java.util.ArrayList;
@@ -21,16 +26,20 @@ final class StationMapController {
     private final OnStationMarkerSelected listener;
     private final Map<String, StationResponse> stationsByIdentifier = new HashMap<>();
     private List<StationResponse> stations = new ArrayList<>();
-    private GoogleMap map;
+    private MapView map;
+    private MyLocationNewOverlay myLocationOverlay;
 
     StationMapController(OnStationMarkerSelected listener) {
         this.listener = listener;
     }
 
-    void attach(GoogleMap googleMap) {
-        map = googleMap;
-        map.getUiSettings().setMapToolbarEnabled(false);
-        map.setOnMarkerClickListener(this::onMarkerClick);
+    void attach(MapView mapView) {
+        map = mapView;
+        map.setMultiTouchControls(true);
+        
+        myLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(mapView.getContext()), map);
+        myLocationOverlay.enableMyLocation();
+
         render();
     }
 
@@ -42,33 +51,44 @@ final class StationMapController {
 
     private void render() {
         if (map == null) return;
-        map.clear();
+        map.getOverlays().clear();
+        
+        if (myLocationOverlay != null) {
+            map.getOverlays().add(myLocationOverlay);
+        }
+        
         stationsByIdentifier.clear();
-        List<LatLng> positions = new ArrayList<>();
+        List<GeoPoint> positions = new ArrayList<>();
 
         for (StationResponse station : stations) {
             if (!hasValidCoordinates(station)) continue;
             String identifier = stationIdentifier(station);
-            LatLng position = new LatLng(station.getLatitude(), station.getLongitude());
-            Marker marker = map.addMarker(new MarkerOptions()
-                    .position(position)
-                    .title(station.getName()));
-            if (marker != null) {
-                marker.setTag(identifier);
-                stationsByIdentifier.put(identifier, station);
-                positions.add(position);
-            }
-        }
-        frameMarkers(positions);
-    }
+            GeoPoint position = new GeoPoint(station.getLatitude(), station.getLongitude());
+            
+            Marker marker = new Marker(map);
+            marker.setPosition(position);
+            marker.setTitle(station.getName());
+            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+            marker.setRelatedObject(identifier);
+            marker.setOnMarkerClickListener((m, mapView) -> {
+                Object tag = m.getRelatedObject();
+                if (tag instanceof String) {
+                    StationResponse clickedStation = stationsByIdentifier.get((String) tag);
+                    if (clickedStation != null) {
+                        listener.onStationSelected(clickedStation);
+                        return true;
+                    }
+                }
+                return false;
+            });
 
-    private boolean onMarkerClick(Marker marker) {
-        Object tag = marker.getTag();
-        if (!(tag instanceof String)) return false;
-        StationResponse station = stationsByIdentifier.get((String) tag);
-        if (station == null) return false;
-        listener.onStationSelected(station);
-        return true;
+            map.getOverlays().add(marker);
+            stationsByIdentifier.put(identifier, station);
+            positions.add(position);
+        }
+        
+        map.invalidate();
+        frameMarkers(positions);
     }
 
     private boolean hasValidCoordinates(StationResponse station) {
@@ -85,15 +105,29 @@ final class StationMapController {
                 ? station.getStationCode() : station.getId();
     }
 
-    private void frameMarkers(List<LatLng> positions) {
+    private void frameMarkers(List<GeoPoint> positions) {
         if (positions.isEmpty()) return;
+        
+        IMapController mapController = map.getController();
         if (positions.size() == 1) {
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(positions.get(0), 13f));
+            mapController.setZoom(13.0);
+            mapController.setCenter(positions.get(0));
             return;
         }
-        LatLngBounds.Builder bounds = new LatLngBounds.Builder();
-        for (LatLng position : positions) bounds.include(position);
-        map.setOnMapLoadedCallback(() ->
-                map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 72)));
+        
+        double minLat = Double.MAX_VALUE;
+        double maxLat = -Double.MAX_VALUE;
+        double minLon = Double.MAX_VALUE;
+        double maxLon = -Double.MAX_VALUE;
+
+        for (GeoPoint p : positions) {
+            if (p.getLatitude() < minLat) minLat = p.getLatitude();
+            if (p.getLatitude() > maxLat) maxLat = p.getLatitude();
+            if (p.getLongitude() < minLon) minLon = p.getLongitude();
+            if (p.getLongitude() > maxLon) maxLon = p.getLongitude();
+        }
+        
+        BoundingBox boundingBox = new BoundingBox(maxLat, maxLon, minLat, minLon);
+        map.post(() -> map.zoomToBoundingBox(boundingBox, true, 72));
     }
 }

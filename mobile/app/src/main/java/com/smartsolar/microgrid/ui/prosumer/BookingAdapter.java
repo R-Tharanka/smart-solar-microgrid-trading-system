@@ -74,7 +74,12 @@ public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.ViewHold
         }
 
         void bind(ReservationSummaryResponse booking, OnBookingClickListener listener) {
-            codeText.setText(booking.getReservationCode());
+            String titleText = booking.getReservationCode();
+            if (booking.getSlotName() != null && !booking.getSlotName().isEmpty() &&
+                booking.getStationName() != null && !booking.getStationName().isEmpty()) {
+                titleText = booking.getSlotName() + " - " + booking.getStationName();
+            }
+            codeText.setText(titleText);
             String timeStr = formatTime(booking.getScheduledStartTimeUtc()) + " - " + formatTime(booking.getScheduledEndTimeUtc());
             timeText.setText(timeStr);
             energyText.setText(String.format("%.1f kWh", booking.getRequestedEnergyKwh()));

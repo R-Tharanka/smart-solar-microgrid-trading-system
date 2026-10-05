@@ -53,9 +53,8 @@
         android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="8dp">
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/station_map_fragment"
-            android:name="com.google.android.gms.maps.SupportMapFragment"
+        <org.osmdroid.views.MapView
+            android:id="@+id/station_map_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
     </FrameLayout>

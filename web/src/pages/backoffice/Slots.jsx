@@ -18,14 +18,13 @@ import { useToast } from '../../context/ToastContext';
 
 const slotStatuses = ['Available', 'Reserved', 'Unavailable', 'Expired'];
 
-// Keeps displayed slot schedules in UTC so they match the create and edit form.
-const formatUtcDateTime = (value) => new Intl.DateTimeFormat(undefined, {
+// Keeps displayed slot schedules in local time.
+const formatDateTime = (value) => new Intl.DateTimeFormat(undefined, {
   year: 'numeric',
   month: 'numeric',
   day: 'numeric',
   hour: 'numeric',
   minute: '2-digit',
-  timeZone: 'UTC',
   timeZoneName: 'short',
 }).format(new Date(value));
 
@@ -252,13 +251,13 @@ const Slots = () => {
           <section className="app-table-wrap" aria-label="Energy slot list">
             <div className="overflow-x-auto">
               <table className="app-table">
-                <thead><tr><th scope="col">Slot</th><th scope="col">Station</th><th scope="col">From (UTC)</th><th scope="col">Until (UTC)</th><th scope="col">Energy</th><th scope="col">Price / kWh</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
+                <thead><tr><th scope="col">Slot</th><th scope="col">Station</th><th scope="col">From</th><th scope="col">Until</th><th scope="col">Energy</th><th scope="col">Price / kWh</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
                 <tbody>{visibleSlots.map((slot) => (
                   <tr key={slot.slotCode}>
                     <td className="whitespace-nowrap font-mono">{slot.slotCode}</td>
                     <td className="min-w-36">{selectedStation?.name || selectedStationCode}</td>
-                    <td className="whitespace-nowrap">{formatUtcDateTime(slot.startTimeUtc)}</td>
-                    <td className="whitespace-nowrap">{formatUtcDateTime(slot.endTimeUtc)}</td>
+                    <td className="whitespace-nowrap">{formatDateTime(slot.startTimeUtc)}</td>
+                    <td className="whitespace-nowrap">{formatDateTime(slot.endTimeUtc)}</td>
                     <td className="whitespace-nowrap">{slot.availableEnergyKwh} kWh</td>
                     <td className="whitespace-nowrap">${Number(slot.pricePerKwh).toFixed(2)}</td>
                     <td><SlotStatusBadge status={slot.status} /></td>
@@ -275,7 +274,7 @@ const Slots = () => {
               <p className="mt-5 text-xs font-semibold uppercase tracking-widest text-slate-500">Scheduled energy capacity</p>
               <div className="slot-capacity">{slot.availableEnergyKwh}<span>kWh</span></div>
               <p className="text-sm text-slate-500">{selectedStation?.name || selectedStationCode}</p>
-              <div className="slot-window"><div><span>From</span><strong>{formatUtcDateTime(slot.startTimeUtc)}</strong></div><div><span>Until</span><strong>{formatUtcDateTime(slot.endTimeUtc)}</strong></div></div>
+              <div className="slot-window"><div><span>From</span><strong>{formatDateTime(slot.startTimeUtc)}</strong></div><div><span>Until</span><strong>{formatDateTime(slot.endTimeUtc)}</strong></div></div>
               <div className="asset-meta"><span>Price per kWh</span><strong>${Number(slot.pricePerKwh).toFixed(2)}</strong></div>
               <div className="asset-actions"><SlotActions slot={slot} canEditSlots={canEditSlots} isBackoffice={isBackoffice} onDetails={openDetails} onEdit={openEdit} onStatus={openStatusDialog} /></div>
             </article>

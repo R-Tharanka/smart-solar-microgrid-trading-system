@@ -11,7 +11,6 @@ public final class FinalizeTransactionRequest {
         this.confirmationNote = confirmationNote;
         this.actualEnergyTransferredKwh = actualEnergyTransferredKwh;
     }
-
     public String getReservationCode() { return reservationCode; }
     public String getConfirmationNote() { return confirmationNote; }
     public Double getActualEnergyTransferredKwh() { return actualEnergyTransferredKwh; }
