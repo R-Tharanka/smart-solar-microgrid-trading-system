@@ -29,8 +29,9 @@ This register does not rewrite the assignment brief. The team must confirm any c
 | CHG-17 | Station deactivation is blocked by active reservations | `Pending`, `Approved`, `QrIssued` and `Verified` reservations block station and relevant slot lifecycle changes | Protects every non-terminal workflow | Keep status lists synchronized across domains and tests | Implemented |
 | CHG-18 | Account deactivation behavior was general | Prosumer self-service records a pending request while remaining Active; Backoffice deactivation applies the non-terminal-reservation guard; protected policies deny deactivated accounts before JWT expiry | Separates user intent from administrative lifecycle control without weakening reservation protection | Android uses the request endpoint and shows pending state; React exposes request state/processing. Verify both clients against the same database | Implemented in source; live evidence pending |
 | CHG-19 | The original plan did not specify rejected-registration resubmission in detail | A rejected Prosumer's existing NIC record is updated and returned to `Pending` on resubmission | Avoids duplicate identities and maintains Backoffice review | Demonstrate the transition and email uniqueness with real MongoDB | Implemented in source; live evidence pending |
-| CHG-20 | The assignment requires nearby nodes through Google Maps but did not define a radius/search contract | Existing `GET /api/stations` accepts optional paired `nearLat`/`nearLng`; the service validates coordinates and applies approximate nearest-first ordering to the status-filtered station set. Android requests `status=Active`, supplies the device coordinates when available, and otherwise loads active stations without nearby ordering | Reuses the authoritative station response for list, map markers and details without adding a second endpoint or client-owned station model | This is ordering, not radius filtering or a MongoDB geo-near query. Validate real-device location/order and document a future radius query only as an optional scalability improvement | Implemented in source; runtime Maps/location evidence pending |
+| CHG-20 | The assignment requires nearby nodes through Google Maps but did not define a radius/search contract | Existing `GET /api/stations` accepts optional paired `nearLat`/`nearLng`; the service validates coordinates and applies approximate nearest-first ordering to the status-filtered station set. Android requests `status=Active`, supplies device coordinates when available, and otherwise loads active stations without nearby ordering. The current UI renders those results with osmdroid/OpenStreetMap rather than Google Maps | Reuses the authoritative station response for list, markers and details without adding a second endpoint or client-owned station model | This is ordering, not radius filtering or a MongoDB geo-near query. Replace the map provider or document explicit lecturer approval, then validate real-device location/order | Backend/location source implemented; Google Maps compliance and runtime evidence pending |
 | CHG-21 | The original dashboard summary treated every `Approved` reservation as upcoming and Android lacked the planned booking categories/search | `approvedFutureCount` now counts only approved reservations whose scheduled start is after server UTC now; Android exposes live pending/future-approved counts plus client-side search and current/pending/history categories over the authoritative reservation list | Aligns the count label with its actual meaning and closes the planned mobile booking-view gap without caching reservation authority | Verify count/category boundaries, refresh after create/update/cancel/approval, search behavior and empty states against the hosted API on device | Implemented in source; device/E2E evidence pending |
+| CHG-22 | The original QR contract left reuse/rotation undecided and allowed issuance only from `Approved` | QR issue now also accepts `QrIssued`; each call generates a new opaque token and atomically replaces the stored hash/expiry while retaining `QrIssued` | Allows a Prosumer to regenerate an unavailable/expired display token without reverting reservation state; every older token becomes invalid | Add a direct renewal/old-token invalidation test; clients must not persist raw QR payloads. The current Android `qr_cache` SharedPreferences violates this rule and must be removed | Backend source implemented; focused test and secure Android handling pending |
 
 ## Current Identity Client/Role Matrix
 
@@ -63,6 +64,8 @@ Pending --approve--> Approved --issue QR--> QrIssued --verify--> Verified --fina
    +--cancel (12-hour rule)------------------------> Cancelled
 ```
 
+`QrIssued --reissue/rotate QR--> QrIssued` replaces the stored token hash and invalidates every earlier token without reopening reservation editing.
+
 Terminal states are `Rejected`, `Cancelled`, `Expired` and `Completed`. Physical deletion is not part of the current backend lifecycle.
 
 ## Confirmation Checklist
@@ -75,6 +78,7 @@ Terminal states are `Rejected`, `Cancelled`, `Expired` and `Completed`. Physical
 - [x] Member 2 SQLite scope includes bounded grid-node reference caching; live slot availability and reservations remain API-only.
 - [x] Nearby station source uses the existing paired-coordinate API and a non-blocking no-location fallback; no radius contract was invented.
 - [x] Prosumer dashboard `approvedFutureCount` excludes past approved reservations; Android search/categories/counts consume authoritative API data.
+- [ ] Android removes raw QR payload/token persistence and QR renewal/old-token invalidation is directly tested.
 - [ ] API contracts, web/mobile labels, diagrams and final report use the same decisions.
 - [ ] All four members sign the Phase 2 contract/handoff record.
 
@@ -85,5 +89,6 @@ Terminal states are `Rejected`, `Cancelled`, `Expired` and `Completed`. Physical
 - Deactivation rejection with a non-terminal reservation.
 - Wrong-role tests for station/slot and approval actions.
 - QR invalid, expired, replay and duplicate-finalization tests.
+- QR renewal, old-token invalidation and proof that Android logout/backup/storage retains no raw transaction token.
 - MongoDB transaction rollback evidence.
 - Android SQLite evidence with secrets and tokens redacted.
