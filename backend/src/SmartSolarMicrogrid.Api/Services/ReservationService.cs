@@ -122,6 +122,17 @@ public sealed class ReservationService(
             throw ReservationException.NotOwned();
         }
 
+        if (string.IsNullOrEmpty(reservation.StationName))
+        {
+            var station = await stationRepository.FindByIdAsync(reservation.StationId, cancellationToken);
+            reservation.StationName = station?.Name ?? "Unknown Station";
+        }
+        if (string.IsNullOrEmpty(reservation.SlotName))
+        {
+            var slot = await slotRepository.FindByIdAsync(reservation.SlotId, cancellationToken);
+            reservation.SlotName = slot?.SlotCode ?? "Unknown Slot";
+        }
+
         return MapToResponse(reservation);
     }
 
@@ -135,7 +146,22 @@ public sealed class ReservationService(
         CancellationToken cancellationToken = default)
     {
         var reservations = await reservationRepository.GetByProsumerAsync(prosumerNic, status, cancellationToken);
-        return reservations.Select(MapToSummary).ToList();
+        var summaries = new List<ReservationSummaryResponse>();
+        foreach (var r in reservations)
+        {
+            if (string.IsNullOrEmpty(r.StationName))
+            {
+                var station = await stationRepository.FindByIdAsync(r.StationId, cancellationToken);
+                r.StationName = station?.Name ?? "Unknown Station";
+            }
+            if (string.IsNullOrEmpty(r.SlotName))
+            {
+                var slot = await slotRepository.FindByIdAsync(r.SlotId, cancellationToken);
+                r.SlotName = slot?.SlotCode ?? "Unknown Slot";
+            }
+            summaries.Add(MapToSummary(r));
+        }
+        return summaries;
     }
 
     // -------------------------------------------------------------------------
@@ -380,7 +406,22 @@ public sealed class ReservationService(
         }
 
         var reservations = await reservationRepository.GetAllAsync(parsedStatus, stationOid, cancellationToken);
-        return reservations.Select(MapToSummary).ToList();
+        var summaries = new List<ReservationSummaryResponse>();
+        foreach (var r in reservations)
+        {
+            if (string.IsNullOrEmpty(r.StationName))
+            {
+                var station = await stationRepository.FindByIdAsync(r.StationId, cancellationToken);
+                r.StationName = station?.Name ?? "Unknown Station";
+            }
+            if (string.IsNullOrEmpty(r.SlotName))
+            {
+                var slot = await slotRepository.FindByIdAsync(r.SlotId, cancellationToken);
+                r.SlotName = slot?.SlotCode ?? "Unknown Slot";
+            }
+            summaries.Add(MapToSummary(r));
+        }
+        return summaries;
     }
 
     // -------------------------------------------------------------------------
