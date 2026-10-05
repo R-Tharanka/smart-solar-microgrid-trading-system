@@ -2,33 +2,40 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/surface_light"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="@dimen/space_4">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="Booking Details"
-            android:textColor="@color/text_primary"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:text="Reservation record"
+            android:textAppearance="@style/TextAppearance.Solar.ScreenTitle" />
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_2"
+            android:text="Your energy booking and current status"
+            android:textAppearance="@style/TextAppearance.Solar.Supporting" />
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_6" android:background="@drawable/bg_solar_notice"
+            android:orientation="vertical" android:padding="@dimen/space_4">
 
         <TextView
             android:id="@+id/detail_code"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:textSize="16sp" />
+            android:textAppearance="@style/TextAppearance.Solar.Code" />
 
         <TextView
             android:id="@+id/detail_status"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:textSize="16sp"
@@ -41,6 +48,11 @@
             android:layout_marginTop="8dp"
             android:textSize="16sp" />
 
+        <TextView android:id="@+id/detail_station"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_3"
+            android:textAppearance="@style/TextAppearance.Solar.Supporting" />
+
         <TextView
             android:id="@+id/detail_note"
             android:layout_width="match_parent"
@@ -49,11 +61,23 @@
             android:textSize="16sp"
             android:visibility="gone" />
 
-        <com.google.android.material.textfield.TextInputLayout
+        <TextView android:id="@+id/detail_energy_summary"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_3"
+            android:textAppearance="@style/TextAppearance.Solar.Body" />
+
+        <TextView android:id="@+id/detail_lifecycle"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_3"
+            android:textAppearance="@style/TextAppearance.Solar.Supporting" />
+
+        </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Solar.Input"
             android:id="@+id/energy_input_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="@dimen/space_6"
             android:hint="Energy to Drop Off (kWh)">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -78,12 +102,12 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/cancel_button"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.Solar.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="Cancel Reservation"
-                android:textColor="@android:color/holo_red_dark" />
+                android:textColor="@color/status_error" />
                 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/generate_qr_button"
@@ -101,6 +125,8 @@
             android:layout_marginTop="24dp"
             android:gravity="center"
             android:orientation="vertical"
+            android:background="@drawable/bg_solar_notice"
+            android:padding="@dimen/space_4"
             android:visibility="gone">
 
             <TextView
@@ -109,12 +135,17 @@
                 android:text="Show this QR code to the Grid Operator to complete your energy transfer."
                 android:textAlignment="center"
                 android:layout_marginBottom="16dp"
-                android:textColor="#757575" />
+                android:textColor="@color/text_secondary" />
 
             <ImageView
                 android:id="@+id/qr_image"
-                android:layout_width="250dp"
-                android:layout_height="250dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:maxHeight="320dp"
+                android:padding="@dimen/space_3"
+                android:background="@drawable/bg_solar_qr"
+                android:contentDescription="Transaction QR code. Show to the Grid Operator."
                 android:scaleType="fitCenter" />
 
             <TextView
@@ -122,12 +153,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:textColor="@android:color/holo_red_dark"
+                android:textColor="@color/status_error"
                 android:textStyle="bold" />
                 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/renew_qr_button"
-                style="@style/Widget.Material3.Button.TextButton"
+                style="@style/Widget.Solar.Button.Text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -135,10 +166,11 @@
                 android:visibility="gone" />
         </LinearLayout>
 
-        <ProgressBar
+        <ProgressBar style="?android:attr/progressBarStyleHorizontal"
             android:id="@+id/progress_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:indeterminate="true"
             android:layout_gravity="center"
             android:layout_marginTop="16dp"
             android:visibility="gone" />

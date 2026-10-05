@@ -1,6 +1,5 @@
 package com.smartsolar.microgrid.ui.operator;
 
-import android.app.AlertDialog;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -9,7 +8,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,6 +25,8 @@ import com.smartsolar.microgrid.data.transaction.TransactionRepository;
 import com.smartsolar.microgrid.data.transaction.VerifiedTransactionResponse;
 import com.smartsolar.microgrid.data.transaction.VerifyTransactionRequest;
 import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
+import com.smartsolar.microgrid.ui.common.StatusUi;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class TransactionVerifyFragment extends Fragment {
     private TransactionRepository repository;
@@ -112,13 +112,16 @@ public class TransactionVerifyFragment extends Fragment {
     private void showDetails() {
         detailsContainer.setVisibility(View.VISIBLE);
         errorContainer.setVisibility(View.GONE);
+        btnFinalize.setEnabled(true);
         
         tvReservationCode.setText("Code: " + verifiedTransaction.getReservationCode());
         tvProsumerNic.setText("Prosumer NIC: " + verifiedTransaction.getProsumerNic());
         tvRequestedEnergy.setText("Requested Energy: " + verifiedTransaction.getRequestedEnergyKwh() + " kWh");
-        tvStatus.setText("Status: " + verifiedTransaction.getStatus());
+        StatusUi.bind(tvStatus, verifiedTransaction.getStatus());
 
-        actualEnergyInput.setText(String.valueOf(verifiedTransaction.getRequestedEnergyKwh()));
+        if (actualEnergyInput.getText() == null || actualEnergyInput.getText().length() == 0) {
+            actualEnergyInput.setText(String.valueOf(verifiedTransaction.getRequestedEnergyKwh()));
+        }
     }
 
     private void showError(String message) {
@@ -173,16 +176,19 @@ public class TransactionVerifyFragment extends Fragment {
             return;
         }
 
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Confirm Energy Transfer")
-                .setMessage("Are you sure you want to finalize the transfer of " + actualEnergy + " kWh?")
-                .setPositiveButton("Confirm", (dialog, which) -> executeFinalize(actualEnergy, note))
-                .setNegativeButton("Cancel", null)
+                .setMessage("Reservation " + verifiedTransaction.getReservationCode()
+                        + "\nReserved " + verifiedTransaction.getRequestedEnergyKwh()
+                        + " kWh\nTransferred " + actualEnergy + " kWh\n\nNote: " + note)
+                .setPositiveButton("Finalize transfer", (dialog, which) -> executeFinalize(actualEnergy, note))
+                .setNegativeButton("Review", null)
                 .show();
     }
 
     private void executeFinalize(double actualEnergy, String note) {
-        showLoading();
+        progressBar.setVisibility(View.VISIBLE);
+        btnFinalize.setEnabled(false);
         FinalizeTransactionRequest request = new FinalizeTransactionRequest(
                 verifiedTransaction.getReservationCode(),
                 note,
@@ -207,12 +213,16 @@ public class TransactionVerifyFragment extends Fragment {
     }
 
     private void showSuccessAndNavigateBack(FinalizedTransactionResponse data) {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Success")
-                .setMessage("Energy transfer completed successfully.\n\nCode: "
-                        + data.getReservationCode() + "\nTransferred: "
-                        + data.getActualEnergyTransferredKwh() + " kWh")
-                .setPositiveButton("OK", (dialog, which) -> {
+        View receipt = getLayoutInflater().inflate(R.layout.dialog_transaction_success, null);
+        StatusUi.bind(receipt.findViewById(R.id.transaction_success_status), data.getStatus());
+        ((TextView) receipt.findViewById(R.id.transaction_success_code))
+                .setText(data.getReservationCode());
+        ((TextView) receipt.findViewById(R.id.transaction_success_energy))
+                .setText(data.getActualEnergyTransferredKwh() + " kWh");
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Transaction completed")
+                .setView(receipt)
+                .setPositiveButton("Return to operations", (dialog, which) -> {
                     NavHostFragment.findNavController(this).popBackStack(R.id.gridOperatorHomeFragment, false);
                 })
                 .setCancelable(false)
@@ -220,7 +230,7 @@ public class TransactionVerifyFragment extends Fragment {
     }
 
     private void showErrorDialog(String title, String message) {
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(title)
                 .setMessage(message)
                 .setPositiveButton("OK", null)

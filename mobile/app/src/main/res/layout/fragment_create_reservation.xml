@@ -2,28 +2,35 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/surface_light"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="@dimen/space_4">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="Reserve Energy Drop-Off"
-            android:textColor="@color/text_primary"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:text="Review your slot"
+            android:textAppearance="@style/TextAppearance.Solar.ScreenTitle" />
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_2"
+            android:text="Confirm the station, time and energy before sending your request."
+            android:textAppearance="@style/TextAppearance.Solar.Supporting" />
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_6" android:background="@drawable/bg_solar_notice"
+            android:orientation="vertical" android:padding="@dimen/space_4">
             
         <TextView
             android:id="@+id/station_code_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_2"
             android:textSize="16sp" />
             
         <TextView
@@ -41,10 +48,12 @@
             android:textSize="16sp"
             android:textStyle="bold" />
 
-        <com.google.android.material.textfield.TextInputLayout
+        </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Solar.Input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="@dimen/space_6"
             android:hint="Energy to Drop Off (kWh)">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -58,13 +67,14 @@
             android:id="@+id/submit_reservation_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="Submit Reservation" />
+            android:layout_marginTop="@dimen/space_8"
+            android:text="Review reservation" />
 
-        <ProgressBar
+        <ProgressBar style="?android:attr/progressBarStyleHorizontal"
             android:id="@+id/progress_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:indeterminate="true"
             android:layout_gravity="center"
             android:layout_marginTop="16dp"
             android:visibility="gone" />

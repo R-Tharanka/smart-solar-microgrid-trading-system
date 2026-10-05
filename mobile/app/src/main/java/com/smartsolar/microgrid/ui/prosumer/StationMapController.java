@@ -1,6 +1,8 @@
 package com.smartsolar.microgrid.ui.prosumer;
 
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.drawable.DrawableCompat;
+import android.graphics.drawable.Drawable;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.util.BoundingBox;
@@ -25,6 +27,8 @@ final class StationMapController {
 
     private final OnStationMarkerSelected listener;
     private final Map<String, StationResponse> stationsByIdentifier = new HashMap<>();
+    private final Map<String, Marker> markersByStationCode = new HashMap<>();
+    private String selectedStationCode;
     private List<StationResponse> stations = new ArrayList<>();
     private MapView map;
     private MyLocationNewOverlay myLocationOverlay;
@@ -49,6 +53,23 @@ final class StationMapController {
         render();
     }
 
+    void selectStation(String stationCode) {
+        selectedStationCode = stationCode;
+        for (Map.Entry<String, Marker> entry : markersByStationCode.entrySet()) {
+            entry.getValue().setIcon(markerIcon(entry.getKey().equals(stationCode)));
+        }
+        if (map != null) map.invalidate();
+    }
+
+    private Drawable markerIcon(boolean selected) {
+        Drawable icon = ContextCompat.getDrawable(map.getContext(), R.drawable.ic_solar_station);
+        if (icon == null) return null;
+        icon = DrawableCompat.wrap(icon.mutate());
+        DrawableCompat.setTint(icon, ContextCompat.getColor(map.getContext(),
+                selected ? R.color.solar_green : R.color.status_success));
+        return icon;
+    }
+
     private void render() {
         if (map == null) return;
         map.getOverlays().clear();
@@ -58,6 +79,7 @@ final class StationMapController {
         }
         
         stationsByIdentifier.clear();
+        markersByStationCode.clear();
         List<GeoPoint> positions = new ArrayList<>();
 
         for (StationResponse station : stations) {
@@ -70,6 +92,8 @@ final class StationMapController {
             marker.setTitle(station.getName());
             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
             marker.setRelatedObject(identifier);
+            marker.setIcon(markerIcon(station.getStationCode() != null
+                    && station.getStationCode().equals(selectedStationCode)));
             marker.setOnMarkerClickListener((m, mapView) -> {
                 Object tag = m.getRelatedObject();
                 if (tag instanceof String) {
@@ -84,6 +108,7 @@ final class StationMapController {
 
             map.getOverlays().add(marker);
             stationsByIdentifier.put(identifier, station);
+            markersByStationCode.put(station.getStationCode(), marker);
             positions.add(position);
         }
         

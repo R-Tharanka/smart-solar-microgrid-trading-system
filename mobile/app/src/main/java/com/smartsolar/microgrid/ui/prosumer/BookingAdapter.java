@@ -1,6 +1,5 @@
 package com.smartsolar.microgrid.ui.prosumer;
 
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.smartsolar.microgrid.R;
+import com.smartsolar.microgrid.ui.common.StatusUi;
 import com.smartsolar.microgrid.data.identity.UtcTimestampParser;
 import com.smartsolar.microgrid.data.reservation.ReservationSummaryResponse;
 
@@ -64,6 +64,7 @@ public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.ViewHold
         private final TextView timeText;
         private final TextView energyText;
         private final TextView statusText;
+        private final TextView stationText;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -71,28 +72,25 @@ public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.ViewHold
             timeText = itemView.findViewById(R.id.booking_time);
             energyText = itemView.findViewById(R.id.booking_energy);
             statusText = itemView.findViewById(R.id.booking_status);
+            stationText = itemView.findViewById(R.id.booking_station);
         }
 
         void bind(ReservationSummaryResponse booking, OnBookingClickListener listener) {
-            String titleText = booking.getReservationCode();
-            if (booking.getSlotName() != null && !booking.getSlotName().isEmpty() &&
-                booking.getStationName() != null && !booking.getStationName().isEmpty()) {
-                titleText = booking.getSlotName() + " - " + booking.getStationName();
+            codeText.setText(booking.getReservationCode());
+            if (booking.getStationName() != null && !booking.getStationName().isEmpty()) {
+                stationText.setText(booking.getStationName());
+                stationText.setVisibility(View.VISIBLE);
+            } else {
+                stationText.setVisibility(View.GONE);
             }
-            codeText.setText(titleText);
             String timeStr = formatTime(booking.getScheduledStartTimeUtc()) + " - " + formatTime(booking.getScheduledEndTimeUtc());
             timeText.setText(timeStr);
             energyText.setText(String.format("%.1f kWh", booking.getRequestedEnergyKwh()));
             
             String status = booking.getStatus();
-            statusText.setText(status);
-            if ("Approved".equalsIgnoreCase(status) || "Completed".equalsIgnoreCase(status)) {
-                statusText.setTextColor(Color.parseColor("#388E3C"));
-            } else if ("Cancelled".equalsIgnoreCase(status) || "Rejected".equalsIgnoreCase(status)) {
-                statusText.setTextColor(Color.parseColor("#D32F2F"));
-            } else {
-                statusText.setTextColor(Color.parseColor("#F57C00"));
-            }
+            StatusUi.bind(statusText, status);
+            itemView.setContentDescription("Booking " + booking.getReservationCode()
+                    + ", status " + status + ", " + timeStr + ". View booking details.");
 
             itemView.setOnClickListener(v -> listener.onBookingClick(booking));
         }

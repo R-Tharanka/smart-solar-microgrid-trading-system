@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/surface_light"
     android:orientation="vertical">
 
     <TextView
@@ -9,10 +10,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
-        android:text="Available Stations"
+        android:text="Find a station"
         android:textColor="@color/text_primary"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:textAppearance="@style/TextAppearance.Solar.SectionTitle" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -32,7 +32,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/station_location_action"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.Solar.Button.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone" />
@@ -50,14 +50,22 @@
     <FrameLayout
         android:id="@+id/station_map_container"
         android:layout_width="match_parent"
-        android:layout_height="260dp"
+        android:layout_height="@dimen/station_map_height"
         android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="8dp">
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/bg_solar_notice"
+        android:clipToOutline="true">
 
         <org.osmdroid.views.MapView
             android:id="@+id/station_map_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+        <TextView android:id="@+id/station_map_loading"
+            android:layout_width="match_parent" android:layout_height="match_parent"
+            android:background="@color/solar_surface_muted"
+            android:gravity="center" android:text="Loading stations…"
+            android:textAppearance="@style/TextAppearance.Solar.Supporting"
+            android:visibility="gone" />
     </FrameLayout>
 
     <FrameLayout
@@ -70,14 +78,11 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:padding="8dp" />
+            android:paddingVertical="@dimen/space_2" />
 
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone" />
+        <include layout="@layout/include_solar_loading_list"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_gravity="top" android:visibility="gone" />
 
         <LinearLayout
             android:id="@+id/error_container"
@@ -89,11 +94,11 @@
             android:visibility="gone">
 
             <TextView
-                android:id="@+id/error_message"
+                android:id="@+id/error_message" android:accessibilityLiveRegion="polite"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:textColor="@android:color/holo_red_dark" />
+                android:textColor="@color/status_error" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/retry_button"
@@ -104,10 +109,15 @@
 
         <TextView
             android:id="@+id/empty_state_text"
+            android:drawableTop="@drawable/ic_solar_station"
+            android:drawableTint="@color/text_secondary"
+            android:drawablePadding="@dimen/space_3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="No active stations found."
+            android:text="No active stations are available. Try again when your connection or location changes."
+            android:gravity="center"
+            android:padding="@dimen/space_6"
             android:visibility="gone" />
     </FrameLayout>
 </LinearLayout>

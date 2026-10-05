@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.smartsolar.microgrid.R;
 import com.smartsolar.microgrid.data.identity.UtcTimestampParser;
 import com.smartsolar.microgrid.data.station.BookingSlotResponse;
+import com.smartsolar.microgrid.ui.common.StatusUi;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -64,6 +65,7 @@ public class SlotAdapter extends RecyclerView.Adapter<SlotAdapter.ViewHolder> {
         private final TextView availableEnergyText;
         private final TextView priceText;
         private final Button reserveButton;
+        private final TextView statusText;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -71,20 +73,26 @@ public class SlotAdapter extends RecyclerView.Adapter<SlotAdapter.ViewHolder> {
             availableEnergyText = itemView.findViewById(R.id.slot_available_energy);
             priceText = itemView.findViewById(R.id.slot_price);
             reserveButton = itemView.findViewById(R.id.reserve_button);
+            statusText = itemView.findViewById(R.id.slot_status);
         }
 
         void bind(BookingSlotResponse slot, OnSlotClickListener listener) {
             String timeStr = formatTime(slot.getStartTimeUtc()) + " - " + formatTime(slot.getEndTimeUtc());
             timeText.setText(timeStr);
+            StatusUi.bind(statusText, slot.getStatus());
+            itemView.setContentDescription("Slot " + slot.getSlotCode() + ", "
+                    + timeStr + ", status " + slot.getStatus());
             availableEnergyText.setText(String.format("%.1f kWh", slot.getAvailableEnergyKwh()));
             priceText.setText(String.format("$%.2f", slot.getPricePerKwh()));
 
             if ("Available".equalsIgnoreCase(slot.getStatus()) && slot.getAvailableEnergyKwh() > 0) {
                 reserveButton.setEnabled(true);
+                reserveButton.setText("Book this slot");
                 reserveButton.setOnClickListener(v -> listener.onReserveClick(slot));
             } else {
                 reserveButton.setEnabled(false);
-                reserveButton.setText("Unavailable");
+                reserveButton.setText("Not bookable");
+                reserveButton.setOnClickListener(null);
             }
         }
 

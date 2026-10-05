@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -94,9 +93,13 @@ public class RegisterFragment extends Fragment {
             public void onSuccess(UserResponse data, String message) {
                 if (!isAdded()) return;
                 setLoading(false);
-                Toast.makeText(requireContext(), R.string.registration_success,
-                        Toast.LENGTH_LONG).show();
-                NavHostFragment.findNavController(RegisterFragment.this).popBackStack();
+                View root = getView();
+                if (root != null) {
+                    root.findViewById(R.id.register_form).setVisibility(View.GONE);
+                    root.findViewById(R.id.registration_pending_panel).setVisibility(View.VISIBLE);
+                    root.findViewById(R.id.registration_pending_panel)
+                            .announceForAccessibility(getString(R.string.registration_success));
+                }
             }
 
             @Override

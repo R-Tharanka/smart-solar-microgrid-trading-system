@@ -1,7 +1,5 @@
 package com.smartsolar.microgrid.ui.prosumer;
 
-import android.app.AlertDialog;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -14,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.core.content.ContextCompat;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.textfield.TextInputLayout;
@@ -28,6 +27,8 @@ import com.smartsolar.microgrid.data.reservation.UpdateReservationRequest;
 import com.smartsolar.microgrid.data.reservation.QrTransactionResponse;
 import com.smartsolar.microgrid.data.transaction.QrPayload;
 import com.smartsolar.microgrid.navigation.AuthenticationNavigator;
+import com.smartsolar.microgrid.ui.common.StatusUi;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
@@ -131,14 +132,16 @@ public class BookingDetailsFragment extends Fragment {
         codeText.setText("Booking Code: " + currentReservation.getReservationCode());
         
         String status = currentReservation.getStatus();
-        statusText.setText("Status: " + status);
-        if ("Approved".equalsIgnoreCase(status) || "Completed".equalsIgnoreCase(status)) {
-            statusText.setTextColor(Color.parseColor("#388E3C"));
-        } else if ("Cancelled".equalsIgnoreCase(status) || "Rejected".equalsIgnoreCase(status)) {
-            statusText.setTextColor(Color.parseColor("#D32F2F"));
-        } else {
-            statusText.setTextColor(Color.parseColor("#F57C00"));
-        }
+        StatusUi.bind(statusText, status);
+        String stationReference = currentReservation.getStationId();
+        ((TextView) requireView().findViewById(R.id.detail_station)).setText(
+                TextUtils.isEmpty(stationReference) ? "Station reference unavailable"
+                        : "Station reference  " + stationReference);
+        ((TextView) requireView().findViewById(R.id.detail_energy_summary))
+                .setText(String.format(Locale.getDefault(), "Requested energy  %.1f kWh",
+                        currentReservation.getRequestedEnergyKwh()));
+        ((TextView) requireView().findViewById(R.id.detail_lifecycle))
+                .setText(lifecycleLabel(status));
 
         String timeStr = formatTime(currentReservation.getScheduledStartTimeUtc()) + " - " + formatTime(currentReservation.getScheduledEndTimeUtc());
         timeText.setText("Scheduled Time: " + timeStr);
@@ -154,6 +157,7 @@ public class BookingDetailsFragment extends Fragment {
 
         // Only allow edits if Pending or Approved (based on backend logic)
         boolean isEditable = "Pending".equalsIgnoreCase(status) || "Approved".equalsIgnoreCase(status);
+        energyInputLayout.setVisibility(isEditable ? View.VISIBLE : View.GONE);
         energyInput.setEnabled(isEditable);
         actionsContainer.setVisibility(isEditable ? View.VISIBLE : View.GONE);
         
@@ -172,7 +176,8 @@ public class BookingDetailsFragment extends Fragment {
                 displayQrCode(currentQrData);
             } else {
                 qrExpiryText.setText("QR payload unavailable. Please regenerate the QR code.");
-                qrExpiryText.setTextColor(Color.parseColor("#F57C00")); // Orange
+                qrExpiryText.setTextColor(ContextCompat.getColor(requireContext(),
+                        R.color.status_warning));
                 renewQrButton.setVisibility(View.VISIBLE);
                 renewQrButton.setText("Regenerate QR Code");
             }
@@ -217,11 +222,13 @@ public class BookingDetailsFragment extends Fragment {
             long expiresAt = UtcTimestampParser.parseEpochMillis(payload.getExpiresAtUtc());
             if (expiresAt > System.currentTimeMillis()) {
                 qrExpiryText.setText("QR expires at: " + formatTime(payload.getExpiresAtUtc()));
-                qrExpiryText.setTextColor(Color.parseColor("#388E3C")); // Green
+                qrExpiryText.setTextColor(ContextCompat.getColor(requireContext(),
+                        R.color.status_success));
                 renewQrButton.setVisibility(View.GONE);
             } else {
                 qrExpiryText.setText("This QR code has expired.");
-                qrExpiryText.setTextColor(Color.parseColor("#D32F2F")); // Red
+                qrExpiryText.setTextColor(ContextCompat.getColor(requireContext(),
+                        R.color.status_error));
                 renewQrButton.setVisibility(View.VISIBLE);
             }
             return true;
@@ -289,7 +296,7 @@ public class BookingDetailsFragment extends Fragment {
     }
 
     private void promptCancelReservation() {
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Cancel Reservation")
                 .setMessage("Are you sure you want to cancel this reservation?")
                 .setPositiveButton("Yes", (dialog, which) -> cancelReservation())
@@ -327,7 +334,7 @@ public class BookingDetailsFragment extends Fragment {
                 reservation.getStatus(),
                 scheduledTime,
                 reservation.getRequestedEnergyKwh());
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(apiMessage != null && !apiMessage.isEmpty() ? apiMessage : "Action Successful")
                 .setMessage(summary)
                 .setPositiveButton(android.R.string.ok, null)
@@ -335,7 +342,7 @@ public class BookingDetailsFragment extends Fragment {
     }
 
     private void showErrorDialog(String title, String message) {
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(title)
                 .setMessage(message)
                 .setPositiveButton("OK", null)
@@ -359,5 +366,16 @@ public class BookingDetailsFragment extends Fragment {
         } catch (ParseException e) {
             return utcTime;
         }
+    }
+
+    private String lifecycleLabel(String status) {
+        String[] stages = {"Pending", "Approved", "QrIssued", "Verified", "Completed"};
+        for (int i = 0; i < stages.length; i++) {
+            if (stages[i].equalsIgnoreCase(status)) {
+                return "Stage " + (i + 1) + " of 5  •  "
+                        + (i == 2 ? "QR issued" : stages[i]);
+            }
+        }
+        return "Current state  •  " + status;
     }
 }

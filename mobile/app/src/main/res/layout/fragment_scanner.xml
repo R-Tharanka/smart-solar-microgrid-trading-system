@@ -1,23 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <com.journeyapps.barcodescanner.DecoratedBarcodeView
-        android:id="@+id/barcode_scanner"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Scan Prosumer QR Code"
-        android:textColor="@android:color/white"
-        android:textSize="18sp"
-        android:layout_marginBottom="32dp"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/solar_green_dark">
+    <com.journeyapps.barcodescanner.DecoratedBarcodeView android:id="@+id/barcode_scanner"
+        android:layout_width="0dp" android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent" />
+    <TextView android:id="@+id/scanner_status" android:layout_width="0dp"
+        android:layout_height="wrap_content" android:layout_margin="@dimen/space_4"
+        android:background="@drawable/bg_solar_hero" android:padding="@dimen/space_4"
+        android:text="Align the transaction QR inside the frame"
+        android:textColor="@color/solar_on_brand" android:textSize="14sp"
+        android:gravity="center" android:accessibilityLiveRegion="polite"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

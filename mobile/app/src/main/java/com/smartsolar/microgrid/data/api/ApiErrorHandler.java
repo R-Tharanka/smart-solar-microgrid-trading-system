@@ -81,12 +81,6 @@ public final class ApiErrorHandler {
             case "TRANSFER_ENERGY_INVALID":
                 return "Enter a transferred energy amount within the reserved quantity.";
             case "RESERVATION_WINDOW_INVALID":
-                try {
-                    JsonObject problem = JsonParser.parseString(responseBody).getAsJsonObject();
-                    if (problem.has("detail") && !problem.get("detail").isJsonNull()) {
-                        return problem.get("detail").getAsString();
-                    }
-                } catch (RuntimeException ignored) {}
                 return "Reservations can only be made for slots starting within 7 days and must not be in the past.";
             case "RESERVATION_NOTICE_PERIOD":
                 return "Reservations must be updated or cancelled at least 12 hours before the scheduled start time.";

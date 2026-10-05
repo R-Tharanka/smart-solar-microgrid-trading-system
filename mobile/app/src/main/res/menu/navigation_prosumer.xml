@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@id/prosumerHomeFragment" android:icon="@drawable/ic_solar_home" android:title="Home" />
+    <item android:id="@id/stationsFragment" android:icon="@drawable/ic_solar_station" android:title="Stations" />
+    <item android:id="@id/myBookingsFragment" android:icon="@drawable/ic_solar_calendar" android:title="Bookings" />
+    <item android:id="@id/profileFragment" android:icon="@drawable/ic_solar_profile" android:title="Profile" />
+</menu>
