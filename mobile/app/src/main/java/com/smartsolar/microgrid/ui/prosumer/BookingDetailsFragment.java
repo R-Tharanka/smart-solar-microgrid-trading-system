@@ -172,7 +172,7 @@ public class BookingDetailsFragment extends Fragment {
                 showLoading(false);
                 currentReservation = data;
                 populateUI();
-                showActionSummary(R.string.reservation_updated_title, data);
+                showActionSummary(message, data);
             }
 
             @Override
@@ -203,7 +203,7 @@ public class BookingDetailsFragment extends Fragment {
                 showLoading(false);
                 currentReservation = data;
                 populateUI();
-                showActionSummary(R.string.reservation_cancelled_title, data);
+                showActionSummary(message, data);
             }
 
             @Override
@@ -216,7 +216,7 @@ public class BookingDetailsFragment extends Fragment {
         });
     }
 
-    private void showActionSummary(int titleResource, ReservationResponse reservation) {
+    private void showActionSummary(String apiMessage, ReservationResponse reservation) {
         String scheduledTime = formatTime(reservation.getScheduledStartTimeUtc())
                 + " - " + formatTime(reservation.getScheduledEndTimeUtc());
         String summary = getString(R.string.reservation_action_summary,
@@ -225,7 +225,7 @@ public class BookingDetailsFragment extends Fragment {
                 scheduledTime,
                 reservation.getRequestedEnergyKwh());
         new AlertDialog.Builder(requireContext())
-                .setTitle(titleResource)
+                .setTitle(apiMessage != null && !apiMessage.isEmpty() ? apiMessage : "Action Successful")
                 .setMessage(summary)
                 .setPositiveButton(android.R.string.ok, null)
                 .show();
