@@ -36,9 +36,10 @@ The API base URL is selected by a Gradle product flavor in `app/build.gradle.kts
 ```text
 emulator:  http://10.0.2.2:5080/
 usbDevice: http://127.0.0.1:5080/
+iis:       value of IIS_API_BASE_URL (defaults to http://127.0.0.1:8080/)
 ```
 
-`10.0.2.2` is the Android emulator alias for the host computer. The `usbDevice` flavor uses `adb reverse` so that the physical device's loopback port `5080` is forwarded to the development computer. Select the matching build variant before installing the app. A deployed environment should use a separate HTTPS production flavor or configuration.
+`10.0.2.2` is the Android emulator alias for the host computer. The `usbDevice` flavor uses `adb reverse` so that the physical device's loopback port `5080` is forwarded to the development computer. The `iis` flavor reads `IIS_API_BASE_URL` from the ignored `local.properties` file, a Gradle property, or an environment variable. Select the matching build variant before installing the app.
 
 ## Requirements
 
@@ -91,7 +92,8 @@ Before testing API-backed features, start the backend API and confirm that it is
 
 - Android Emulator: select `emulatorDebug`; `10.0.2.2` maps to the host computer.
 - USB-connected physical device: run `adb reverse tcp:5080 tcp:5080`, then select `usbDeviceDebug`.
-- Deployed environment: add or configure an HTTPS production target rather than using either local-development flavor.
+- Local IIS assessment: set `IIS_API_BASE_URL=http://YOUR_LAN_IPV4:8080/` in `local.properties`, then select `iisDebug`.
+- Production IIS: use an HTTPS URL and remove the local IIS cleartext override before distribution.
 
 The URL must include its trailing `/`. Each flavor permits cleartext traffic only for its local development host. Do not commit environment-specific credentials, tokens, or private keys.
 
@@ -175,6 +177,25 @@ adb -s DEVICE_SERIAL install -r `
 ```
 
 The `usbDeviceDebug` application connects to `http://127.0.0.1:5080/`; ADB reverse forwards that address to the API running on the computer. Port forwarding may need to be configured again after disconnecting the USB cable or restarting ADB.
+
+### Windows PowerShell: USB device with the IIS API
+
+Use the `iisDebug` flavor instead of `usbDeviceDebug` when the API is hosted by IIS on port `8080`:
+
+```powershell
+adb -s DEVICE_SERIAL reverse --remove tcp:5080
+adb -s DEVICE_SERIAL reverse tcp:8080 tcp:8080
+adb -s DEVICE_SERIAL reverse --list
+.\gradlew.bat installIisDebug
+adb -s DEVICE_SERIAL shell am force-stop com.smartsolar.microgrid
+adb -s DEVICE_SERIAL shell am start -n com.smartsolar.microgrid/.MainActivity
+```
+
+These commands remove the old port-5080 rule, forward the phone's port `8080` to IIS, confirm the forwarding rule, install the IIS-specific APK, and restart the application. Replace `DEVICE_SERIAL` with the identifier printed by `adb devices`.
+
+Copy only commands, not the `PS ...>` prompt, `>>` continuation markers, previous output, or error lines beginning with `+`. If PowerShell is stuck at `>>`, press `Ctrl+C` and retry one command at a time.
+
+The complete IIS workflow, command-by-command explanations, LAN alternative and server checks are documented in [the IIS deployment guide](../docs/deployment/iis-deployment.md#8-point-android-at-iis).
 
 ### Windows PowerShell: emulator
 

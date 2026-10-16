@@ -47,6 +47,7 @@ Phase 1 requirements analysis and project foundation documents:
 - [Member integration contract](docs/phase-3/member-integration-contract.md)
 - [Full-system Postman collection](docs/postman/Smart-Solar-Microgrid-Full-System.postman_collection.json)
 - [Postman collection and execution guide](docs/postman/README.md)
+- [IIS deployment guide](docs/deployment/iis-deployment.md)
 
 The ASP.NET Core foundation is under `backend/` and uses MongoDB Atlas. Copy `.env.example` to an untracked `.env`, add the Atlas SRV connection string and run `docker compose up --build`. Verify Atlas connectivity at `http://localhost:5080/health/ready`.
 
